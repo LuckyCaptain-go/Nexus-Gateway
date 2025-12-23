@@ -348,13 +348,50 @@ We welcome contributions! Please follow these steps:
 
 ## Roadmap
 
-- [ ] Support for additional databases (MongoDB, Redis)
-- [ ] Query result caching
+### Phase 1: Enhanced Single-Source Capabilities
+
+#### Data Lakes & Warehouses
+- [ ] **Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi support
+- [ ] **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
+- [ ] **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
+
+#### Object Storage & File Systems
+- [ ] **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob
+- [ ] **Distributed Storage**: HDFS, Apache Ozone
+- [ ] **File Formats**: Parquet, ORC, Avro, CSV, JSON, Iceberg, Delta
+
+#### Domestic Database Support (China)
+- [ ] **Distributed Databases**: OceanBase, TiDB, Tencent TDSQL, GaussDB
+- [ ] **Traditional Databases**: DaMeng (DM), KingbaseES, GBase, Oscar, OpenGauss
+
+### Phase 2: Compute Engine Integration
+- [ ] **Trino Integration**: Distributed SQL query engine federation
+- [ ] **Spark Integration**: Batch and streaming data processing
+- [ ] **Flink Integration**: Real-time stream processing
+- [ ] **Compute Engine Orchestration**: Intelligent routing to optimal engine
+
+### Phase 3: Cross-Source Query via Compute Engines
+- [ ] **Unified Query API**: Single interface that routes to Trino/Spark for cross-source queries
+- [ ] **Source Catalog Management**: Map data sources to Trino/Spark catalogs
+- [ ] **Query Translation**: Convert standard SQL to engine-specific syntax when needed
+- [ ] **Result Proxy**: Stream results from compute engines back to clients
+- [ ] **Engine Health Check**: Monitor compute engine cluster status
+
+### Phase 4: ETL via Compute Engines
+- [ ] **ETL Job API**: REST API to submit Spark/Flink ETL jobs
+- [ ] **Job Management**: Track job status, logs, and cancellation
+- [ ] **Template Library**: Pre-built ETL templates for common patterns (sync, transform, aggregate)
+- [ ] **Schedule Integration**: Interface with schedulers (Airflow, DolphinScheduler) for recurring jobs
+- [ ] **Visual Pipeline Builder**: Web UI to design ETL pipelines that generate Spark/Flink jobs
+
+### Phase 5: Advanced Features
+- [ ] Query result caching with intelligent invalidation
 - [ ] GraphQL API support
 - [ ] Webhook notifications for query events
-- [ ] Advanced analytics dashboard
-- [ ] Multi-region support
+- [ ] Advanced analytics dashboard with real-time metrics
+- [ ] Multi-region and active-active deployment
 - [ ] Query auditing and compliance features
+- [ ] AI-powered query optimization and recommendations
 
 ## License
 
