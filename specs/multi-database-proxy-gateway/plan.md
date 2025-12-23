@@ -322,6 +322,39 @@ Authorization: Bearer <jwt_token>
 - CI/CD pipeline
 - Load testing and optimization
 
+### Phase 6: Enhanced Single-Source Capabilities
+- **Data Lake & Warehouse Support**:
+  - Apache Iceberg, Delta Lake, Apache Hudi table formats
+  - Snowflake, Databricks, Redshift, BigQuery connectors
+  - ClickHouse, Doris, StarRocks, Druid drivers
+- **Object Storage Integration**:
+  - S3, MinIO, OSS, COS, Azure Blob clients
+  - HDFS, Apache Ozone support
+  - Parquet, ORC, Avro, CSV, JSON file readers
+- **Domestic Database Support**:
+  - OceanBase, TiDB, TDSQL, GaussDB drivers
+  - DaMeng, KingbaseES, GBase, Oscar, OpenGauss support
+
+### Phase 7: Compute Engine Integration
+- **Trino Integration**: Query federation via Trino JDBC/REST API
+- **Spark Integration**: Spark Connect, Livy REST API integration
+- **Flink Integration**: SQL Gateway, Table API support
+- **Engine Router**: Intelligent routing based on query type and data size
+
+### Phase 8: Cross-Source Query via Compute Engines
+- **Unified Query API**: Single endpoint that detects multi-source queries and routes to Trino/Spark
+- **Source Catalog Management**: Automatically register data sources as Trino/Spark catalogs
+- **Query Translation Layer**: Handle SQL dialect differences between engines
+- **Result Streaming Proxy**: Stream large result sets efficiently from compute engines
+- **Engine Integration**: Trino JDBC/REST, Spark Connect, Flink SQL Gateway
+
+### Phase 9: ETL via Compute Engines
+- **ETL Job Submission API**: REST endpoints to submit Spark/Flink jobs
+- **Job Lifecycle Management**: Track job submission, execution, completion, failure
+- **Pre-built Templates**: Common ETL patterns (CDC, batch sync, aggregation)
+- **Scheduler Integration**: Interfaces for Airflow, DolphinScheduler, Cron
+- **Pipeline Designer UI**: Visual builder that generates Spark/Flink job definitions
+
 ## 8. Development Guidelines
 
 ### Code Organization
