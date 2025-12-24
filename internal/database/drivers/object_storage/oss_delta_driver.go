@@ -1,0 +1,109 @@
+package object_storage
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+
+	"nexus-gateway/internal/database"
+	"nexus-gateway/internal/model"
+)
+
+// OSSDeltaDriver implements Driver interface for Alibaba OSS Delta Lake tables
+type OSSDeltaDriver struct {
+	config *OSSConfig
+	client *OSSClient
+}
+
+// NewOSSDeltaDriver creates a new OSS Delta Lake driver
+func NewOSSDeltaDriver(ctx context.Context, config *OSSConfig) (*OSSDeltaDriver, error) {
+	client, err := NewOSSClient(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OSSDeltaDriver{
+		config: config,
+		client: client,
+	}, nil
+}
+
+// Open opens a connection (not applicable for OSS Delta Lake)
+func (d *OSSDeltaDriver) Open(dsn string) (*sql.DB, error) {
+	return nil, fmt.Errorf("OSS Delta Lake driver does not support standard database connections")
+}
+
+// ValidateDSN validates the connection string
+func (d *OSSDeltaDriver) ValidateDSN(dsn string) error {
+	if dsn == "" {
+		return fmt.Errorf("DSN cannot be empty")
+	}
+	return nil
+}
+
+// GetDefaultPort returns the default OSS port
+func (d *OSSDeltaDriver) GetDefaultPort() int {
+	return 443 // HTTPS
+}
+
+// BuildDSN builds a connection string from configuration
+func (d *OSSDeltaDriver) BuildDSN(config *model.DataSourceConfig) string {
+	return fmt.Sprintf("oss://%s", config.BucketName)
+}
+
+// GetDatabaseTypeName returns the database type name
+func (d *OSSDeltaDriver) GetDatabaseTypeName() string {
+	return "oss-delta"
+}
+
+// TestConnection tests if the connection is working
+func (d *OSSDeltaDriver) TestConnection(db *sql.DB) error {
+	return fmt.Errorf("use TestConnectionContext instead")
+}
+
+// TestConnectionContext tests the OSS connection
+func (d *OSSDeltaDriver) TestConnectionContext(ctx context.Context) error {
+	_, err := d.client.ListObjects(ctx, "", 1)
+	if err != nil {
+		return fmt.Errorf("failed to test OSS connection: %w", err)
+	}
+	return nil
+}
+
+// GetDriverName returns the driver name
+func (d *OSSDeltaDriver) GetDriverName() string {
+	return "oss-delta"
+}
+
+// GetCategory returns the driver category
+func (d *OSSDeltaDriver) GetCategory() database.DriverCategory {
+	return database.CategoryObjectStorage
+}
+
+// GetCapabilities returns driver capabilities
+func (d *OSSDeltaDriver) GetCapabilities() database.DriverCapabilities {
+	return database.DriverCapabilities{
+		SupportsSQL:             false,
+		SupportsTransaction:     true,
+		SupportsSchemaDiscovery: true,
+		SupportsTimeTravel:      true,
+		RequiresTokenRotation:   false,
+		SupportsStreaming:       true,
+	}
+}
+
+// ConfigureAuth configures authentication
+func (d *OSSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
+	return nil
+}
+
+// RegisterOSSDeltaDriver registers the OSS Delta Lake driver globally
+func RegisterOSSDeltaDriver(ctx context.Context, config *OSSConfig) error {
+	driver, err := NewOSSDeltaDriver(ctx, config)
+	if err != nil {
+		return err
+	}
+
+	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOSSDelta, driver)
+	return nil
+}

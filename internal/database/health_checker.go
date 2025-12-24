@@ -232,6 +232,25 @@ func (hc *HealthChecker) ValidateDataSourceConfiguration(config *model.DataSourc
 		return fmt.Errorf("driver not available for database type %s: %w", dbType, err)
 	}
 
+	// Get category to determine validation rules
+	category := driver.GetCategory()
+
+	// Validate based on category
+	switch category {
+	case CategoryObjectStorage:
+		// Object storage (S3, etc.) requires bucket and region
+		return hc.validateObjectStorageConfig(config, dbType)
+	case CategoryFileSystem:
+		// File systems (HDFS) require namenode and path
+		return hc.validateFileSystemConfig(config, dbType)
+	default:
+		// Standard databases require host, port, database, username
+		return hc.validateDatabaseConfig(config, driver)
+	}
+}
+
+// validateDatabaseConfig validates standard database configurations
+func (hc *HealthChecker) validateDatabaseConfig(config *model.DataSourceConfig, driver Driver) error {
 	// Check required fields
 	if config.Host == "" {
 		return fmt.Errorf("host is required")
@@ -249,6 +268,42 @@ func (hc *HealthChecker) ValidateDataSourceConfiguration(config *model.DataSourc
 	// Build and validate DSN
 	dsn := driver.BuildDSN(config)
 	return driver.ValidateDSN(dsn)
+}
+
+// validateObjectStorageConfig validates object storage configurations
+func (hc *HealthChecker) validateObjectStorageConfig(config *model.DataSourceConfig, dbType model.DatabaseType) error {
+	// Object storage requires bucket name and region
+	if config.Database == "" { // Use Database field for bucket name
+		return fmt.Errorf("bucket name is required")
+	}
+
+	// Region is required for most object storage providers
+	// (stored in Host field for non-SQL sources)
+	if config.Host == "" {
+		return fmt.Errorf("region is required")
+	}
+
+	return nil
+}
+
+// validateFileSystemConfig validates file system configurations
+func (hc *HealthChecker) validateFileSystemConfig(config *model.DataSourceConfig, dbType model.DatabaseType) error {
+	// HDFS/Ozone require namenode/ozonename address
+	if config.Host == "" {
+		return fmt.Errorf("namenode address is required")
+	}
+
+	// Port is required
+	if config.Port <= 0 {
+		config.Port = 8020 // Default HDFS port
+	}
+
+	// Path is optional (uses root if not specified)
+	if config.Database == "" {
+		config.Database = "/" // Default to root
+	}
+
+	return nil
 }
 
 // GetDriverInfo returns information about available database drivers
