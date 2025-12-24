@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode"
 
+	"nexus-gateway/internal/model"
 	"vitess.io/vitess/go/vt/sqlparser"
 )
 
@@ -318,4 +319,343 @@ func (sv *SQLValidator) calculateSelectComplexity(selectStmt *sqlparser.Select) 
 	}
 
 	return complexity
+}
+
+// =============================================================================
+// Data Source-Specific Validation (Phase 1 Extensions)
+// =============================================================================
+
+// DataSourceSQLConfig holds SQL dialect configuration for a data source type
+type DataSourceSQLConfig struct {
+	SupportsTimeTravel     bool
+	SupportsWindowFunctions bool
+	SupportsArrays          bool
+	SupportsStructs         bool
+	SupportsJSON            bool
+	IdentifierQuote        string // e.g., `"` for PostgreSQL, "`" for MySQL
+	TimeTravelSyntax       string // e.g., "FOR SYSTEM_TIME AS OF", "TABLE"
+}
+
+// GetDataSourceSQLConfig returns SQL configuration for a data source type
+func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
+	switch dbType {
+	// Data Lake Table Formats
+	case model.DatabaseTypeApacheIceberg:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "FOR SYSTEM_TIME AS OF",
+		}
+	case model.DatabaseTypeDeltaLake:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        "VERSION AS OF",
+		}
+	case model.DatabaseTypeApacheHudi:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        " TIMESTAMP AS OF",
+		}
+
+	// Cloud Warehouses
+	case model.DatabaseTypeSnowflake:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "AT",
+		}
+	case model.DatabaseTypeDatabricks:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        "VERSION AS OF",
+		}
+	case model.DatabaseTypeBigQuery:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      true,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         "``,
+			TimeTravelSyntax:        "FOR SYSTEM_TIME AS OF",
+		}
+	case model.DatabaseTypeRedshift:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "",
+		}
+
+	// OLAP Engines
+	case model.DatabaseTypeClickHouse:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         "``,
+			TimeTravelSyntax:        "",
+		}
+	case model.DatabaseTypeApacheDoris, model.DatabaseTypeStarRocks, model.DatabaseTypeApacheDruid:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         "``,
+			TimeTravelSyntax:        "",
+		}
+
+	// Object Storage - No SQL, API-based
+	case model.DatabaseTypeS3, model.DatabaseTypeMinIO, model.DatabaseTypeAlibabaOSS,
+		model.DatabaseTypeTencentCOS, model.DatabaseTypeAzureBlob:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: false,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            false,
+			IdentifierQuote:         "",
+			TimeTravelSyntax:        "",
+		}
+
+	// Domestic Databases
+	case model.DatabaseTypeOceanBase, model.DatabaseTypeTiDB:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        "",
+		}
+
+	// File Systems
+	case model.DatabaseTypeHDFS, model.DatabaseTypeOzone:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: false,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            false,
+			IdentifierQuote:         "",
+			TimeTravelSyntax:        "",
+		}
+
+	// Relational Databases (existing)
+	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        "",
+		}
+	case model.DatabaseTypePostgreSQL:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "",
+		}
+	case model.DatabaseTypeOracle:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "",
+		}
+
+	default:
+		// Default to MySQL-like configuration
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          false,
+			SupportsStructs:         false,
+			SupportsJSON:            true,
+			IdentifierQuote:         "`",
+			TimeTravelSyntax:        "",
+		}
+	}
+}
+
+// ValidateDataSourceSyntax validates SQL syntax for a specific data source type
+func (sv *SQLValidator) ValidateDataSourceSyntax(sql string, dbType model.DatabaseType) error {
+	config := GetDataSourceSQLConfig(dbType)
+
+	// Basic validation first
+	if err := sv.ValidateStatement(sql); err != nil {
+		return err
+	}
+
+	// Validate data source-specific syntax
+	return sv.validateDataSourceSpecificSyntax(sql, dbType, config)
+}
+
+// validateDataSourceSpecificSyntax validates data source-specific SQL features
+func (sv *SQLValidator) validateDataSourceSpecificSyntax(sql string, dbType model.DatabaseType, config DataSourceSQLConfig) error {
+	sqlUpper := strings.ToUpper(sql)
+
+	// Check for time travel syntax if not supported
+	if config.TimeTravelSyntax == "" && sv.hasTimeTravelSyntax(sqlUpper) {
+		return fmt.Errorf("time travel queries not supported for %s", dbType)
+	}
+
+	// Check for unsupported complex types
+	if !config.SupportsArrays && sv.hasArraySyntax(sql) {
+		return fmt.Errorf("array types not supported for %s", dbType)
+	}
+
+	if !config.SupportsStructs && sv.hasStructSyntax(sql) {
+		return fmt.Errorf("struct types not supported for %s", dbType)
+	}
+
+	return nil
+}
+
+// hasTimeTravelSyntax checks if SQL contains time travel syntax
+func (sv *SQLValidator) hasTimeTravelSyntax(sqlUpper string) bool {
+	timeTravelPatterns := []string{
+		"FOR SYSTEM_TIME AS OF",
+		"VERSION AS OF",
+		"TIMESTAMP AS OF",
+		"AT TIMESTAMP",
+		"FOR SYSTEM TIME",
+	}
+
+	for _, pattern := range timeTravelPatterns {
+		if strings.Contains(sqlUpper, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// hasArraySyntax checks if SQL contains array syntax
+func (sv *SQLValidator) hasArraySyntax(sql string) bool {
+	// Check for ARRAY type or bracket notation
+	arrayPatterns := []string{
+		"ARRAY[",
+		"ARRAY<",
+		"::ARRAY",
+		"[", // Could be array subscript
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, pattern := range arrayPatterns {
+		if strings.Contains(upperSQL, pattern) || strings.Contains(sql, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// hasStructSyntax checks if SQL contains struct syntax
+func (sv *SQLValidator) hasStructSyntax(sql string) bool {
+	structPatterns := []string{
+		"STRUCT<",
+		"ROW(",
+		"::STRUCT",
+	}
+
+	upperSQL := strings.ToUpper(sql)
+	for _, pattern := range structPatterns {
+		if strings.Contains(upperSQL, pattern) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// SupportsQueryType checks if a data source supports a specific query type
+func (sv *SQLValidator) SupportsQueryType(dbType model.DatabaseType, queryType string) bool {
+	config := GetDataSourceSQLConfig(dbType)
+
+	switch strings.ToUpper(queryType) {
+	case "TIMETRAVEL":
+		return config.SupportsTimeTravel
+	case "WINDOW":
+		return config.SupportsWindowFunctions
+	case "ARRAY":
+		return config.SupportsArrays
+	case "STRUCT":
+		return config.SupportsStructs
+	case "JSON":
+		return config.SupportsJSON
+	default:
+		return true
+	}
+}
+
+// SanitizeSQLForDataSource sanitizes SQL for a specific data source
+func (sv *SQLValidator) SanitizeSQLForDataSource(sql string, dbType model.DatabaseType) (string, error) {
+	config := GetDataSourceSQLConfig(dbType)
+
+	// Validate first
+	if err := sv.ValidateDataSourceSyntax(sql, dbType); err != nil {
+		return "", err
+	}
+
+	// Normalize identifiers (quote them properly)
+	sanitized := sv.normalizeIdentifiers(sql, config.IdentifierQuote)
+
+	return sanitized, nil
+}
+
+// normalizeIdentifiers normalizes SQL identifiers for the data source
+func (sv *SQLValidator) normalizeIdentifiers(sql, quoteChar string) string {
+	if quoteChar == "" {
+		return sql
+	}
+
+	// This is a simplified implementation
+	// In production, you would use the SQL parser to properly identify and quote identifiers
+	normalized := sql
+
+	// Replace unquoted identifiers with quoted ones (simplified)
+	// This is a placeholder - proper implementation requires AST parsing
+
+	return normalized
 }

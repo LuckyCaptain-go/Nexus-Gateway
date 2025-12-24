@@ -111,14 +111,14 @@ func (qs *queryService) ValidateQuery(ctx context.Context, req *model.QueryReque
 	// Apply defaults
 	req.ApplyDefaults()
 
-	// Validate SQL security
-	if err := qs.sqlValidator.ValidateStatement(req.SQL); err != nil {
+	// Get data source to check database type
+	dataSource, err := qs.datasourceRepo.GetByID(ctx, req.DataSourceID)
+	if err != nil {
 		return err
 	}
 
-	// Check if data source exists
-	_, err := qs.datasourceRepo.GetByID(ctx, req.DataSourceID)
-	if err != nil {
+	// Validate SQL with data source-specific syntax checking
+	if err := qs.sqlValidator.ValidateDataSourceSyntax(req.SQL, dataSource.Type); err != nil {
 		return err
 	}
 
