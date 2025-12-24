@@ -8,21 +8,28 @@ import (
 	"time"
 
 	"nexus-gateway/internal/model"
+	"nexus-gateway/internal/security"
 )
 
 // ConnectionPool manages database connections for different data sources
 type ConnectionPool struct {
-	pools    map[string]*sql.DB
-	mutex    sync.RWMutex
-	health   map[string]bool
-	healthMu sync.RWMutex
+	pools        map[string]*sql.DB
+	mutex        sync.RWMutex
+	health       map[string]bool
+	healthMu     sync.RWMutex
+	tokenManager *security.TokenManager
+	vault        *security.CredentialVault
+	driverCaps   map[string]DriverCapabilities // Cached driver capabilities
 }
 
 // NewConnectionPool creates a new ConnectionPool instance
-func NewConnectionPool() *ConnectionPool {
+func NewConnectionPool(tokenManager *security.TokenManager, vault *security.CredentialVault) *ConnectionPool {
 	return &ConnectionPool{
-		pools:  make(map[string]*sql.DB),
-		health: make(map[string]bool),
+		pools:        make(map[string]*sql.DB),
+		health:       make(map[string]bool),
+		tokenManager: tokenManager,
+		vault:        vault,
+		driverCaps:   make(map[string]DriverCapabilities),
 	}
 }
 
@@ -255,4 +262,114 @@ func (cp *ConnectionPool) getHealth(dataSourceID string) bool {
 	cp.healthMu.RLock()
 	defer cp.healthMu.RUnlock()
 	return cp.health[dataSourceID]
+}
+
+// =============================================================================
+// Token Rotation Support
+// =============================================================================
+
+// SetupTokenRotation registers token rotation for a data source if needed
+func (cp *ConnectionPool) SetupTokenRotation(ctx context.Context, dataSource *model.DataSource) error {
+	driver, err := GetDriverRegistry().GetDriver(dataSource.Type)
+	if err != nil {
+		return err
+	}
+
+	caps := driver.GetCapabilities()
+	if !caps.RequiresTokenRotation {
+		return nil // No rotation needed
+	}
+
+	// Cache driver capabilities
+	cp.driverCaps[dataSource.ID] = caps
+
+	// Register token rotation with TokenManager
+	if cp.tokenManager != nil {
+		// Define rotation function
+		onRotate := func(ctx context.Context) (string, time.Time, error) {
+			return cp.rotateToken(ctx, dataSource)
+		}
+
+		// Set expiration time (default 1 hour, should be configured per data source)
+		expiresAt := time.Now().Add(1 * time.Hour)
+
+		cp.tokenManager.RegisterToken(dataSource.ID, expiresAt, onRotate)
+	}
+
+	return nil
+}
+
+// rotateToken performs token rotation for a data source
+func (cp *ConnectionPool) rotateToken(ctx context.Context, dataSource *model.DataSource) (string, time.Time, error) {
+	driver, err := GetDriverRegistry().GetDriver(dataSource.Type)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	// Get credentials from vault
+	// TODO: Implement credential retrieval from database via CredentialVault
+
+	// Rotate token based on data source type
+	switch dataSource.Type {
+	case model.DatabaseTypeS3, model.DatabaseTypeMinIO:
+		// AWS IAM token rotation
+		// TODO: Call AWS security to refresh credentials
+		return "new-token", time.Now().Add(1 * time.Hour), nil
+
+	case model.DatabaseTypeBigQuery:
+		// GCP OAuth token rotation
+		// TODO: Call GCP security to refresh OAuth token
+		return "new-token", time.Now().Add(1 * time.Hour), nil
+
+	case model.DatabaseTypeHDFS, model.DatabaseTypeOzone:
+		// Kerberos token rotation
+		// TODO: Call Kerberos security to refresh token
+		return "new-token", time.Now().Add(8 * time.Hour), nil
+
+	default:
+		return "", time.Time{}, fmt.Errorf("token rotation not supported for %s", dataSource.Type)
+	}
+}
+
+// RefreshToken forces an immediate token refresh for a data source
+func (cp *ConnectionPool) RefreshToken(ctx context.Context, dataSourceID string) error {
+	if cp.tokenManager == nil {
+		return fmt.Errorf("token manager not configured")
+	}
+
+	// Trigger token rotation
+	_, _, err := cp.tokenManager.rotateToken(ctx, dataSourceID)
+	return err
+}
+
+// GetCurrentToken retrieves the current token for a data source
+func (cp *ConnectionPool) GetCurrentToken(ctx context.Context, dataSourceID string) (string, error) {
+	if cp.tokenManager == nil {
+		return "", fmt.Errorf("token manager not configured")
+	}
+
+	return cp.tokenManager.GetToken(dataSourceID)
+}
+
+// RemoveTokenRotation removes token rotation for a data source
+func (cp *ConnectionPool) RemoveTokenRotation(dataSourceID string) {
+	if cp.tokenManager != nil {
+		// TODO: Implement token removal in TokenManager
+		_ = dataSourceID
+	}
+}
+
+// GetDataSourceCapabilities returns cached driver capabilities for a data source
+func (cp *ConnectionPool) GetDataSourceCapabilities(dataSourceID string) (DriverCapabilities, bool) {
+	cp.mutex.RLock()
+	defer cp.mutex.RUnlock()
+
+	caps, exists := cp.driverCaps[dataSourceID]
+	return caps, exists
+}
+
+// RequiresTokenRotation checks if a data source requires token rotation
+func (cp *ConnectionPool) RequiresTokenRotation(dataSourceID string) bool {
+	caps, exists := cp.GetDataSourceCapabilities(dataSourceID)
+	return exists && caps.RequiresTokenRotation
 }

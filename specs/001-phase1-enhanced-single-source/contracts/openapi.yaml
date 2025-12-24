@@ -1,0 +1,953 @@
+openapi: 3.0.3
+info:
+  title: Nexus Gateway API - Phase 1 Enhanced Single-Source Capabilities
+  description: |
+    Multi-database proxy gateway REST API with support for 30+ data source types including
+    data lake table formats (Iceberg, Delta Lake, Hudi), cloud warehouses (Snowflake, Databricks,
+    Redshift, BigQuery), object storage (S3, MinIO, OSS, COS, Azure Blob), OLAP engines
+    (ClickHouse, Doris, StarRocks, Druid), domestic Chinese databases, and distributed
+    file systems (HDFS, Ozone).
+  version: 1.1.0
+  contact:
+    name: Nexus Gateway Team
+    email: support@nexus-gateway.io
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8099/api/v1
+    description: Local development server
+  - url: https://api.nexus-gateway.io/api/v1
+    description: Production server
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: DataSources
+    description: Data source management endpoints
+  - name: Queries
+    description: Query execution endpoints
+  - name: Databases
+    description: Database connection test endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Get gateway health status
+      description: Returns the health status of the gateway and connectivity to configured data sources
+      operationId: getHealth
+      responses:
+        '200':
+          description: Gateway is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /datasources:
+    get:
+      tags:
+        - DataSources
+      summary: List all data sources
+      description: Retrieves a paginated list of all configured data sources with optional filtering by type and status
+      operationId: listDataSources
+      parameters:
+        - name: type
+          in: query
+          description: Filter by data source type
+          schema:
+            type: string
+            enum: [mysql, mariadb, postgresql, oracle, iceberg, delta_lake, hudi, snowflake, databricks, redshift, bigquery, s3_parquet, minio_parquet, oss_parquet, cos_parquet, azure_parquet, hdfs_avro, ozone_parquet, clickhouse, doris, starrocks, druid, oceanbase_mysql, oceanbase_oracle, tidb, tdsql, gaussdb_mysql, gaussdb_postgres, dameng, kingbasees, gbase_8s, gbase_8t, oscar, opengauss]
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [active, inactive, error]
+        - name: page
+          in: query
+          description: Page number (starting from 1)
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of data sources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourcesListResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - DataSources
+      summary: Create a new data source
+      description: Creates a new data source configuration with the specified type and connection parameters
+      operationId: createDataSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceCreateRequest'
+      responses:
+        '201':
+          description: Data source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Data source name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /datasources/{id}:
+    get:
+      tags:
+        - DataSources
+      summary: Get data source details
+      description: Retrieves detailed information about a specific data source
+      operationId: getDataSource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data source UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Data source details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - DataSources
+      summary: Update data source configuration
+      description: Updates the configuration of an existing data source
+      operationId: updateDataSource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data source UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceUpdateRequest'
+      responses:
+        '200':
+          description: Data source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - DataSources
+      summary: Delete a data source
+      description: Deletes a data source configuration
+      operationId: deleteDataSource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data source UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Data source deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /datasources/{id}/test:
+    post:
+      tags:
+        - DataSources
+      summary: Test data source connection
+      description: Tests the connectivity to a data source without executing a query
+      operationId: testDataSourceConnection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data source UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection test successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionTestResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Connection test failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionTestResponse'
+
+  /query:
+    post:
+      tags:
+        - Queries
+      summary: Execute a SQL query
+      description: Executes a read-only SQL query against the specified data source with streaming result support
+      operationId: executeQuery
+      parameters:
+        - name: X-Correlation-ID
+          in: header
+          description: Correlation ID for request tracing
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+          headers:
+            X-Correlation-ID:
+              schema:
+                type: string
+              description: Correlation ID for request tracing
+        '400':
+          description: Invalid request data or SQL query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '408':
+          description: Query execution timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error during query execution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /query/validate:
+    post:
+      tags:
+        - Queries
+      summary: Validate a SQL query
+      description: Validates a SQL query without executing it (syntax check, schema validation, permission check)
+      operationId: validateQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryValidateRequest'
+      responses:
+        '200':
+          description: Query validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryValidateResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /databases/test/{id}:
+    get:
+      tags:
+        - Databases
+      summary: Test database connection
+      description: **DEPRECATED** - Use POST /datasources/{id}/test instead
+      deprecated: true
+      operationId: testDatabase
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data source UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data source not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    DataSourceType:
+      type: string
+      enum:
+        # Traditional databases (existing)
+        - mysql
+        - mariadb
+        - postgresql
+        - oracle
+        # Data lake table formats (Phase 1)
+        - iceberg
+        - delta_lake
+        - hudi
+        # Cloud data warehouses (Phase 1)
+        - snowflake
+        - databricks
+        - redshift
+        - bigquery
+        # Object storage (Phase 1)
+        - s3_parquet
+        - s3_orc
+        - s3_avro
+        - s3_csv
+        - s3_json
+        - minio_parquet
+        - minio_csv
+        - oss_parquet
+        - cos_parquet
+        - azure_parquet
+        # Distributed file systems (Phase 1)
+        - hdfs_avro
+        - hdfs_parquet
+        - hdfs_csv
+        - ozone_parquet
+        # OLAP engines (Phase 1)
+        - clickhouse
+        - doris
+        - starrocks
+        - druid
+        # Domestic Chinese databases (Phase 1)
+        - oceanbase_mysql
+        - oceanbase_oracle
+        - tidb
+        - tdsql
+        - gaussdb_mysql
+        - gaussdb_postgres
+        - dameng
+        - kingbasees
+        - gbase_8s
+        - gbase_8t
+        - oscar
+        - opengauss
+      description: Data source type identifier
+
+    DataSourceStatus:
+      type: string
+      enum: [active, inactive, error]
+      description: Data source connection status
+
+    DataSourceConfig:
+      type: object
+      description: Data source connection configuration (extensible per source type)
+      properties:
+        host:
+          type: string
+          description: Server hostname or IP address
+          example: localhost
+        port:
+          type: integer
+          minimum: 1
+          maximum: 65535
+          description: Server port number
+          example: 3306
+        database:
+          type: string
+          description: Database name
+          example: mydb
+        username:
+          type: string
+          description: Database username
+          example: readonly_user
+        password:
+          type: string
+          format: password
+          description: Database password (encrypted in storage)
+          example: ********
+        ssl:
+          type: boolean
+          description: Enable SSL/TLS connection
+          default: false
+        timeout:
+          type: integer
+          description: Connection timeout in seconds
+          default: 30
+        maxPoolSize:
+          type: integer
+          description: Maximum connection pool size
+          default: 10
+        idleTimeout:
+          type: integer
+          description: Idle connection timeout in seconds
+          default: 600
+        maxLifetime:
+          type: integer
+          description: Maximum connection lifetime in seconds
+          default: 1800
+        timezone:
+          type: string
+          description: Database timezone
+          example: UTC
+        authentication:
+          type: object
+          description: Authentication configuration (for cloud services)
+          properties:
+            type:
+              type: string
+              enum: [basic, oauth2, iam, kerberos, jwt, sas, pat, keypair]
+              description: Authentication type
+            credentials:
+              type: object
+              description: Authentication credentials (encrypted in storage)
+        additionalProps:
+          type: object
+          additionalProperties: true
+          description: Additional source-specific properties
+
+    DataSourceCreateRequest:
+      type: object
+      required:
+        - name
+        - type
+        - config
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Data source name (must be unique)
+          example: Production MySQL
+        type:
+          $ref: '#/components/schemas/DataSourceType'
+        config:
+          $ref: '#/components/schemas/DataSourceConfig'
+
+    DataSourceUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Data source name
+        config:
+          $ref: '#/components/schemas/DataSourceConfig'
+        status:
+          $ref: '#/components/schemas/DataSourceStatus'
+
+    DataSource:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - config
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Data source UUID
+        name:
+          type: string
+          description: Data source name
+        type:
+          $ref: '#/components/schemas/DataSourceType'
+        config:
+          $ref: '#/components/schemas/DataSourceConfig'
+        status:
+          $ref: '#/components/schemas/DataSourceStatus'
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    DataSourceResponse:
+      type: object
+      required:
+        - success
+        - data
+        - correlationId
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/DataSource'
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for request tracing
+
+    DataSourcesListResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - dataSources
+            - pagination
+          properties:
+            dataSources:
+              type: array
+              items:
+                $ref: '#/components/schemas/DataSource'
+            pagination:
+              type: object
+              required:
+                - page
+                - limit
+                - total
+                - totalPages
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                limit:
+                  type: integer
+                  example: 20
+                total:
+                  type: integer
+                  example: 45
+                totalPages:
+                  type: integer
+                  example: 3
+
+    QueryRequest:
+      type: object
+      required:
+        - dataSourceId
+        - sql
+      properties:
+        dataSourceId:
+          type: string
+          format: uuid
+          description: Data source UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        sql:
+          type: string
+          description: SQL SELECT query to execute
+          example: SELECT id, name, email FROM users WHERE status = ? LIMIT 100
+        parameters:
+          type: array
+          description: Query parameters for parameterized queries
+          items:
+            type: string
+          example: ['active']
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of rows to return
+          default: 100
+          example: 100
+        offset:
+          type: integer
+          minimum: 0
+          description: Number of rows to skip
+          default: 0
+          example: 0
+
+    QueryValidateRequest:
+      type: object
+      required:
+        - dataSourceId
+        - sql
+      properties:
+        dataSourceId:
+          type: string
+          format: uuid
+          description: Data source UUID
+        sql:
+          type: string
+          description: SQL query to validate
+
+    QueryColumn:
+      type: object
+      required:
+        - name
+        - type
+        - nullable
+      properties:
+        name:
+          type: string
+          description: Column name
+          example: user_id
+        type:
+          type: string
+          description: Column data type
+          example: INTEGER
+        nullable:
+          type: boolean
+          description: Whether column can contain NULL values
+          example: false
+
+    QueryMetadata:
+      type: object
+      required:
+        - rowCount
+        - executionTimeMs
+        - dataSourceId
+        - databaseType
+      properties:
+        rowCount:
+          type: integer
+          description: Number of rows returned
+          example: 42
+        executionTimeMs:
+          type: integer
+          description: Query execution time in milliseconds
+          example: 145
+        dataSourceId:
+          type: string
+          format: uuid
+          description: Data source UUID
+        databaseType:
+          $ref: '#/components/schemas/DataSourceType'
+        dataProcessedBytes:
+          type: integer
+          description: Amount of data scanned in bytes (if available)
+          example: 1048576
+
+    QueryResponse:
+      type: object
+      required:
+        - success
+        - data
+        - correlationId
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - columns
+            - rows
+            - metadata
+          properties:
+            columns:
+              type: array
+              description: Column definitions
+              items:
+                $ref: '#/components/schemas/QueryColumn'
+            rows:
+              type: array
+              description: Query result rows (array of arrays)
+              items:
+                type: array
+                items: {}
+              example:
+                - [1, 'John Doe', 'john@example.com']
+                - [2, 'Jane Smith', 'jane@example.com']
+            metadata:
+              $ref: '#/components/schemas/QueryMetadata'
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for request tracing
+
+    QueryValidateResponse:
+      type: object
+      required:
+        - success
+        - valid
+        - correlationId
+      properties:
+        success:
+          type: boolean
+          example: true
+        valid:
+          type: boolean
+          description: Whether the query is valid
+          example: true
+        errors:
+          type: array
+          description: Validation errors (if any)
+          items:
+            type: string
+          example: []
+        correlationId:
+          type: string
+          format: uuid
+
+    ConnectionTestResponse:
+      type: object
+      required:
+        - success
+        - data
+        - correlationId
+      properties:
+        success:
+          type: boolean
+          description: Whether the connection test succeeded
+          example: true
+        data:
+          type: object
+          required:
+            - connected
+            - message
+            - testedAt
+          properties:
+            connected:
+              type: boolean
+              description: Connection status
+              example: true
+            message:
+              type: string
+              description: Test result message
+              example: Successfully connected to data source
+            executionTimeMs:
+              type: integer
+              description: Connection test duration in milliseconds
+              example: 23
+            testedAt:
+              type: string
+              format: date-time
+              description: Test timestamp
+        correlationId:
+          type: string
+          format: uuid
+
+    HealthResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - status
+            - version
+            - timestamp
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded, unhealthy]
+              description: Gateway health status
+            version:
+              type: string
+              description: Gateway version
+              example: 1.1.0
+            timestamp:
+              type: string
+              format: date-time
+              description: Health check timestamp
+            activeDataSources:
+              type: integer
+              description: Number of active data sources
+              example: 12
+            totalDataSources:
+              type: integer
+              description: Total number of configured data sources
+              example: 15
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: INVALID_REQUEST
+            message:
+              type: string
+              description: Human-readable error message
+              example: Invalid request data
+            details:
+              type: object
+              description: Additional error details
+              additionalProperties: true
+            correlationId:
+              type: string
+              format: uuid
+              description: Correlation ID for support tracking
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication token obtained from login endpoint
+
+security:
+  - BearerAuth: []
