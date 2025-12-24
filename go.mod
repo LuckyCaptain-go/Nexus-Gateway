@@ -11,6 +11,39 @@ require (
 	golang.org/x/time v0.13.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/gorm v1.25.4
+
+	// Phase 1: Cloud Data Warehouses
+	github.com/snowflakedb/gosnowflake v1.8.0
+	cloud.google.com/go/bigquery v1.57.0
+
+	// Phase 1: AWS Services (S3, Redshift)
+	github.com/aws/aws-sdk-go-v2 v1.24.0
+	github.com/aws/aws-sdk-go-v2/config v1.26.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.24.0
+
+	// Phase 1: Azure Blob Storage
+	github.com/Azure/azure-storage-blob-go v1.3.0
+
+	// Phase 1: Alibaba Cloud OSS
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.7
+
+	// Phase 1: ClickHouse OLAP Engine
+	github.com/ClickHouse/clickhouse-go/v2 v2.16.0
+
+	// Phase 1: HDFS and Kerberos
+	github.com/colinmarc/hdfs/v2 v3.0.5
+	github.com/jcmturner/gokrb5/v8 v8.4.4
+	github.com/jcmturner/gokrb5/v8 v8.4.4/client
+
+	// Phase 1: File Format Readers
+	github.com/xitongsys/parquet-go v1.1.2
+	github.com/scritchley/orc v0.0.0-20210720192528-391a5b7e16f8
+	github.com/linkedin/goavro/v2 v2.11.0
+
+	// Phase 1: Testing
+	github.com/testcontainers/testcontainers-go v0.32.0
+	github.com/stretchr/testify v1.9.0
 )
 
 require (

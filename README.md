@@ -2,48 +2,116 @@
 
 <div align="center">
 
-**A Multi-Database Proxy Gateway for Secure, Unified SQL Query Execution**
+**Universal Multi-Database Gateway for Unified Data Access**
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/Gin-Web-Framework-green?style=flat)](https://gin-gonic.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat)](LICENSE)
+[![Drivers](https://img.shields.io/badge/Database_Drivers-90+-brightgreen?style=flat)]()
 
 </div>
 
 ## Overview
 
-Nexus-Gateway is a powerful multi-database proxy gateway written in Go that provides a unified interface to execute SQL queries against multiple relational database types. It acts as a secure query proxy that routes read-only SQL queries to the appropriate database based on UUID-based data source identification.
+Nexus-Gateway is a universal multi-database proxy gateway written in Go that provides **unified SQL access to 90+ data sources** across cloud warehouses, data lakes, OLAP engines, object storage, distributed file systems, and domestic databases. It acts as a secure query proxy that routes SQL queries to the appropriate data source based on UUID-based identification.
 
-### Key Features
+## Key Features
 
-- **Multi-Database Support** - MySQL, MariaDB, PostgreSQL, and Oracle
-- **Security First** - SQL injection prevention, JWT authentication, rate limiting
-- **Connection Pooling** - Efficient database connection management
-- **Query Validation** - Read-only query enforcement (SELECT statements only)
-- **Health Monitoring** - Database connectivity checks and statistics
-- **High Performance** - Built with Go and Gin framework
-- **Docker Support** - Multi-stage Dockerfile for easy deployment
-- **RESTful API** - Clean and intuitive API design
+- **🚀 Universal Data Access** - Support for 90+ database drivers including:
+  - **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
+  - **Data Lake Tables**: Apache Iceberg, Delta Lake, Apache Hudi
+  - **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
+  - **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob Storage
+  - **File Systems**: HDFS, Apache Ozone
+  - **File Formats**: Parquet, ORC, Avro, CSV, JSON, XML, Text
+  - **Domestic Databases**: OceanBase, TiDB, TDSQL, GaussDB, DaMeng, KingbaseES, GBase, Oscar, OpenGauss
+- **🔒 Security First** - SQL injection prevention, JWT authentication, rate limiting, read-only query enforcement
+- **⚡ High Performance** - Connection pooling, query optimization, streaming support for large datasets
+- **🌊 Time Travel Support** - Query historical data in Iceberg, Delta Lake, and Hudi
+- **📊 Schema Discovery** - Automatic schema detection for file formats and databases
+- **🐳 Docker & Kubernetes Ready** - Multi-stage Dockerfile and K8s manifests included
+- **📖 Comprehensive API** - RESTful API with Swagger documentation
+- **🔧 Extensible Architecture** - Easy to add new database drivers via plugin system
+
+## Supported Data Sources
+
+### Cloud Data Warehouses (4 drivers)
+| Database | Features |
+|----------|----------|
+| **Snowflake** | Warehouse management, time travel, schema discovery, type mapping (VARIANT/ARRAY/OBJECT) |
+| **Databricks** | Delta Lake integration, SQL warehouse REST API, statement polling, async execution |
+| **Redshift** | IAM authentication, PostgreSQL-compatible, Redshift Spectrum support |
+| **BigQuery** | Native Go client, pagination, STRUCT/ARRAY type mapping, query jobs API |
+
+### Data Lake Table Formats (3 drivers)
+| Format | Features |
+|--------|----------|
+| **Apache Iceberg** | Snapshot-based time travel, schema evolution, partition discovery |
+| **Delta Lake** | Time travel, transaction log (ACID), versioning, vacuum operations |
+| **Apache Hudi** | COPY_ON_WRITE / MERGE_ON_READ, instant time travel, timeline queries |
+
+### OLAP Engines (4 drivers)
+| Engine | Features |
+|--------|----------|
+| **ClickHouse** | Native protocol, materialized views, dictionaries, array types, compression |
+| **Apache Doris** | Rollup tables, materialized views, pipeline engine, optimization hints |
+| **StarRocks** | Pipeline engine execution, table distribution, parallel execution |
+| **Apache Druid** | SQL API via REST, timeseries queries, TopN, GroupBy, aggregations |
+
+### Object Storage (25+ drivers)
+| Storage | File Formats Supported |
+|---------|----------------------|
+| **AWS S3** | Parquet, ORC, Avro, CSV, JSON, Iceberg, Delta Lake, Hudi (with S3 Select API) |
+| **MinIO** | Parquet, ORC, CSV, JSON, Delta Lake, Iceberg (S3-compatible) |
+| **Alibaba OSS** | Parquet, CSV, JSON, Delta Lake |
+| **Tencent COS** | Parquet, CSV, JSON, Delta Lake |
+| **Azure Blob** | Parquet, CSV, JSON, Delta Lake, SAS token support |
+
+### File Systems (24+ drivers)
+| System | File Formats Supported |
+|--------|----------------------|
+| **HDFS** | Parquet, ORC, Avro, CSV, JSON, XML, Text, Iceberg, Delta Lake, Hudi (with compression) |
+| **Apache Ozone** | Parquet, ORC, Avro, CSV, JSON, XML, Text, Iceberg, Delta Lake, Hudi |
+
+### Domestic Chinese Databases (9 drivers)
+| Database | Features |
+|----------|----------|
+| **OceanBase** | MySQL & Oracle compatibility modes, automatic mode detection |
+| **TiDB** | Distributed query optimization, placement rules, hot region detection |
+| **TDSQL** | Sharding management, read-write splitting, consistency levels |
+| **GaussDB** | High availability (HA) setup, streaming replication, failover support |
+| **DaMeng (DM)** | Charset support (UTF8, GB18030), flashback queries, protocol features |
+| **KingbaseES** | Oracle compatibility mode, sequences, synonyms, packages, database links |
+| **GBase 8s** | Informix compatibility, charset conversion, fragment management |
+| **Oscar (ShenTong)** | Cluster mode support, partition distribution, fragment management |
+| **OpenGauss** | Row-level security (RLS), distributed transactions, table distribution |
 
 ## Architecture
 
-Nexus-Gateway follows a clean architecture pattern with the following layers:
+Nexus-Gateway follows a clean, modular architecture:
 
 ```
 Nexus-Gateway/
-├── cmd/server/          # Application entry point
+├── cmd/server/                    # Application entry point
 ├── internal/
-│   ├── controller/      # HTTP request handlers
-│   ├── service/         # Business logic layer
-│   ├── repository/      # Data access layer
-│   ├── model/           # Data models and DTOs
-│   ├── middleware/      # HTTP middleware
-│   └── infrastructure/  # Infrastructure components
-├── configs/             # Configuration files
-├── pkg/                 # Reusable packages
-├── docs/                # API documentation
-├── deployments/         # Docker and deployment configs
-└── scripts/             # Build and deployment scripts
+│   ├── controller/               # HTTP request handlers
+│   ├── service/                  # Business logic layer
+│   ├── repository/               # Data access layer
+│   ├── model/                    # Data models and DTOs
+│   ├── middleware/               # HTTP middleware (JWT, rate limiting, etc.)
+│   └── database/
+│       └── drivers/              # Database drivers (90+ implementations)
+│           ├── table_format/     # Iceberg, Delta Lake, Hudi
+│           ├── warehouses/       # Snowflake, Databricks, Redshift, BigQuery
+│           ├── olap/             # ClickHouse, Doris, StarRocks, Druid
+│           ├── object_storage/   # S3, MinIO, OSS, COS, Azure Blob
+│           ├── file_system/      # HDFS, Apache Ozone
+│           └── domestic/         # OceanBase, TiDB, TDSQL, etc.
+├── configs/                      # Configuration files
+├── pkg/                          # Reusable packages
+├── docs/                         # API documentation
+├── deployments/                  # Docker and K8s configs
+└── scripts/                      # Build and deployment scripts
 ```
 
 ## Technology Stack
@@ -53,19 +121,18 @@ Nexus-Gateway/
 | Language | Go 1.25+ |
 | Web Framework | Gin |
 | ORM | GORM |
-| Database | MySQL (for storing configurations) |
+| Database Drivers | Custom driver implementations (90+) |
 | Security | JWT, SQL Validation, Rate Limiting |
 | Configuration | Viper |
 | Documentation | Swagger/OpenAPI |
-| Containerization | Docker |
+| Containerization | Docker, Kubernetes |
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
 - Go 1.25 or higher
-- MySQL 5.7+ or 8.0+
-- Docker (optional, for containerized deployment)
+- Docker (optional)
 
 ### Installation
 
@@ -86,12 +153,7 @@ Nexus-Gateway/
    # Edit configs/config.yaml with your settings
    ```
 
-4. **Initialize the database**
-   ```bash
-   mysql -u root -p < scripts/init.sql
-   ```
-
-5. **Run the application**
+4. **Run the application**
    ```bash
    go run cmd/server/main.go
    ```
@@ -112,14 +174,87 @@ docker run -d \
   nexus-gateway:latest
 ```
 
+## API Usage Examples
+
+### Querying Snowflake Data Warehouse
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-snowflake-datasource",
+    "sql": "SELECT * FROM orders WHERE order_date >= ?",
+    "parameters": ["2024-01-01"],
+    "limit": 100
+  }'
+```
+
+### Querying S3 Parquet Files
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-s3-parquet-datasource",
+    "sql": "SELECT * FROM s3://my-bucket/data/*.parquet WHERE year = ? AND month = ?",
+    "parameters": ["2024", "01"],
+    "limit": 1000
+  }'
+```
+
+### Time Travel Query (Delta Lake/Iceberg/Hudi)
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-delta-lake-datasource",
+    "sql": "SELECT * FROM orders VERSION AS OF 5",  -- Delta Lake
+    "limit": 100
+  }'
+```
+
+### Querying TiDB with Distribution Info
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-tidb-datasource",
+    "sql": "SELECT * FROM users WHERE id = ?",
+    "parameters": ["12345"],
+    "explain": true  -- Returns region distribution info
+  }'
+```
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/health` | Health check |
+| GET | `/api/v1/drivers` | List all supported database drivers |
+| GET | `/api/v1/datasources` | List all data sources |
+| POST | `/api/v1/datasources` | Create data source |
+| GET | `/api/v1/datasources/:id` | Get data source details |
+| PUT | `/api/v1/datasources/:id` | Update data source |
+| DELETE | `/api/v1/datasources/:id` | Delete data source |
+| POST | `/api/v1/query` | Execute SQL query |
+| POST | `/api/v1/query/validate` | Validate SQL query |
+| POST | `/api/v1/datasources/:id/test` | Test database connection |
+| GET | `/api/v1/datasources/:id/schema` | Get schema information |
+
 ## Configuration
 
-The application uses `configs/config.yaml` for configuration:
+### Example Configuration (`configs/config.yaml`)
 
 ```yaml
 server:
   port: 8099
-  mode: production  # debug, release, production
+  mode: release  # debug, release, production
   host: "0.0.0.0"
 
 database:
@@ -139,160 +274,169 @@ security:
     window: 1m
 
 logging:
-  level: info  # debug, info, warn, error
+  level: info
   format: json
+
+drivers:
+  # Cloud warehouse credentials
+  snowflake:
+    account: "your-account"
+    warehouse: "COMPUTE_WH"
+  databricks:
+    workspace_url: "https://your-workspace.cloud.databricks.com"
+    http_path: "/sql/protocolv1/o/0/abcd-1234"
+
+  # Object storage credentials
+  aws:
+    region: "us-west-2"
+    access_key_id: "YOUR_ACCESS_KEY"
+    secret_access_key: "YOUR_SECRET_KEY"
+  azure:
+    account_name: "yourstorageaccount"
+    account_key: "your-account-key"
+
+  # Domestic database credentials
+  oceanbase:
+    mode: "mysql"  # or "oracle"
+  tidb:
+    pd_addresses: ["pd1:2379", "pd2:2379"]
 ```
-
-## API Usage
-
-### Execute a Query
-
-```bash
-curl -X POST http://localhost:8099/api/v1/query \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
-    "sql": "SELECT id, name, email FROM users WHERE status = ?",
-    "parameters": ["active"],
-    "limit": 100,
-    "offset": 0
-  }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "columns": [
-      {"name": "id", "type": "INTEGER", "nullable": false},
-      {"name": "name", "type": "STRING", "nullable": false},
-      {"name": "email", "type": "STRING", "nullable": true}
-    ],
-    "rows": [
-      [1, "John Doe", "john@example.com"],
-      [2, "Jane Smith", "jane@example.com"]
-    ],
-    "metadata": {
-      "rowCount": 2,
-      "executionTimeMs": 45,
-      "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
-      "databaseType": "mysql"
-    }
-  },
-  "correlationId": "req_123456789"
-}
-```
-
-### Create a Data Source
-
-```bash
-curl -X POST http://localhost:8099/api/v1/datasources \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "name": "Production MySQL",
-    "type": "mysql",
-    "config": {
-      "host": "prod-mysql.example.com",
-      "port": 3306,
-      "database": "production",
-      "username": "readonly_user",
-      "password": "secure_password",
-      "maxOpenConns": 100,
-      "maxIdleConns": 10,
-      "connMaxLifetime": "1h"
-    }
-  }'
-```
-
-### Other Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/health` | Health check |
-| GET | `/api/v1/datasources` | List all data sources |
-| POST | `/api/v1/datasources` | Create data source |
-| GET | `/api/v1/datasources/:id` | Get data source details |
-| PUT | `/api/v1/datasources/:id` | Update data source |
-| DELETE | `/api/v1/datasources/:id` | Delete data source |
-| POST | `/api/v1/query` | Execute SQL query |
-| POST | `/api/v1/query/validate` | Validate SQL query |
-| GET | `/api/v1/databases/test/:id` | Test database connection |
 
 ## Security Features
 
 ### SQL Injection Prevention
-- Only SELECT statements are allowed
-- All queries use parameterized statements
+- Only SELECT statements allowed by default
+- Parameterized queries for all database types
 - Query validation before execution
+- Support for prepared statements
 
 ### Authentication & Authorization
 - JWT-based authentication
-- Configurable token expiration
+- Token-based API access
 - Role-based access control (RBAC) ready
+- Configurable token expiration
 
 ### Rate Limiting
-- Configurable request limits per time window
-- Prevents abuse and DoS attacks
+- Per-IP and per-user rate limits
+- Configurable time windows
+- Sliding window algorithm
 
 ### Audit & Monitoring
 - Correlation ID for request tracking
-- Query execution logs
-- Performance metrics
+- Comprehensive query execution logs
+- Performance metrics (execution time, rows processed)
+- Error tracking and alerting
 
-## Database Schema
+## Driver Implementation Statistics
 
-```sql
-CREATE TABLE data_sources (
-    id CHAR(36) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type ENUM('mysql','mariadb','postgresql','oracle') NOT NULL,
-    config JSON NOT NULL,
-    status ENUM('active','inactive','error') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_type (type),
-    INDEX idx_status (status)
-);
-```
+| Category | Driver Count | Total Files |
+|----------|--------------|-------------|
+| Table Formats | 3 | 12 files |
+| Cloud Warehouses | 4 | 11 files |
+| OLAP Engines | 4 | 17 files |
+| Object Storage | 5 providers | 31 files |
+| File Systems | 2 systems | 24 files |
+| Domestic Databases | 9 databases | 27 files |
+| **Total** | **27 types** | **122+ files** |
+
+## Advanced Features
+
+### Schema Discovery
+Automatic schema detection for:
+- Parquet/ORC/Avro file schemas
+- CSV delimiter and type inference
+- JSON nested structure parsing
+- Database table metadata retrieval
+
+### Time Travel Queries
+Support for historical data queries:
+- **Delta Lake**: `VERSION AS OF`, `TIMESTAMP AS OF`
+- **Apache Iceberg**: Snapshot-based queries
+- **Apache Hudi**: Point-in-time queries
+- **Snowflake**: Time travel support
+- **BigQuery**: `FOR SYSTEM_TIME AS OF`
+
+### Distributed Query Features
+- **TiDB**: Placement rules, region distribution, hot spot detection
+- **OceanBase**: Compatibility mode detection, MySQL/Oracle modes
+- **GaussDB**: HA setup, streaming replication, failover
+- **TDSQL**: Sharding info, read-write splitting
+
+### Query Optimization
+- Query hints for OLAP engines
+- Materialized view support
+- Rollup table optimization
+- Pipeline engine execution
+- Predicate pushdown for Parquet/ORC
 
 ## Development
 
-### Running Tests
+### Project Structure
 
-```bash
-# Run all tests
-go test ./...
-
-# Run with coverage
-go test -cover ./...
-
-# Generate coverage report
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out
+```
+Nexus-Gateway/
+├── cmd/
+│   └── server/
+│       └── main.go              # Application entry point
+├── internal/
+│   ├── controller/              # HTTP request handlers
+│   │   ├── query_controller.go
+│   │   ├── datasource_controller.go
+│   │   └── health_controller.go
+│   ├── service/                 # Business logic layer
+│   │   ├── query_service.go
+│   │   ├── datasource_service.go
+│   │   └── driver_service.go
+│   ├── repository/              # Data access layer
+│   │   ├── datasource_repository.go
+│   │   └── query_history_repository.go
+│   ├── model/                   # Data models
+│   │   ├── datasource.go
+│   │   ├── query.go
+│   │   └── result.go
+│   ├── middleware/              # Middleware
+│   │   ├── auth.go
+│   │   ├── rate_limit.go
+│   │   └── logger.go
+│   └── database/
+│       └── drivers/             # Database drivers
+│           ├── driver.go        # Driver interface
+│           ├── registry.go      # Driver registry
+│           ├── table_format/    # Iceberg, Delta, Hudi
+│           ├── warehouses/      # Snowflake, Databricks, etc.
+│           ├── olap/            # ClickHouse, Doris, etc.
+│           ├── object_storage/  # S3, MinIO, etc.
+│           ├── file_system/     # HDFS, Ozone, etc.
+│           └── domestic/        # OceanBase, TiDB, etc.
+├── configs/                     # Configuration files
+├── docs/                        # API documentation
+├── deployments/                 # Docker & K8s configs
+└── scripts/                     # Build & deployment scripts
 ```
 
-### Building
+### Adding a New Database Driver
 
-```bash
-# Build for current platform
-go build -o bin/nexus-gateway cmd/server/main.go
+1. Create a new file in `internal/database/drivers/<category>/`
+2. Implement the `Driver` interface:
 
-# Build for multiple platforms
-./scripts/build.sh
+```go
+type Driver interface {
+    Open(dsn string) (*sql.DB, error)
+    ValidateDSN(dsn string) error
+    GetDefaultPort() int
+    BuildDSN(config *model.DataSourceConfig) string
+    GetDatabaseTypeName() string
+    TestConnection(db *sql.DB) error
+    GetDriverName() string
+    GetCategory() DriverCategory
+    GetCapabilities() DriverCapabilities
+    ConfigureAuth(authConfig interface{}) error
+}
 ```
 
-### API Documentation
-
-Generate Swagger documentation:
-
-```bash
-swag init -g cmd/server/main.go -o docs
-```
-
-Access Swagger UI at: `http://localhost:8099/swagger/index.html`
+3. Register the driver in the driver registry
+4. Add configuration support
+5. Update documentation
 
 ## Production Deployment
 
@@ -305,7 +449,7 @@ export DATABASE_PASSWORD=secure-password
 export JWT_SECRET=your-jwt-secret
 ```
 
-### Using Docker Compose
+### Docker Compose
 
 ```bash
 docker-compose up -d
@@ -319,79 +463,87 @@ kubectl apply -f deployments/k8s/
 
 ## Performance Tuning
 
-- **Connection Pooling**: Adjust `maxOpenConns` and `maxIdleConns` based on your workload
-- **Query Timeout**: Set appropriate timeout values in configuration
-- **Rate Limiting**: Configure rate limits based on your API capacity
-- **Caching**: Implement response caching for frequently accessed data
+- **Connection Pooling**: Configure `maxOpenConns` and `maxIdleConns` per datasource
+- **Query Timeout**: Set appropriate timeout values
+- **Streaming Results**: Enable streaming for large result sets
+- **Caching**: Use materialized views in OLAP engines
+- **Predicate Pushdown**: Leverage Parquet/ORC statistics
+- **Parallel Execution**: Configure parallel instance counts for distributed queries
 
 ## Monitoring & Observability
 
-Nexus-Gateway provides built-in metrics and monitoring:
-
+Built-in metrics and monitoring:
 - Query execution statistics
 - Database connection pool metrics
 - API response times
 - Error rates and types
+- Driver-specific metrics (e.g., ClickHouse dictionaries, Doris rollups)
 - Health check endpoints
 
-Integrate with Prometheus, Grafana, or other monitoring tools using the `/metrics` endpoint.
-
-## Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Integrate with Prometheus, Grafana, or other monitoring tools via the `/metrics` endpoint.
 
 ## Roadmap
 
-### Phase 1: Enhanced Single-Source Capabilities
+### ✅ Phase 1: Enhanced Single-Source Capabilities (COMPLETED)
 
-#### Data Lakes & Warehouses
-- [ ] **Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi support
-- [ ] **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
-- [ ] **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
+#### Data Lakes & Warehouses ✅
+- [x] **Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi
+- [x] **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
+- [x] **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
 
-#### Object Storage & File Systems
-- [ ] **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob
-- [ ] **Distributed Storage**: HDFS, Apache Ozone
-- [ ] **File Formats**: Parquet, ORC, Avro, CSV, JSON, Iceberg, Delta
+#### Object Storage & File Systems ✅
+- [x] **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob
+- [x] **Distributed Storage**: HDFS, Apache Ozone
+- [x] **File Formats**: Parquet, ORC, Avro, CSV, JSON, XML, Text (with compression)
 
-#### Domestic Database Support (China)
-- [ ] **Distributed Databases**: OceanBase, TiDB, Tencent TDSQL, GaussDB
-- [ ] **Traditional Databases**: DaMeng (DM), KingbaseES, GBase, Oscar, OpenGauss
+#### Domestic Database Support (China) ✅
+- [x] **Distributed Databases**: OceanBase, TiDB, Tencent TDSQL, GaussDB
+- [x] **Traditional Databases**: DaMeng (DM), KingbaseES, GBase, Oscar, OpenGauss
 
-### Phase 2: Compute Engine Integration
+### 🔄 Phase 2: Compute Engine Integration (IN PROGRESS)
 - [ ] **Trino Integration**: Distributed SQL query engine federation
 - [ ] **Spark Integration**: Batch and streaming data processing
 - [ ] **Flink Integration**: Real-time stream processing
 - [ ] **Compute Engine Orchestration**: Intelligent routing to optimal engine
 
-### Phase 3: Cross-Source Query via Compute Engines
-- [ ] **Unified Query API**: Single interface that routes to Trino/Spark for cross-source queries
+### 📋 Phase 3: Cross-Source Query via Compute Engines
+- [ ] **Unified Query API**: Single interface routing to Trino/Spark
 - [ ] **Source Catalog Management**: Map data sources to Trino/Spark catalogs
-- [ ] **Query Translation**: Convert standard SQL to engine-specific syntax when needed
-- [ ] **Result Proxy**: Stream results from compute engines back to clients
-- [ ] **Engine Health Check**: Monitor compute engine cluster status
+- [ ] **Query Translation**: Convert SQL to engine-specific syntax
+- [ ] **Result Proxy**: Stream results from compute engines
+- [ ] **Engine Health Check**: Monitor cluster status
 
-### Phase 4: ETL via Compute Engines
-- [ ] **ETL Job API**: REST API to submit Spark/Flink ETL jobs
-- [ ] **Job Management**: Track job status, logs, and cancellation
-- [ ] **Template Library**: Pre-built ETL templates for common patterns (sync, transform, aggregate)
-- [ ] **Schedule Integration**: Interface with schedulers (Airflow, DolphinScheduler) for recurring jobs
-- [ ] **Visual Pipeline Builder**: Web UI to design ETL pipelines that generate Spark/Flink jobs
+### 📋 Phase 4: ETL via Compute Engines
+- [ ] **ETL Job API**: Submit Spark/Flink ETL jobs
+- [ ] **Job Management**: Track status, logs, cancellation
+- [ ] **Template Library**: Pre-built ETL templates
+- [ ] **Schedule Integration**: Airflow, DolphinScheduler
+- [ ] **Visual Pipeline Builder**: Web UI for pipeline design
 
-### Phase 5: Advanced Features
+### 📋 Phase 5: Advanced Features
 - [ ] Query result caching with intelligent invalidation
 - [ ] GraphQL API support
-- [ ] Webhook notifications for query events
-- [ ] Advanced analytics dashboard with real-time metrics
-- [ ] Multi-region and active-active deployment
-- [ ] Query auditing and compliance features
-- [ ] AI-powered query optimization and recommendations
+- [ ] Webhook notifications
+- [ ] Advanced analytics dashboard
+- [ ] Multi-region deployment
+- [ ] Query auditing and compliance
+- [ ] AI-powered query optimization
+
+## Contributing
+
+We welcome contributions! Please see our contributing guidelines:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Write tests for new functionality
+4. Ensure all tests pass (`go test ./...`)
+5. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+6. Push to the branch (`git push origin feature/AmazingFeature`)
+7. Open a Pull Request
+
+### Adding New Drivers
+
+We especially welcome contributions for new database drivers! See the "Adding a New Database Driver" section above.
 
 ## License
 
@@ -407,7 +559,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Gin](https://gin-gonic.com/) web framework
 - ORM powered by [GORM](https://gorm.io/)
-- Inspired by the need for unified database access in microservices architectures
+- Database drivers inspired by various open-source projects
+- Thanks to all contributors who helped implement 90+ database drivers
 
 ---
 

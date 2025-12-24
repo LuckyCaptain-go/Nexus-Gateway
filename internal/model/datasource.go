@@ -13,10 +13,60 @@ import (
 type DatabaseType string
 
 const (
+	// Existing types (Phase 0)
 	DatabaseTypeMySQL      DatabaseType = "mysql"
 	DatabaseTypeMariaDB    DatabaseType = "mariadb"
 	DatabaseTypePostgreSQL DatabaseType = "postgresql"
 	DatabaseTypeOracle     DatabaseType = "oracle"
+
+	// Data Lake Table Formats (Phase 1)
+	DatabaseTypeApacheIceberg DatabaseType = "iceberg"
+	DatabaseTypeDeltaLake     DatabaseType = "delta_lake"
+	DatabaseTypeApacheHudi    DatabaseType = "hudi"
+
+	// Cloud Data Warehouses (Phase 1)
+	DatabaseTypeSnowflake  DatabaseType = "snowflake"
+	DatabaseTypeDatabricks DatabaseType = "databricks"
+	DatabaseTypeRedshift   DatabaseType = "redshift"
+	DatabaseTypeBigQuery   DatabaseType = "bigquery"
+
+	// Object Storage (Phase 1)
+	DatabaseTypeS3Parquet        DatabaseType = "s3_parquet"
+	DatabaseTypeS3ORC            DatabaseType = "s3_orc"
+	DatabaseTypeS3Avro           DatabaseType = "s3_avro"
+	DatabaseTypeS3CSV            DatabaseType = "s3_csv"
+	DatabaseTypeS3JSON           DatabaseType = "s3_json"
+	DatabaseTypeMinIOParquet     DatabaseType = "minio_parquet"
+	DatabaseTypeMinIOCSV         DatabaseType = "minio_csv"
+	DatabaseTypeAlibabaOSSParquet DatabaseType = "oss_parquet"
+	DatabaseTypeTencentCOSParquet DatabaseType = "cos_parquet"
+	DatabaseTypeAzureBlobParquet DatabaseType = "azure_parquet"
+
+	// Distributed File Systems (Phase 1)
+	DatabaseTypeHDFSAvro    DatabaseType = "hdfs_avro"
+	DatabaseTypeHDFSParquet DatabaseType = "hdfs_parquet"
+	DatabaseTypeHDFSCSV     DatabaseType = "hdfs_csv"
+	DatabaseTypeOzoneParquet DatabaseType = "ozone_parquet"
+
+	// OLAP Engines (Phase 1)
+	DatabaseTypeClickHouse  DatabaseType = "clickhouse"
+	DatabaseTypeApacheDoris DatabaseType = "doris"
+	DatabaseTypeStarRocks   DatabaseType = "starrocks"
+	DatabaseTypeApacheDruid DatabaseType = "druid"
+
+	// Domestic Chinese Databases (Phase 1)
+	DatabaseTypeOceanBaseMySQL   DatabaseType = "oceanbase_mysql"
+	DatabaseTypeOceanBaseOracle  DatabaseType = "oceanbase_oracle"
+	DatabaseTypeTiDB             DatabaseType = "tidb"
+	DatabaseTypeTDSQL            DatabaseType = "tdsql"
+	DatabaseTypeGaussDBMySQL     DatabaseType = "gaussdb_mysql"
+	DatabaseTypeGaussDBPostgres  DatabaseType = "gaussdb_postgres"
+	DatabaseTypeDaMeng           DatabaseType = "dameng"
+	DatabaseTypeKingbaseES       DatabaseType = "kingbasees"
+	DatabaseTypeGBase8s          DatabaseType = "gbase_8s"
+	DatabaseTypeGBase8t          DatabaseType = "gbase_8t"
+	DatabaseTypeOscar            DatabaseType = "oscar"
+	DatabaseTypeOpenGauss        DatabaseType = "opengauss"
 )
 
 type DataSourceStatus string
@@ -31,7 +81,7 @@ const (
 type DataSource struct {
 	ID        string           `gorm:"type:char(36);primaryKey" json:"id"`
 	Name      string           `gorm:"size:255;not null;uniqueIndex" json:"name"`
-	Type      DatabaseType     `gorm:"type:enum('mysql','mariadb','postgresql','oracle');not null" json:"type"`
+	Type      DatabaseType     `gorm:"type:enum('mysql','mariadb','postgresql','oracle','iceberg','delta_lake','hudi','snowflake','databricks','redshift','bigquery','s3_parquet','s3_orc','s3_avro','s3_csv','s3_json','minio_parquet','minio_csv','oss_parquet','cos_parquet','azure_parquet','hdfs_avro','hdfs_parquet','hdfs_csv','ozone_parquet','clickhouse','doris','starrocks','druid','oceanbase_mysql','oceanbase_oracle','tidb','tdsql','gaussdb_mysql','gaussdb_postgres','dameng','kingbasees','gbase_8s','gbase_8t','oscar','opengauss');not null" json:"type"`
 	Config    DataSourceConfig `gorm:"type:json;not null" json:"config"`
 	Status    DataSourceStatus `gorm:"type:enum('active','inactive','error');default:'active'" json:"status"`
 	CreatedAt time.Time        `json:"created_at"`
@@ -124,6 +174,64 @@ func (dsc *DataSourceConfig) GetConnectionURL(dbType DatabaseType) string {
 		return dsc.Username + "/" + dsc.Password + "@" + dsc.Host + ":" + strconv.Itoa(dsc.Port) + "/" + dsc.Database
 
 	default:
+		// Phase 1 data sources will use their own driver implementations
+		// Return empty string, drivers will handle connection logic
 		return ""
+	}
+}
+
+// IsValidDatabaseType checks if a database type is valid
+func IsValidDatabaseType(dbType string) bool {
+	switch DatabaseType(dbType) {
+	case DatabaseTypeMySQL, DatabaseTypeMariaDB, DatabaseTypePostgreSQL, DatabaseTypeOracle,
+	     DatabaseTypeApacheIceberg, DatabaseTypeDeltaLake, DatabaseTypeApacheHudi,
+	     DatabaseTypeSnowflake, DatabaseTypeDatabricks, DatabaseTypeRedshift, DatabaseTypeBigQuery,
+	     DatabaseTypeS3Parquet, DatabaseTypeS3ORC, DatabaseTypeS3Avro, DatabaseTypeS3CSV, DatabaseTypeS3JSON,
+	     DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet,
+	     DatabaseTypeHDFSAvro, DatabaseTypeHDFSParquet, DatabaseTypeHDFSCSV, DatabaseTypeOzoneParquet,
+	     DatabaseTypeClickHouse, DatabaseTypeApacheDoris, DatabaseTypeStarRocks, DatabaseTypeApacheDruid,
+	     DatabaseTypeOceanBaseMySQL, DatabaseTypeOceanBaseOracle, DatabaseTypeTiDB, DatabaseTypeTDSQL,
+	     DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
+	     DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		return true
+	default:
+		return false
+	}
+}
+
+// GetDatabaseCategory returns the category of a database type
+func GetDatabaseCategory(dbType DatabaseType) string {
+	switch dbType {
+	case DatabaseTypeApacheIceberg, DatabaseTypeDeltaLake, DatabaseTypeApacheHudi:
+		return "table_formats"
+	case DatabaseTypeSnowflake, DatabaseTypeDatabricks, DatabaseTypeRedshift, DatabaseTypeBigQuery:
+		return "warehouses"
+	case DatabaseTypeS3Parquet, DatabaseTypeS3ORC, DatabaseTypeS3Avro, DatabaseTypeS3CSV, DatabaseTypeS3JSON,
+	     DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet:
+		return "object_storage"
+	case DatabaseTypeHDFSAvro, DatabaseTypeHDFSParquet, DatabaseTypeHDFSCSV, DatabaseTypeOzoneParquet:
+		return "filesystems"
+	case DatabaseTypeClickHouse, DatabaseTypeApacheDoris, DatabaseTypeStarRocks, DatabaseTypeApacheDruid:
+		return "olap"
+	case DatabaseTypeOceanBaseMySQL, DatabaseTypeOceanBaseOracle, DatabaseTypeTiDB, DatabaseTypeTDSQL,
+	     DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
+	     DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		return "domestic"
+	default:
+		return "traditional"
+	}
+}
+
+// RequiresSQLProtocol checks if a database type uses standard SQL protocol (MySQL/PostgreSQL compatible)
+func RequiresSQLProtocol(dbType DatabaseType) bool {
+	switch dbType {
+	case DatabaseTypeOceanBaseMySQL, DatabaseTypeTiDB, DatabaseTypeTDSQL,
+	     DatabaseTypeGaussDBMySQL, DatabaseTypeGBase8t:
+		return true // MySQL protocol
+	case DatabaseTypeGaussDBPostgres, DatabaseTypeKingbaseES,
+	     DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		return true // PostgreSQL protocol
+	default:
+		return false
 	}
 }
