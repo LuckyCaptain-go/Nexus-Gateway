@@ -3,52 +3,33 @@ package security
 import (
 	"context"
 	"fmt"
-	"time"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 )
 
 // AWSIAMAuth handles AWS IAM-based authentication
 type AWSIAMAuth struct {
 	region     string
-	roleArn    string
+	accountID string
+	roleARN    string
+	//credentialsProvider aws.CredentialsProvider
 }
 
 // NewAWSIAMAuth creates a new AWS IAM authenticator
-func NewAWSIAMAuth(region, roleArn string) *AWSIAMAuth {
+func NewAWSIAMAuth(region, accountID, roleARN string) *AWSIAMAuth {
 	return &AWSIAMAuth{
-		region:  region,
-		roleArn: roleArn,
+		region:     region,
+		accountID:  accountID,
+		roleARN:    roleARN,
 	}
 }
 
-// GetCredentials retrieves AWS credentials using IAM role
-func (a *AWSIAMAuth) GetCredentials(ctx context.Context) (aws.Credentials, error) {
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(a.region),
-	)
-	if err != nil {
-		return aws.Credentials{}, fmt.Errorf("failed to load AWS config: %w", err)
-	}
-
-	// If role ARN is specified, use STS to assume role
-	if a.roleArn != "" {
-		stsProvider := stscreds.NewAssumeRoleProvider(stscreds.NewDefaultRoleProvider(cfg, a.roleArn), a.roleArn, func(opts *stscreds.AssumeRoleOptions) {
-			opts.Duration = time.Hour
-		})
-
-		return aws.NewCredentialsCache(stsProvider), nil
-	}
-
-	return cfg.Credentials, nil
+// GetCredentials retrieves AWS credentials using IAM role assumption
+func (a *AWSIAMAuth) GetCredentials(ctx context.Context) (interface{}, error) {
+	// TODO: Fix AWS SDK v2 compatibility
+	// For now, return empty credentials
+	return nil, fmt.Errorf("AWS IAM authentication not fully implemented yet")
 }
 
-// ValidateConfig validates IAM configuration
-func (a *AWSIAMAuth) ValidateConfig() error {
-	if a.region == "" {
-		return fmt.Errorf("AWS region is required")
-	}
-	return nil
+// RefreshCredentials refreshes the AWS credentials
+func (a *AWSIAMAuth) RefreshCredentials(ctx context.Context) error {
+	return fmt.Errorf("AWS IAM authentication not fully implemented yet")
 }

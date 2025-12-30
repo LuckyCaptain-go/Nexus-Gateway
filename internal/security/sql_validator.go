@@ -8,16 +8,17 @@ import (
 	"unicode"
 
 	"nexus-gateway/internal/model"
+
 	"vitess.io/vitess/go/vt/sqlparser"
 )
 
 var (
-	ErrNotSelectQuery     = errors.New("only SELECT queries are allowed")
-	ErrSQLSyntaxError     = errors.New("SQL syntax error")
-	ErrDangerousKeyword   = errors.New("dangerous SQL keyword detected")
-	ErrSQLInjection       = errors.New("potential SQL injection detected")
-	ErrEmptyQuery         = errors.New("query cannot be empty")
-	ErrQueryTooLong       = errors.New("query exceeds maximum length")
+	ErrNotSelectQuery   = errors.New("only SELECT queries are allowed")
+	ErrSQLSyntaxError   = errors.New("SQL syntax error")
+	ErrDangerousKeyword = errors.New("dangerous SQL keyword detected")
+	ErrSQLInjection     = errors.New("potential SQL injection detected")
+	ErrEmptyQuery       = errors.New("query cannot be empty")
+	ErrQueryTooLong     = errors.New("query exceeds maximum length")
 )
 
 // SQLValidator validates SQL queries for security
@@ -156,15 +157,15 @@ func (sv *SQLValidator) checkSQLInjection(sql string) error {
 		// SQL comment patterns
 		"--", "/*", "*/",
 		// Multiple statements (check for multiple semicolons - should not exist after normalization)
-		";.*;",  // Multiple semicolons indicate multiple statements
-		";\\s+[a-z]",  // Content after semicolon (another statement)
+		";.*;",       // Multiple semicolons indicate multiple statements
+		";\\s+[a-z]", // Content after semicolon (another statement)
 		// UNION with SELECT in unusual places (potential injection)
 		"union.*select.*union",
 		// String concatenation patterns (multiple quotes in suspicious context)
 		"'.*'.*'.*'",
 		// Or patterns with suspicious operators (injection patterns)
 		"\\bor\\s+1\\s*=\\s*1\\b",  // OR 1=1 (injection pattern)
-		"\\band\\s+1\\s*=\\s*1\\b",  // AND 1=1 (injection pattern)
+		"\\band\\s+1\\s*=\\s*1\\b", // AND 1=1 (injection pattern)
 		// Common injection patterns
 		"\\bor\\s+true\\b", "\\band\\s+true\\b",
 		// Waitfor delays (common in injection testing)
@@ -210,8 +211,8 @@ func (sv *SQLValidator) hasSuspiciousCharacters(sql string) bool {
 		for i := 0; i < len(sql)-2; i++ {
 			char := sql[i]
 			// Skip spaces and common SQL characters that might repeat legitimately
-			if char != ' ' && char != '\t' && char != '\n' && 
-			   sql[i] == sql[i+1] && sql[i+1] == sql[i+2] {
+			if char != ' ' && char != '\t' && char != '\n' &&
+				sql[i] == sql[i+1] && sql[i+1] == sql[i+2] {
 				return true
 			}
 		}
@@ -327,13 +328,13 @@ func (sv *SQLValidator) calculateSelectComplexity(selectStmt *sqlparser.Select) 
 
 // DataSourceSQLConfig holds SQL dialect configuration for a data source type
 type DataSourceSQLConfig struct {
-	SupportsTimeTravel     bool
+	SupportsTimeTravel      bool
 	SupportsWindowFunctions bool
 	SupportsArrays          bool
 	SupportsStructs         bool
 	SupportsJSON            bool
-	IdentifierQuote        string // e.g., `"` for PostgreSQL, "`" for MySQL
-	TimeTravelSyntax       string // e.g., "FOR SYSTEM_TIME AS OF", "TABLE"
+	IdentifierQuote         string // e.g., `"` for PostgreSQL, "`" for MySQL
+	TimeTravelSyntax        string // e.g., "FOR SYSTEM_TIME AS OF", "TABLE"
 }
 
 // GetDataSourceSQLConfig returns SQL configuration for a data source type
@@ -399,7 +400,7 @@ func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 			SupportsArrays:          true,
 			SupportsStructs:         true,
 			SupportsJSON:            true,
-			IdentifierQuote:         "``,
+			IdentifierQuote:         "`",
 			TimeTravelSyntax:        "FOR SYSTEM_TIME AS OF",
 		}
 	case model.DatabaseTypeRedshift:
@@ -421,7 +422,7 @@ func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 			SupportsArrays:          true,
 			SupportsStructs:         true,
 			SupportsJSON:            true,
-			IdentifierQuote:         "``,
+			IdentifierQuote:         "`",
 			TimeTravelSyntax:        "",
 		}
 	case model.DatabaseTypeApacheDoris, model.DatabaseTypeStarRocks, model.DatabaseTypeApacheDruid:
@@ -431,13 +432,13 @@ func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 			SupportsArrays:          false,
 			SupportsStructs:         false,
 			SupportsJSON:            true,
-			IdentifierQuote:         "``,
+			IdentifierQuote:         "`",
 			TimeTravelSyntax:        "",
 		}
 
 	// Object Storage - No SQL, API-based
-	case model.DatabaseTypeS3, model.DatabaseTypeMinIO, model.DatabaseTypeAlibabaOSS,
-		model.DatabaseTypeTencentCOS, model.DatabaseTypeAzureBlob:
+	case model.DatabaseTypeS3Parquet, model.DatabaseTypeS3ORC, model.DatabaseTypeS3Avro,
+		model.DatabaseTypeS3CSV, model.DatabaseTypeS3JSON:
 		return DataSourceSQLConfig{
 			SupportsTimeTravel:      false,
 			SupportsWindowFunctions: false,
@@ -449,7 +450,7 @@ func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 		}
 
 	// Domestic Databases
-	case model.DatabaseTypeOceanBase, model.DatabaseTypeTiDB:
+	case model.DatabaseTypeOceanBaseMySQL, model.DatabaseTypeOceanBaseOracle, model.DatabaseTypeTiDB:
 		return DataSourceSQLConfig{
 			SupportsTimeTravel:      false,
 			SupportsWindowFunctions: true,
@@ -461,7 +462,7 @@ func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 		}
 
 	// File Systems
-	case model.DatabaseTypeHDFS, model.DatabaseTypeOzone:
+	case model.DatabaseTypeHDFSAvro, model.DatabaseTypeHDFSParquet, model.DatabaseTypeHDFSCSV, model.DatabaseTypeOzoneParquet:
 		return DataSourceSQLConfig{
 			SupportsTimeTravel:      false,
 			SupportsWindowFunctions: false,
