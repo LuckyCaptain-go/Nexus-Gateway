@@ -52,8 +52,8 @@ func main() {
 
 	// Initialize rate limiting
 	rateLimitConfig := middleware.RateLimiterConfig{
-		RPM:  cfg.Security.RateLimitPerMinute,
-		Burst: cfg.Security.RateLimitBurst,
+		RPM:             cfg.Security.RateLimitPerMinute,
+		Burst:           cfg.Security.RateLimitBurst,
 		CleanupInterval: 5 * time.Minute,
 	}
 	rateLimiter := middleware.NewRateLimiter(rateLimitConfig)
@@ -124,6 +124,13 @@ func main() {
 			queries.GET("/history", queryController.GetQueryHistory)
 		}
 
+		// Fetch endpoints (batch data retrieval)
+		fetch := api.Group("/fetch")
+		{
+			fetch.POST("", queryController.FetchQuery)
+			fetch.GET("/:query_id/:slug/:token", queryController.FetchNextBatch)
+		}
+
 		// Database management endpoints
 		database := auth.Group("/database")
 		{
@@ -132,6 +139,19 @@ func main() {
 			database.GET("/connections/stats", databaseController.GetConnectionStats)
 			database.GET("/health", databaseController.GetDatabaseHealth)
 		}
+	}
+
+	// Internal API v2 group (for Vega-Gateway compatibility)
+	internalAPI := router.Group("/api/internal/vega-gateway/v2")
+
+	// Internal fetch endpoints
+	internalFetch := internalAPI.Group("/fetch")
+	{
+		// Internal fetch query endpoint (requires account headers)
+		internalFetch.POST("", queryController.InternalFetchQuery)
+
+		// Internal fetch next batch endpoint (requires account headers)
+		internalFetch.GET("/:query_id/:slug/:token", queryController.InternalFetchNextBatch)
 	}
 
 	// Start server

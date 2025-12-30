@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"nexus-gateway/internal/database/drivers/traditional"
 	"nexus-gateway/internal/model"
 )
 
@@ -11,13 +12,13 @@ import (
 type DriverCategory string
 
 const (
-	CategoryRelational        DriverCategory = "relational"
-	CategoryTableFormat       DriverCategory = "table_format"
-	CategoryWarehouse         DriverCategory = "warehouse"
-	CategoryObjectStorage     DriverCategory = "object_storage"
-	CategoryOLAP              DriverCategory = "olap"
-	CategoryDomesticDatabase  DriverCategory = "domestic_database"
-	CategoryFileSystem        DriverCategory = "file_system"
+	CategoryRelational       DriverCategory = "relational"
+	CategoryTableFormat      DriverCategory = "table_format"
+	CategoryWarehouse        DriverCategory = "warehouse"
+	CategoryObjectStorage    DriverCategory = "object_storage"
+	CategoryOLAP             DriverCategory = "olap"
+	CategoryDomesticDatabase DriverCategory = "domestic_database"
+	CategoryFileSystem       DriverCategory = "file_system"
 )
 
 // DriverCapabilities defines what operations a driver supports
@@ -42,11 +43,11 @@ func NewDriverFactory() *DriverFactory {
 func (df *DriverFactory) CreateDriver(dbType model.DatabaseType) (Driver, error) {
 	switch dbType {
 	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB:
-		return &MySQLDriver{}, nil
+		return &traditional.MySQLDriver{}, nil
 	case model.DatabaseTypePostgreSQL:
-		return &PostgreSQLDriver{}, nil
+		return &traditional.PostgreSQLDriver{}, nil
 	case model.DatabaseTypeOracle:
-		return &OracleDriver{}, nil
+		return &traditional.OracleDriver{}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", dbType)
 	}
@@ -85,231 +86,6 @@ type Driver interface {
 	ConfigureAuth(authConfig interface{}) error
 }
 
-// MySQLDriver implements Driver for MySQL/MariaDB
-type MySQLDriver struct{}
-
-func (d *MySQLDriver) Open(dsn string) (*sql.DB, error) {
-	return sql.Open("mysql", dsn)
-}
-
-func (d *MySQLDriver) ValidateDSN(dsn string) error {
-	// Basic MySQL DSN validation
-	if dsn == "" {
-		return fmt.Errorf("DSN cannot be empty")
-	}
-	// More sophisticated validation could be added here
-	return nil
-}
-
-func (d *MySQLDriver) GetDefaultPort() int {
-	return 3306
-}
-
-func (d *MySQLDriver) BuildDSN(config *model.DataSourceConfig) string {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-		config.Database,
-	)
-
-	// Add parameters
-	params := []string{}
-	if config.SSL {
-		params = append(params, "tls=true")
-	}
-	if config.Timezone != "" {
-		params = append(params, "loc="+config.Timezone)
-	}
-
-	if len(params) > 0 {
-		dsn += "?"
-		for i, param := range params {
-			if i > 0 {
-				dsn += "&"
-			}
-			dsn += param
-		}
-	}
-
-	return dsn
-}
-
-func (d *MySQLDriver) GetDatabaseTypeName() string {
-	return "mysql"
-}
-
-func (d *MySQLDriver) TestConnection(db *sql.DB) error {
-	return db.Ping()
-}
-
-func (d *MySQLDriver) GetDriverName() string {
-	return "mysql"
-}
-
-func (d *MySQLDriver) GetCategory() DriverCategory {
-	return CategoryRelational
-}
-
-func (d *MySQLDriver) GetCapabilities() DriverCapabilities {
-	return DriverCapabilities{
-		SupportsSQL:             true,
-		SupportsTransaction:     true,
-		SupportsSchemaDiscovery: true,
-		SupportsTimeTravel:      false,
-		RequiresTokenRotation:   false,
-		SupportsStreaming:       true,
-	}
-}
-
-func (d *MySQLDriver) ConfigureAuth(authConfig interface{}) error {
-	// MySQL uses basic auth, no special configuration
-	return nil
-}
-
-// PostgreSQLDriver implements Driver for PostgreSQL
-type PostgreSQLDriver struct{}
-
-func (d *PostgreSQLDriver) Open(dsn string) (*sql.DB, error) {
-	return sql.Open("postgres", dsn)
-}
-
-func (d *PostgreSQLDriver) ValidateDSN(dsn string) error {
-	if dsn == "" {
-		return fmt.Errorf("DSN cannot be empty")
-	}
-	return nil
-}
-
-func (d *PostgreSQLDriver) GetDefaultPort() int {
-	return 5432
-}
-
-func (d *PostgreSQLDriver) BuildDSN(config *model.DataSourceConfig) string {
-	dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-		config.Database,
-	)
-
-	// Add parameters
-	params := []string{}
-	if config.SSL {
-		params = append(params, "sslmode=require")
-	} else {
-		params = append(params, "sslmode=disable")
-	}
-	if config.Timezone != "" {
-		params = append(params, "TimeZone="+config.Timezone)
-	}
-
-	if len(params) > 0 {
-		dsn += "?"
-		for i, param := range params {
-			if i > 0 {
-				dsn += "&"
-			}
-			dsn += param
-		}
-	}
-
-	return dsn
-}
-
-func (d *PostgreSQLDriver) GetDatabaseTypeName() string {
-	return "postgresql"
-}
-
-func (d *PostgreSQLDriver) TestConnection(db *sql.DB) error {
-	return db.Ping()
-}
-
-func (d *PostgreSQLDriver) GetDriverName() string {
-	return "postgres"
-}
-
-func (d *PostgreSQLDriver) GetCategory() DriverCategory {
-	return CategoryRelational
-}
-
-func (d *PostgreSQLDriver) GetCapabilities() DriverCapabilities {
-	return DriverCapabilities{
-		SupportsSQL:             true,
-		SupportsTransaction:     true,
-		SupportsSchemaDiscovery: true,
-		SupportsTimeTravel:      false,
-		RequiresTokenRotation:   false,
-		SupportsStreaming:       true,
-	}
-}
-
-func (d *PostgreSQLDriver) ConfigureAuth(authConfig interface{}) error {
-	return nil
-}
-
-// OracleDriver implements Driver for Oracle
-type OracleDriver struct{}
-
-func (d *OracleDriver) Open(dsn string) (*sql.DB, error) {
-	return sql.Open("oracle", dsn)
-}
-
-func (d *OracleDriver) ValidateDSN(dsn string) error {
-	if dsn == "" {
-		return fmt.Errorf("DSN cannot be empty")
-	}
-	return nil
-}
-
-func (d *OracleDriver) GetDefaultPort() int {
-	return 1521
-}
-
-func (d *OracleDriver) BuildDSN(config *model.DataSourceConfig) string {
-	// Oracle DSN format: user/password@host:port/database
-	return fmt.Sprintf("%s/%s@%s:%d/%s",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-		config.Database,
-	)
-}
-
-func (d *OracleDriver) GetDatabaseTypeName() string {
-	return "oracle"
-}
-
-func (d *OracleDriver) TestConnection(db *sql.DB) error {
-	return db.Ping()
-}
-
-func (d *OracleDriver) GetDriverName() string {
-	return "oracle"
-}
-
-func (d *OracleDriver) GetCategory() DriverCategory {
-	return CategoryRelational
-}
-
-func (d *OracleDriver) GetCapabilities() DriverCapabilities {
-	return DriverCapabilities{
-		SupportsSQL:             true,
-		SupportsTransaction:     true,
-		SupportsSchemaDiscovery: true,
-		SupportsTimeTravel:      false,
-		RequiresTokenRotation:   false,
-		SupportsStreaming:       true,
-	}
-}
-
-func (d *OracleDriver) ConfigureAuth(authConfig interface{}) error {
-	return nil
-}
-
 // =============================================================================
 // Placeholder Drivers for Phase 1 Data Sources
 // These drivers are registered but not yet fully implemented
@@ -317,7 +93,7 @@ func (d *OracleDriver) ConfigureAuth(authConfig interface{}) error {
 
 // PlaceholderDriver represents a driver that is planned but not yet implemented
 type PlaceholderDriver struct {
-	dbType  model.DatabaseType
+	dbType   model.DatabaseType
 	category DriverCategory
 }
 
