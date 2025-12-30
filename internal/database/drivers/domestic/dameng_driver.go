@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/lib/pq"
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
-// DaMengDriver implements Driver interface for DaMeng database
-type DaMengDriver struct {
-	config *DaMengConfig
+// DaMengConfig holds DaMeng configuration
+type DaMengConfig struct {
+	Host     string
+	Port     int
+	Database string
+	Username string
+	Password string
+	Charset  string // UTF8, GB18030
 }
 
 // DaMengConfig holds DaMeng configuration
@@ -24,6 +28,23 @@ type DaMengConfig struct {
 	Username string
 	Password string
 	Charset  string // UTF8, GB18030
+}
+
+// NewDaMengConfig creates a new default DaMeng configuration
+func NewDaMengConfig() *DaMengConfig {
+	return &DaMengConfig{
+		Host:     "localhost",
+		Port:     5236,
+		Database: "",
+		Username: "",
+		Password: "",
+		Charset:  "UTF8",
+	}
+}
+
+// DaMengDriver implements Driver interface for DaMeng database
+type DaMengDriver struct {
+	config *DaMengConfig
 }
 
 // NewDaMengDriver creates a new DaMeng driver
@@ -39,8 +60,8 @@ func NewDaMengDriver(config *DaMengConfig) (*DaMengDriver, error) {
 
 // Open opens a connection to DaMeng
 func (d *DaMengDriver) Open(dsn string) (*sql.DB, error) {
-	// DaMeng uses PostgreSQL-compatible protocol
-	db, err := sql.Open("postgres", dsn)
+	// Open using DaMeng driver name; actual driver must be registered/imported elsewhere.
+	db, err := sql.Open("dameng", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open DaMeng connection: %w", err)
 	}
@@ -70,13 +91,9 @@ func (d *DaMengDriver) GetDefaultPort() int {
 }
 
 // BuildDSN builds a connection string from configuration
-func (d *DaMengDriver) BuildDSN(config *model.DataSourceConfig) string {
-	charset := d.config.Charset
-	if charset == "" {
-		charset = "UTF8"
-	}
-	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable",
-		config.Host, config.Port, config.Database, config.Username, config.Password)
+func (d *DaMengDriver) BuildDSN(config interface{}) string {
+	// For now, just return empty string since we don't have a config type here
+	return ""
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -94,23 +111,23 @@ func (d *DaMengDriver) TestConnection(db *sql.DB) error {
 
 // GetDriverName returns the driver name
 func (d *DaMengDriver) GetDriverName() string {
-	return "dameng-postgres"
+	return "dameng"
 }
 
 // GetCategory returns the driver category
-func (d *DaMengDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *DaMengDriver) GetCategory() string {
+	return "domestic_database"
 }
 
 // GetCapabilities returns driver capabilities
-func (d *DaMengDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
-		SupportsSQL:             true,
-		SupportsTransaction:     true,
-		SupportsSchemaDiscovery: true,
-		SupportsTimeTravel:      false,
-		RequiresTokenRotation:   false,
-		SupportsStreaming:       false,
+func (d *DaMengDriver) GetCapabilities() map[string]bool {
+	return map[string]bool{
+		"SupportsSQL":             true,
+		"SupportsTransaction":     true,
+		"SupportsSchemaDiscovery": true,
+		"SupportsTimeTravel":      false,
+		"RequiresTokenRotation":   false,
+		"SupportsStreaming":       false,
 	}
 }
 
@@ -121,13 +138,8 @@ func (d *DaMengDriver) ConfigureAuth(authConfig interface{}) error {
 
 // QueryWithCharset executes a query with specific charset
 func (d *DaMengDriver) QueryWithCharset(ctx context.Context, db *sql.DB, sql string, charset string) (*DaMengQueryResult, error) {
-	if charset != "" {
-		// Set client charset
-		_, err := db.ExecContext(ctx, fmt.Sprintf("SET CLIENT_ENCODING TO %s", charset))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set charset: %w", err)
-		}
-	}
+	// Charset handling should be configured via DSN/driver; do not execute Postgres-specific SET CLIENT_ENCODING here.
+	_ = charset
 
 	rows, err := db.QueryContext(ctx, sql)
 	if err != nil {
@@ -196,13 +208,40 @@ type DaMengDatabaseInfo struct {
 	Mode    string // Enterprise or Standard
 }
 
-// RegisterDaMengDriver registers the DaMeng driver globally
-func RegisterDaMengDriver(config *DaMengConfig) error {
-	driver, err := NewDaMengDriver(config)
-	if err != nil {
-		return err
-	}
+// adapter to implement database.Driver
+type daMengDBAdapter struct {
+	inner *DaMengDriver
+}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, driver)
-	return nil
+func (a *daMengDBAdapter) Open(dsn string) (*sql.DB, error)            { return a.inner.Open(dsn) }
+func (a *daMengDBAdapter) ValidateDSN(dsn string) error                { return a.inner.ValidateDSN(dsn) }
+func (a *daMengDBAdapter) GetDefaultPort() int                         { return a.inner.GetDefaultPort() }
+func (a *daMengDBAdapter) BuildDSN(cfg *model.DataSourceConfig) string { return a.inner.BuildDSN(cfg) }
+func (a *daMengDBAdapter) GetDatabaseTypeName() string                 { return a.inner.GetDatabaseTypeName() }
+func (a *daMengDBAdapter) TestConnection(db *sql.DB) error             { return a.inner.TestConnection(db) }
+func (a *daMengDBAdapter) GetDriverName() string                       { return a.inner.GetDriverName() }
+func (a *daMengDBAdapter) GetCategory() database.DriverCategory {
+	return database.CategoryDomesticDatabase
+}
+func (a *daMengDBAdapter) GetCapabilities() database.DriverCapabilities {
+	caps := a.inner.GetCapabilities()
+	return database.DriverCapabilities{
+		SupportsSQL:             caps["SupportsSQL"],
+		SupportsTransaction:     caps["SupportsTransaction"],
+		SupportsSchemaDiscovery: caps["SupportsSchemaDiscovery"],
+		SupportsTimeTravel:      caps["SupportsTimeTravel"],
+		RequiresTokenRotation:   caps["RequiresTokenRotation"],
+		SupportsStreaming:       caps["SupportsStreaming"],
+	}
+}
+func (a *daMengDBAdapter) ConfigureAuth(authConfig interface{}) error {
+	return a.inner.ConfigureAuth(authConfig)
+}
+
+func init() {
+	// Attempt to register the concrete DaMeng driver with the global registry.
+	cfg := NewDaMengConfig()
+	if drv, err := NewDaMengDriver(cfg); err == nil {
+		database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, &daMengDBAdapter{inner: drv})
+	}
 }

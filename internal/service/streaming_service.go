@@ -15,12 +15,12 @@ import (
 
 // StreamingService handles streaming query results for large datasets
 type StreamingService struct {
-	connPool       *database.ConnectionPool
-	activeStreams  map[string]*ActiveStream
-	streamsMutex   sync.RWMutex
-	maxStreams     int
-	streamTimeout  time.Duration
-	chunkSize      int
+	connPool      *database.ConnectionPool
+	activeStreams map[string]*ActiveStream
+	streamsMutex  sync.RWMutex
+	maxStreams    int
+	streamTimeout time.Duration
+	chunkSize     int
 }
 
 // ActiveStream represents an active streaming query
@@ -40,12 +40,12 @@ type ActiveStream struct {
 
 // StreamChunk represents a chunk of streamed data
 type StreamChunk struct {
-	StreamID string         `json:"streamId"`
-	ChunkID  int64          `json:"chunkId"`
+	StreamID string             `json:"streamId"`
+	ChunkID  int64              `json:"chunkId"`
 	Columns  []model.ColumnInfo `json:"columns,omitempty"` // Only in first chunk
-	Rows     [][]interface{} `json:"rows"`
-	HasMore  bool            `json:"hasMore"`
-	Metadata StreamMetadata  `json:"metadata"`
+	Rows     [][]interface{}    `json:"rows"`
+	HasMore  bool               `json:"hasMore"`
+	Metadata StreamMetadata     `json:"metadata"`
 }
 
 // StreamMetadata contains metadata about the stream
@@ -254,7 +254,7 @@ func (ss *StreamingService) StreamToWriter(ctx context.Context, streamID string,
 		chunkID++
 
 		// Check if stream is complete
-		if !chunk.hasMore {
+		if !chunk.HasMore {
 			break
 		}
 	}

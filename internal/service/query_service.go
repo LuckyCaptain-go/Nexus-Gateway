@@ -408,7 +408,7 @@ func (qs *queryService) recordQueryStats(dataSourceID string, success bool, dura
 // FetchQuery executes a fetch query and returns the first batch of data
 func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
 	// Validate SQL
-	if err := qs.sqlValidator.Validate(req.SQL); err != nil {
+	if err := qs.sqlValidator.ValidateStatement(req.SQL); err != nil {
 		return nil, fmt.Errorf("SQL validation failed: %w", err)
 	}
 
@@ -419,11 +419,10 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 	}
 
 	// Get connection from pool
-	conn, err := qs.connPool.GetConnection(datasource)
+	conn, err := qs.connPool.GetConnection(ctx, datasource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
-	defer qs.connPool.ReleaseConnection(conn)
 
 	// Create query session
 	session := &QuerySession{
@@ -439,7 +438,7 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 	}
 
 	// Execute query and get first batch
-	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, req.SQL, req.BatchSize, 0, datasource.Type)
+	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, req.SQL, int64(req.BatchSize), 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
@@ -498,17 +497,16 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 		return nil, fmt.Errorf("failed to get data source: %w", err)
 	}
 
-	conn, err := qs.connPool.GetConnection(datasource)
+	conn, err := qs.connPool.GetConnection(ctx, datasource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database connection: %w", err)
 	}
-	defer qs.connPool.ReleaseConnection(conn)
 
 	// Calculate offset for next batch
 	offset := session.FetchedRows
 
 	// Execute query for next batch
-	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, session.SQL, batchSize, offset, datasource.Type)
+	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, session.SQL, int64(batchSize), offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
@@ -605,7 +603,7 @@ func (qs *queryService) buildNextURI(queryID, slug, token string, batchSize int)
 }
 
 // executeBatchQuery executes a query and returns results in batch format
-func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{}, sql string, batchSize, offset int64) ([]model.ColumnInfo, [][]string, int64, error) {
+func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{}, query string, batchSize, offset int64) ([]model.ColumnInfo, [][]string, int64, error) {
 	// Convert conn to *sql.DB
 	db, ok := conn.(*sql.DB)
 	if !ok {
@@ -613,7 +611,7 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	}
 
 	// Apply pagination to the SQL query
-	paginatedSQL := qs.applyBatchPagination(sql, batchSize, offset, dbType)
+	paginatedSQL := qs.applyBatchPagination(query, batchSize, offset)
 
 	// Execute the query
 	rows, err := db.QueryContext(ctx, paginatedSQL)
@@ -629,7 +627,7 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	}
 
 	// Build column information
-	columns := qs.buildBatchColumnInfo(columnTypes, dbType)
+	columns := qs.buildBatchColumnInfo(columnTypes)
 
 	// Process rows
 	var entries [][]string
@@ -647,7 +645,7 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	}
 
 	// For total count, we need to run a separate COUNT query
-	totalCount, err := qs.getRowCount(ctx, db, sql)
+	totalCount, err := qs.getRowCount(ctx, db, query)
 	if err != nil {
 		// If count query fails, use the current row count as an estimate
 		totalCount = offset + int64(len(entries))
@@ -657,34 +655,18 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 }
 
 // applyBatchPagination applies pagination to SQL query for batch fetching
-func (qs *queryService) applyBatchPagination(sql string, batchSize, offset int64, dbType model.DatabaseType) string {
+func (qs *queryService) applyBatchPagination(sql string, batchSize, offset int64) string {
 	sql = strings.TrimSpace(sql)
 
 	// Check if query already has LIMIT or OFFSET
 	sqlUpper := strings.ToUpper(sql)
 	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
 		// For complex queries with existing pagination, add a subquery wrapper
-		return qs.applySubqueryPagination(sql, batchSize, offset, dbType)
+		return qs.applySubqueryPagination(sql, batchSize, offset)
 	}
 
-	// Apply database-specific pagination based on database type
-	switch dbType {
-	case model.DatabaseTypePostgreSQL:
-		return qs.applyPostgreSQLPagination(sql, batchSize, offset)
-	case model.DatabaseTypeOracle:
-		return qs.applyOraclePagination(sql, batchSize, offset)
-	case model.DatabaseTypeGaussDB:
-		return qs.applyGaussDBPagination(sql, batchSize, offset)
-	case model.DatabaseTypeKingBaseES:
-		return qs.applyKingBasePagination(sql, batchSize, offset)
-	case model.DatabaseTypeOceanBase:
-		return qs.applyOceanBasePagination(sql, batchSize, offset)
-	case model.DatabaseTypeDM:
-		return qs.applyDMPagination(sql, batchSize, offset)
-	default:
-		// Standard SQL LIMIT/OFFSET for MySQL, MariaDB and others
-		return qs.applyStandardPagination(sql, batchSize, offset)
-	}
+	// Use standard LIMIT/OFFSET for most databases
+	return qs.applyStandardPagination(sql, batchSize, offset)
 }
 
 // applyStandardPagination applies standard LIMIT/OFFSET pagination
@@ -740,28 +722,20 @@ func (qs *queryService) applyDMPagination(sql string, batchSize, offset int64) s
 }
 
 // applySubqueryPagination applies pagination with subquery wrapper for complex queries
-func (qs *queryService) applySubqueryPagination(sql string, batchSize, offset int64, dbType model.DatabaseType) string {
-	// Use database-specific syntax for subquery pagination
-	switch dbType {
-	case model.DatabaseTypeOracle:
-		if offset > 0 {
-			return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset)
-		}
-		return fmt.Sprintf("SELECT * FROM (SELECT * FROM (%s)) WHERE ROWNUM <= %d", sql, batchSize)
-	default:
-		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query LIMIT %d OFFSET %d", sql, batchSize, offset)
-	}
+func (qs *queryService) applySubqueryPagination(sql string, batchSize, offset int64) string {
+	// Use a standard approach with LIMIT/OFFSET for simplicity
+	return fmt.Sprintf("SELECT * FROM (%s) AS batch_query LIMIT %d OFFSET %d", sql, batchSize, offset)
 }
 
 // buildBatchColumnInfo builds column information from column types
-func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType, dbType model.DatabaseType) []model.ColumnInfo {
+func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []model.ColumnInfo {
 	columns := make([]model.ColumnInfo, len(columnTypes))
 
 	for i, col := range columnTypes {
 		nullable, _ := col.Nullable()
 		columns[i] = model.ColumnInfo{
 			Name:     col.Name(),
-			Type:     string(qs.typeMapper.MapToStandardType(dbType, col.DatabaseTypeName(), nullable)),
+			Type:     string(qs.typeMapper.MapToStandardType(model.DatabaseTypeMySQL, col.DatabaseTypeName(), nullable)),
 			Nullable: nullable,
 		}
 	}
@@ -779,7 +753,7 @@ func (qs *queryService) mapColumnTypeToStandard(dbTypeName string) string {
 	case "INT", "INTEGER", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
 		"INT4", "INT8", "INT2", "SERIAL", "BIGSERIAL", "SMALLSERIAL",
 		"INTEGER UNSIGNED", "BIGINT UNSIGNED", "SMALLINT UNSIGNED",
-		"NUMBER", "DECIMAL", "NUMERIC", "REAL", "DOUBLE PRECISION":
+		"NUMBER", "DOUBLE PRECISION":
 		return "integer"
 
 	// Floating point types
@@ -821,8 +795,6 @@ func (qs *queryService) mapColumnTypeToStandard(dbTypeName string) string {
 		return "decimal"
 	case "VARCHARC(n)", "CHARC(n)":
 		return "string"
-	case "INTEGER UNSIGNED", "BIGINT UNSIGNED":
-		return "integer"
 
 	default:
 		// For unknown types, return string but log for future enhancement
@@ -864,7 +836,7 @@ func (qs *queryService) getRowCount(ctx context.Context, db *sql.DB, sql string)
 	countSQL = regexp.MustCompile(`ORDER BY.*`).ReplaceAllString(countSQL, "")
 
 	// Replace SELECT ... with SELECT COUNT(*)
-	countSQL = regexp.MustCompile(`SELECT\s+(.*?)\s+FROM`, "SELECT COUNT(*) FROM").ReplaceAllString(countSQL, "SELECT COUNT(*) FROM")
+	countSQL = regexp.MustCompile(`SELECT\s+(.*?)\s+FROM`).ReplaceAllString(countSQL, "SELECT COUNT(*) FROM")
 
 	// Add database-specific limit for complex queries
 	if strings.Contains(countSQL, "GROUP BY") || strings.Contains(countSQL, "DISTINCT") {

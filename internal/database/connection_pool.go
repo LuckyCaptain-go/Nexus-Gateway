@@ -197,14 +197,14 @@ func (cp *ConnectionPool) GetStats() map[string]ConnectionStats {
 	for id, db := range cp.pools {
 		dbStats := db.Stats()
 		stats[id] = ConnectionStats{
-			OpenConnections: dbStats.OpenConnections,
-			InUse:          dbStats.InUse,
-			Idle:           dbStats.Idle,
-			WaitCount:      dbStats.WaitCount,
-			WaitDuration:   dbStats.WaitDuration,
-			MaxIdleClosed:  dbStats.MaxIdleClosed,
+			OpenConnections:   dbStats.OpenConnections,
+			InUse:             dbStats.InUse,
+			Idle:              dbStats.Idle,
+			WaitCount:         dbStats.WaitCount,
+			WaitDuration:      dbStats.WaitDuration,
+			MaxIdleClosed:     dbStats.MaxIdleClosed,
 			MaxLifetimeClosed: dbStats.MaxLifetimeClosed,
-			Healthy:        cp.getHealth(id),
+			Healthy:           cp.getHealth(id),
 		}
 	}
 
@@ -214,13 +214,13 @@ func (cp *ConnectionPool) GetStats() map[string]ConnectionStats {
 // ConnectionStats contains connection pool statistics
 type ConnectionStats struct {
 	OpenConnections   int           `json:"openConnections"`
-	InUse            int           `json:"inUse"`
-	Idle             int           `json:"idle"`
-	WaitCount        int64         `json:"waitCount"`
-	WaitDuration     time.Duration `json:"waitDuration"`
-	MaxIdleClosed    int64         `json:"maxIdleClosed"`
-	MaxLifetimeClosed int64        `json:"maxLifetimeClosed"`
-	Healthy          bool          `json:"healthy"`
+	InUse             int           `json:"inUse"`
+	Idle              int           `json:"idle"`
+	WaitCount         int64         `json:"waitCount"`
+	WaitDuration      time.Duration `json:"waitDuration"`
+	MaxIdleClosed     int64         `json:"maxIdleClosed"`
+	MaxLifetimeClosed int64         `json:"maxLifetimeClosed"`
+	Healthy           bool          `json:"healthy"`
 }
 
 // HealthCheck performs health checks on all connections
@@ -301,7 +301,7 @@ func (cp *ConnectionPool) SetupTokenRotation(ctx context.Context, dataSource *mo
 
 // rotateToken performs token rotation for a data source
 func (cp *ConnectionPool) rotateToken(ctx context.Context, dataSource *model.DataSource) (string, time.Time, error) {
-	driver, err := GetDriverRegistry().GetDriver(dataSource.Type)
+	_, err := GetDriverRegistry().GetDriver(dataSource.Type)
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -311,20 +311,14 @@ func (cp *ConnectionPool) rotateToken(ctx context.Context, dataSource *model.Dat
 
 	// Rotate token based on data source type
 	switch dataSource.Type {
-	case model.DatabaseTypeS3, model.DatabaseTypeMinIO:
-		// AWS IAM token rotation
-		// TODO: Call AWS security to refresh credentials
-		return "new-token", time.Now().Add(1 * time.Hour), nil
-
 	case model.DatabaseTypeBigQuery:
 		// GCP OAuth token rotation
 		// TODO: Call GCP security to refresh OAuth token
 		return "new-token", time.Now().Add(1 * time.Hour), nil
 
-	case model.DatabaseTypeHDFS, model.DatabaseTypeOzone:
-		// Kerberos token rotation
-		// TODO: Call Kerberos security to refresh token
-		return "new-token", time.Now().Add(8 * time.Hour), nil
+	// TODO: Add support for other data source types when they are implemented
+	// case model.DatabaseTypeS3, model.DatabaseTypeMinIO:
+	// case model.DatabaseTypeHDFS, model.DatabaseTypeOzone:
 
 	default:
 		return "", time.Time{}, fmt.Errorf("token rotation not supported for %s", dataSource.Type)
@@ -338,7 +332,7 @@ func (cp *ConnectionPool) RefreshToken(ctx context.Context, dataSourceID string)
 	}
 
 	// Trigger token rotation
-	_, _, err := cp.tokenManager.rotateToken(ctx, dataSourceID)
+	_, _, err := cp.tokenManager.RotateTokenWithResult(ctx, dataSourceID)
 	return err
 }
 

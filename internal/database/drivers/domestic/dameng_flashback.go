@@ -21,13 +21,15 @@ func NewDaMengFlashbackHandler(driver *DaMengDriver) *DaMengFlashbackHandler {
 
 // QueryAtTimestamp queries data as of a specific timestamp
 func (f *DaMengFlashbackHandler) QueryAtTimestamp(ctx context.Context, db *sql.DB, sql string, timestamp time.Time) (*DaMengQueryResult, error) {
-	flashbackSQL := fmt.Sprintf("SELECT * FROM (%s) AS OF TIMESTAMP %s",
-		sql,
-		timestamp.Format("2006-01-02 15:04:05"))
+	// NOTE: The "AS OF TIMESTAMP" / flashback syntax is Oracle-specific.
+	// DaMeng may implement temporal queries differently. For now, fall
+	// back to executing the base query and document that temporal query
+	// support requires a driver-specific implementation.
+	// TODO: Implement proper temporal query for DaMeng.
 
-	rows, err := db.QueryContext(ctx, flashbackSQL)
+	rows, err := db.QueryContext(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query at timestamp: %w", err)
+		return nil, fmt.Errorf("failed to query at timestamp (temporal not implemented): %w", err)
 	}
 	defer rows.Close()
 
@@ -61,11 +63,13 @@ func (f *DaMengFlashbackHandler) QueryAtTimestamp(ctx context.Context, db *sql.D
 
 // QueryAtSCN queries data as of a specific SCN (System Change Number)
 func (f *DaMengFlashbackHandler) QueryAtSCN(ctx context.Context, db *sql.DB, sql string, scn int64) (*DaMengQueryResult, error) {
-	flashbackSQL := fmt.Sprintf("SELECT * FROM (%s) AS OF SCN %d", sql, scn)
+	// SCN-based flashback is Oracle-specific. DaMeng SCN semantics may
+	// differ. Temporal SCN queries are not implemented here.
+	// TODO: Implement SCN temporal query for DaMeng.
 
-	rows, err := db.QueryContext(ctx, flashbackSQL)
+	rows, err := db.QueryContext(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query at SCN: %w", err)
+		return nil, fmt.Errorf("failed to query at SCN (temporal not implemented): %w", err)
 	}
 	defer rows.Close()
 
@@ -99,92 +103,40 @@ func (f *DaMengFlashbackHandler) QueryAtSCN(ctx context.Context, db *sql.DB, sql
 
 // FlashbackTable flashes back a table to a specific timestamp
 func (f *DaMengFlashbackHandler) FlashbackTable(ctx context.Context, db *sql.DB, tableName string, timestamp time.Time) error {
-	sql := fmt.Sprintf("FLASHBACK TABLE %s TO TIMESTAMP %s",
-		tableName,
-		timestamp.Format("2006-01-02 15:04:05"))
-
-	_, err := db.ExecContext(ctx, sql)
-	if err != nil {
-		return fmt.Errorf("failed to flashback table: %w", err)
-	}
-	return nil
+	// Flashback DDL is database-specific and may not be supported by DaMeng
+	// in the same way as Oracle. Do not attempt destructive DDL here.
+	return fmt.Errorf("FlashbackTable: not implemented for DaMeng — requires DB-specific support")
 }
 
 // FlashbackTableToSCN flashes back a table to a specific SCN
 func (f *DaMengFlashbackHandler) FlashbackTableToSCN(ctx context.Context, db *sql.DB, tableName string, scn int64) error {
-	sql := fmt.Sprintf("FLASHBACK TABLE %s TO SCN %d", tableName, scn)
-	_, err := db.ExecContext(ctx, sql)
-	if err != nil {
-		return fmt.Errorf("failed to flashback table to SCN: %w", err)
-	}
-	return nil
+	// Flashback by SCN is not implemented generically.
+	return fmt.Errorf("FlashbackTableToSCN: not implemented for DaMeng — requires DB-specific support")
 }
 
 // GetCurrentSCN retrieves the current SCN
 func (f *DaMengFlashbackHandler) GetCurrentSCN(ctx context.Context, db *sql.DB) (int64, error) {
-	var scn int64
-	err := db.QueryRowContext(ctx, "SELECT CURRENT_SCN FROM V$DATABASE").Scan(&scn)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get current SCN: %w", err)
-	}
-	return scn, nil
+	return 0, fmt.Errorf("GetCurrentSCN: not implemented for DaMeng — requires DB-specific view")
 }
 
 // GetTableSCN retrieves the current SCN for a table
 func (f *DaMengFlashbackHandler) GetTableSCN(ctx context.Context, db *sql.DB, tableName string) (int64, error) {
-	var scn int64
-	sql := fmt.Sprintf("SELECT OBJECT_SCN FROM USER_OBJECTS WHERE OBJECT_NAME = '%s'", tableName)
-	err := db.QueryRowContext(ctx, sql).Scan(&scn)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get table SCN: %w", err)
-	}
-	return scn, nil
+	return 0, fmt.Errorf("GetTableSCN: not implemented for DaMeng — requires DB-specific view")
 }
 
 // EnableFlashback enables flashback for a table
 func (f *DaMengFlashbackHandler) EnableFlashback(ctx context.Context, db *sql.DB, tableName string) error {
-	sql := fmt.Sprintf("ALTER TABLE %s ENABLE FLASHBACK", tableName)
-	_, err := db.ExecContext(ctx, sql)
-	if err != nil {
-		return fmt.Errorf("failed to enable flashback: %w", err)
-	}
-	return nil
+	return fmt.Errorf("EnableFlashback: not implemented for DaMeng — requires DB-specific DDL")
 }
 
 // DisableFlashback disables flashback for a table
 func (f *DaMengFlashbackHandler) DisableFlashback(ctx context.Context, db *sql.DB, tableName string) error {
-	sql := fmt.Sprintf("ALTER TABLE %s DISABLE FLASHBACK", tableName)
-	_, err := db.ExecContext(ctx, sql)
-	if err != nil {
-		return fmt.Errorf("failed to disable flashback: %w", err)
-	}
-	return nil
+	return fmt.Errorf("DisableFlashback: not implemented for DaMeng — requires DB-specific DDL")
 }
 
 // GetFlashbackInfo retrieves flashback information for a table
 func (f *DaMengFlashbackHandler) GetFlashbackInfo(ctx context.Context, db *sql.DB, tableName string) (*DaMengFlashbackInfo, error) {
-	sql := `
-		SELECT TABLE_NAME, FLASHBACK_ENABLED, OLDEST_FLASHBACK_SCN, OLDEST_FLASHBACK_TIME
-		FROM USER_TABLES
-		WHERE TABLE_NAME = ?
-	`
-
-	info := &DaMengFlashbackInfo{
-		TableName: tableName,
-	}
-
-	err := db.QueryRowContext(ctx, sql, tableName).Scan(
-		&info.TableName,
-		&info.FlashbackEnabled,
-		&info.OldestFlashbackSCN,
-		&info.OldestFlashbackTime,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get flashback info: %w", err)
-	}
-
-	return info, nil
+	return nil, fmt.Errorf("GetFlashbackInfo: not implemented for DaMeng — requires DB-specific system tables")
 }
 
 // DaMengFlashbackInfo represents flashback information

@@ -3,6 +3,11 @@ package security
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
 // AWSIAMAuth handles AWS IAM-based authentication
@@ -23,10 +28,10 @@ func NewAWSIAMAuth(region, accountID, roleARN string) *AWSIAMAuth {
 }
 
 // GetCredentials retrieves AWS credentials using IAM role assumption
-func (a *AWSIAMAuth) GetCredentials(ctx context.Context) (interface{}, error) {
+func (a *AWSIAMAuth) GetCredentials(ctx context.Context) (aws.Credentials, error) {
 	// TODO: Fix AWS SDK v2 compatibility
 	// For now, return empty credentials
-	return nil, fmt.Errorf("AWS IAM authentication not fully implemented yet")
+	return aws.Credentials{}, fmt.Errorf("AWS IAM authentication not fully implemented yet")
 }
 
 // RefreshCredentials refreshes the AWS credentials

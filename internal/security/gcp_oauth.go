@@ -2,12 +2,8 @@ package security
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -23,7 +19,7 @@ type GCPAuth struct {
 func NewGCPAuthFromJSON(credentialsJSON []byte) (*GCPAuth, error) {
 	return &GCPAuth{
 		credentialsJSON: credentialsJSON,
-	}
+	}, nil
 }
 
 // NewGCPAuthFromFile creates a new GCP authenticator from a service account file
@@ -54,10 +50,12 @@ func (g *GCPAuth) GetToken(ctx context.Context) (*oauth2.Token, error) {
 	}
 
 	// Parse service account JSON and create JWT token source
-	creds, err := google.CredentialsFromJSON(g.credentialsJSON)
+	creds, err := google.CredentialsFromJSON(ctx, g.credentialsJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse credentials JSON: %w", err)
 	}
+
+	return creds.TokenSource.Token()
 
 	return creds.TokenSource.Token()
 }

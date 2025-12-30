@@ -2,18 +2,19 @@ package security
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
 
 // TokenManager handles automatic rotation of authentication tokens
 type TokenManager struct {
-	vault           *CredentialVault
-	rotationCheck   time.Duration
-	rotationBuffer  time.Duration
-	rotations       map[string]*tokenRotation
-	rotationsMu     sync.RWMutex
-	stopChan         chan struct{}
+	vault          *CredentialVault
+	rotationCheck  time.Duration
+	rotationBuffer time.Duration
+	rotations      map[string]*tokenRotation
+	rotationsMu    sync.RWMutex
+	stopChan       chan struct{}
 }
 
 type tokenRotation struct {
@@ -27,8 +28,8 @@ type tokenRotation struct {
 func NewTokenManager(vault *CredentialVault) *TokenManager {
 	return &TokenManager{
 		vault:          vault,
-		rotationCheck:  5 * time.Minute,  // Check every 5 minutes
-		rotationBuffer: 5 * time.Minute,  // Rotate 5 minutes before expiration
+		rotationCheck:  5 * time.Minute, // Check every 5 minutes
+		rotationBuffer: 5 * time.Minute, // Rotate 5 minutes before expiration
 		rotations:      make(map[string]*tokenRotation),
 		stopChan:       make(chan struct{}),
 	}
@@ -82,13 +83,13 @@ func (tm *TokenManager) checkAndRotateTokens(ctx context.Context) {
 		rotation.mu.Unlock()
 
 		if needsRotation {
-			tm.rotateToken(ctx, id)
+			tm.RotateToken(ctx, id)
 		}
 	}
 }
 
-// rotateToken rotates a specific token
-func (tm *TokenManager) rotateToken(ctx context.Context, dataSourceID string) {
+// RotateToken rotates a specific token
+func (tm *TokenManager) RotateToken(ctx context.Context, dataSourceID string) {
 	tm.rotationsMu.RLock()
 	rotation := tm.rotations[dataSourceID]
 	tm.rotationsMu.RUnlock()
@@ -113,6 +114,35 @@ func (tm *TokenManager) rotateToken(ctx context.Context, dataSourceID string) {
 
 	// TODO: Store new token in database via CredentialVault
 	_ = newToken
+}
+
+// RotateTokenWithResult rotates a specific token and returns the result
+func (tm *TokenManager) RotateTokenWithResult(ctx context.Context, dataSourceID string) (string, time.Time, error) {
+	tm.rotationsMu.RLock()
+	rotation := tm.rotations[dataSourceID]
+	tm.rotationsMu.RUnlock()
+
+	if rotation == nil {
+		return "", time.Time{}, fmt.Errorf("no rotation handler found for %s", dataSourceID)
+	}
+
+	rotation.mu.Lock()
+	defer rotation.mu.Unlock()
+
+	// Call the rotation function
+	newToken, expiresAt, err := rotation.onRotate(ctx)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	// Update expiration
+	rotation.expiresAt = expiresAt
+	rotation.lastRotation = time.Now()
+
+	// TODO: Store new token in database via CredentialVault
+	_ = newToken
+
+	return newToken, expiresAt, nil
 }
 
 // GetToken retrieves the current token for a data source

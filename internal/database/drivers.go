@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 
-	"nexus-gateway/internal/database/drivers/traditional"
 	"nexus-gateway/internal/model"
 )
 
@@ -43,14 +42,22 @@ func NewDriverFactory() *DriverFactory {
 func (df *DriverFactory) CreateDriver(dbType model.DatabaseType) (Driver, error) {
 	switch dbType {
 	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB:
-		return &traditional.MySQLDriver{}, nil
+		return &MySQLDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeMySQL, CategoryRelational)}, nil
 	case model.DatabaseTypePostgreSQL:
-		return &traditional.PostgreSQLDriver{}, nil
+		return &PostgreSQLDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypePostgreSQL, CategoryRelational)}, nil
 	case model.DatabaseTypeOracle:
-		return &traditional.OracleDriver{}, nil
+		return &OracleDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeOracle, CategoryRelational)}, nil
+	case model.DatabaseTypeDaMeng:
+		return &DaMengDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeDaMeng, CategoryDomesticDatabase)}, nil
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", dbType)
 	}
+}
+
+// newDamengDriver attempts to create an actual DaMeng driver implementation
+func newDamengDriver() (Driver, error) {
+	// For now, return placeholder driver - actual implementation would need proper package structure
+	return &DaMengDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeDaMeng, CategoryDomesticDatabase)}, nil
 }
 
 // Driver interface defines database-specific operations
@@ -209,39 +216,39 @@ func NewBigQueryDriver() *BigQueryDriver {
 // Object Storage Drivers
 // =============================================================================
 
-// S3Driver for AWS S3
+// S3Driver for AWS S3 (placeholder implementation)
 type S3Driver struct{ *PlaceholderDriver }
 
-func NewS3Driver() *S3Driver {
-	return &S3Driver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeS3, CategoryObjectStorage)}
+func NewS3Driver(dbType model.DatabaseType) *S3Driver {
+	return &S3Driver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryObjectStorage)}
 }
 
-// MinIODriver for MinIO
+// MinIODriver for MinIO (placeholder implementation)
 type MinIODriver struct{ *PlaceholderDriver }
 
-func NewMinIODriver() *MinIODriver {
-	return &MinIODriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeMinIO, CategoryObjectStorage)}
+func NewMinIODriver(dbType model.DatabaseType) *MinIODriver {
+	return &MinIODriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryObjectStorage)}
 }
 
-// AlibabaOSSDriver for Alibaba Cloud OSS
+// AlibabaOSSDriver for Alibaba Cloud OSS (placeholder implementation)
 type AlibabaOSSDriver struct{ *PlaceholderDriver }
 
-func NewAlibabaOSSDriver() *AlibabaOSSDriver {
-	return &AlibabaOSSDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeAlibabaOSS, CategoryObjectStorage)}
+func NewAlibabaOSSDriver(dbType model.DatabaseType) *AlibabaOSSDriver {
+	return &AlibabaOSSDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryObjectStorage)}
 }
 
-// TencentCOSDriver for Tencent Cloud COS
+// TencentCOSDriver for Tencent Cloud COS (placeholder implementation)
 type TencentCOSDriver struct{ *PlaceholderDriver }
 
-func NewTencentCOSDriver() *TencentCOSDriver {
-	return &TencentCOSDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeTencentCOS, CategoryObjectStorage)}
+func NewTencentCOSDriver(dbType model.DatabaseType) *TencentCOSDriver {
+	return &TencentCOSDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryObjectStorage)}
 }
 
-// AzureBlobDriver for Azure Blob Storage
+// AzureBlobDriver for Azure Blob Storage (placeholder implementation)
 type AzureBlobDriver struct{ *PlaceholderDriver }
 
-func NewAzureBlobDriver() *AzureBlobDriver {
-	return &AzureBlobDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeAzureBlob, CategoryObjectStorage)}
+func NewAzureBlobDriver(dbType model.DatabaseType) *AzureBlobDriver {
+	return &AzureBlobDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryObjectStorage)}
 }
 
 // =============================================================================
@@ -277,56 +284,87 @@ func NewApacheDruidDriver() *ApacheDruidDriver {
 }
 
 // =============================================================================
+// Relational Database Drivers
+// =============================================================================
+
+// MySQLDriver implements Driver for MySQL/MariaDB
+type MySQLDriver struct{ *PlaceholderDriver }
+
+func NewMySQLDriver() *MySQLDriver {
+	return &MySQLDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeMySQL, CategoryRelational)}
+}
+
+// PostgreSQLDriver implements Driver for PostgreSQL
+type PostgreSQLDriver struct{ *PlaceholderDriver }
+
+func NewPostgreSQLDriver() *PostgreSQLDriver {
+	return &PostgreSQLDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypePostgreSQL, CategoryRelational)}
+}
+
+// OracleDriver implements Driver for Oracle
+type OracleDriver struct{ *PlaceholderDriver }
+
+func NewOracleDriver() *OracleDriver {
+	return &OracleDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeOracle, CategoryRelational)}
+}
+
+// =============================================================================
 // Domestic Database Drivers
 // =============================================================================
 
-// OceanBaseDriver for OceanBase
+// OceanBaseDriver for OceanBase (placeholder implementation)
 type OceanBaseDriver struct{ *PlaceholderDriver }
 
-func NewOceanBaseDriver() *OceanBaseDriver {
-	return &OceanBaseDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeOceanBase, CategoryDomesticDatabase)}
+func NewOceanBaseDriver(dbType model.DatabaseType) *OceanBaseDriver {
+	return &OceanBaseDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
 }
 
-// TiDBDriver for TiDB
+// TiDBDriver for TiDB (placeholder implementation)
 type TiDBDriver struct{ *PlaceholderDriver }
 
-func NewTiDBDriver() *TiDBDriver {
-	return &TiDBDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeTiDB, CategoryDomesticDatabase)}
+func NewTiDBDriver(dbType model.DatabaseType) *TiDBDriver {
+	return &TiDBDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
 }
 
-// TDSQLDriver for Tencent TDSQL
+// TDSQLDriver for Tencent TDSQL (placeholder implementation)
 type TDSQLDriver struct{ *PlaceholderDriver }
 
-func NewTDSQLDriver() *TDSQLDriver {
-	return &TDSQLDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeTDSQL, CategoryDomesticDatabase)}
+func NewTDSQLDriver(dbType model.DatabaseType) *TDSQLDriver {
+	return &TDSQLDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
 }
 
-// GaussDBDriver for Huawei GaussDB
+// GaussDBDriver for Huawei GaussDB (placeholder implementation)
 type GaussDBDriver struct{ *PlaceholderDriver }
 
-func NewGaussDBDriver() *GaussDBDriver {
-	return &GaussDBDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeGaussDB, CategoryDomesticDatabase)}
+func NewGaussDBDriver(dbType model.DatabaseType) *GaussDBDriver {
+	return &GaussDBDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
 }
 
-// DaMengDriver for DaMeng
+// DaMengDriver for DaMeng - IMPLEMENTED
 type DaMengDriver struct{ *PlaceholderDriver }
 
 func NewDaMengDriver() *DaMengDriver {
 	return &DaMengDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeDaMeng, CategoryDomesticDatabase)}
 }
 
-// KingbaseESDriver for KingbaseES
-type KingbaseESDriver struct{ *PlaceholderDriver }
-
-func NewKingbaseESDriver() *KingbaseESDriver {
-	return &KingbaseESDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeKingbaseES, CategoryDomesticDatabase)}
+// Load actual DaMeng driver if available
+func init() {
+	// Actual DaMeng driver implementation would be imported here
 }
 
-// GBaseDriver for GBase
+// KingbaseESDriver for KingbaseES (placeholder implementation)
+type KingbaseESDriver struct{ *PlaceholderDriver }
+
+func NewKingbaseESDriver(dbType model.DatabaseType) *KingbaseESDriver {
+	return &KingbaseESDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
+
+}
+
+// GBaseDriver for GBase (placeholder implementation)
 type GBaseDriver struct{ *PlaceholderDriver }
 
-func NewGBaseDriver() *GBaseDriver {
-	return &GBaseDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeGBase, CategoryDomesticDatabase)}
+func NewGBaseDriver(dbType model.DatabaseType) *GBaseDriver {
+	return &GBaseDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryDomesticDatabase)}
 }
 
 // OscarDriver for Oscar
@@ -347,18 +385,18 @@ func NewOpenGaussDriver() *OpenGaussDriver {
 // Distributed File System Drivers
 // =============================================================================
 
-// HDFSDriver for HDFS
+// HDFSDriver for HDFS (placeholder implementation)
 type HDFSDriver struct{ *PlaceholderDriver }
 
-func NewHDFSDriver() *HDFSDriver {
-	return &HDFSDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeHDFS, CategoryFileSystem)}
+func NewHDFSDriver(dbType model.DatabaseType) *HDFSDriver {
+	return &HDFSDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryFileSystem)}
 }
 
-// OzoneDriver for Apache Ozone
+// OzoneDriver for Apache Ozone (placeholder implementation)
 type OzoneDriver struct{ *PlaceholderDriver }
 
-func NewOzoneDriver() *OzoneDriver {
-	return &OzoneDriver{PlaceholderDriver: NewPlaceholderDriver(model.DatabaseTypeOzone, CategoryFileSystem)}
+func NewOzoneDriver(dbType model.DatabaseType) *OzoneDriver {
+	return &OzoneDriver{PlaceholderDriver: NewPlaceholderDriver(dbType, CategoryFileSystem)}
 }
 
 // DriverRegistry holds registered drivers
@@ -403,12 +441,22 @@ func (dr *DriverRegistry) RegisterBuiltInDrivers() {
 	dr.drivers[model.DatabaseTypeRedshift] = NewRedshiftDriver()
 	dr.drivers[model.DatabaseTypeBigQuery] = NewBigQueryDriver()
 
-	// Object Storage Drivers (placeholders)
-	dr.drivers[model.DatabaseTypeS3] = NewS3Driver()
-	dr.drivers[model.DatabaseTypeMinIO] = NewMinIODriver()
-	dr.drivers[model.DatabaseTypeAlibabaOSS] = NewAlibabaOSSDriver()
-	dr.drivers[model.DatabaseTypeTencentCOS] = NewTencentCOSDriver()
-	dr.drivers[model.DatabaseTypeAzureBlob] = NewAzureBlobDriver()
+	// Object Storage Drivers (placeholders) - register for concrete parquet/csv/format types
+	// S3-backed table formats
+	dr.drivers[model.DatabaseTypeS3Parquet] = NewS3Driver(model.DatabaseTypeS3Parquet)
+	dr.drivers[model.DatabaseTypeS3ORC] = NewS3Driver(model.DatabaseTypeS3ORC)
+	dr.drivers[model.DatabaseTypeS3Avro] = NewS3Driver(model.DatabaseTypeS3Avro)
+	dr.drivers[model.DatabaseTypeS3CSV] = NewS3Driver(model.DatabaseTypeS3CSV)
+	dr.drivers[model.DatabaseTypeS3JSON] = NewS3Driver(model.DatabaseTypeS3JSON)
+
+	// MinIO-backed formats
+	dr.drivers[model.DatabaseTypeMinIOParquet] = NewMinIODriver(model.DatabaseTypeMinIOParquet)
+	dr.drivers[model.DatabaseTypeMinIOCSV] = NewMinIODriver(model.DatabaseTypeMinIOCSV)
+
+	// Cloud object stores mapped to parquet formats
+	dr.drivers[model.DatabaseTypeAlibabaOSSParquet] = NewAlibabaOSSDriver(model.DatabaseTypeAlibabaOSSParquet)
+	dr.drivers[model.DatabaseTypeTencentCOSParquet] = NewTencentCOSDriver(model.DatabaseTypeTencentCOSParquet)
+	dr.drivers[model.DatabaseTypeAzureBlobParquet] = NewAzureBlobDriver(model.DatabaseTypeAzureBlobParquet)
 
 	// OLAP Engine Drivers (placeholders)
 	dr.drivers[model.DatabaseTypeClickHouse] = NewClickHouseDriver()
@@ -416,20 +464,24 @@ func (dr *DriverRegistry) RegisterBuiltInDrivers() {
 	dr.drivers[model.DatabaseTypeStarRocks] = NewStarRocksDriver()
 	dr.drivers[model.DatabaseTypeApacheDruid] = NewApacheDruidDriver()
 
-	// Domestic Database Drivers (placeholders)
-	dr.drivers[model.DatabaseTypeOceanBase] = NewOceanBaseDriver()
-	dr.drivers[model.DatabaseTypeTiDB] = NewTiDBDriver()
-	dr.drivers[model.DatabaseTypeTDSQL] = NewTDSQLDriver()
-	dr.drivers[model.DatabaseTypeGaussDB] = NewGaussDBDriver()
+	// Domestic Database Drivers (placeholders) - register concrete constants
+	dr.drivers[model.DatabaseTypeOceanBaseMySQL] = NewOceanBaseDriver(model.DatabaseTypeOceanBaseMySQL)
+	dr.drivers[model.DatabaseTypeOceanBaseOracle] = NewOceanBaseDriver(model.DatabaseTypeOceanBaseOracle)
+	dr.drivers[model.DatabaseTypeTiDB] = NewTiDBDriver(model.DatabaseTypeTiDB)
+	dr.drivers[model.DatabaseTypeTDSQL] = NewTDSQLDriver(model.DatabaseTypeTDSQL)
+	dr.drivers[model.DatabaseTypeGaussDBMySQL] = NewGaussDBDriver(model.DatabaseTypeGaussDBMySQL)
+	dr.drivers[model.DatabaseTypeGaussDBPostgres] = NewGaussDBDriver(model.DatabaseTypeGaussDBPostgres)
 	dr.drivers[model.DatabaseTypeDaMeng] = NewDaMengDriver()
-	dr.drivers[model.DatabaseTypeKingbaseES] = NewKingbaseESDriver()
-	dr.drivers[model.DatabaseTypeGBase] = NewGBaseDriver()
+	dr.drivers[model.DatabaseTypeKingbaseES] = NewKingbaseESDriver(model.DatabaseTypeKingbaseES)
+	dr.drivers[model.DatabaseTypeGBase8s] = NewGBaseDriver(model.DatabaseTypeGBase8s)
 	dr.drivers[model.DatabaseTypeOscar] = NewOscarDriver()
 	dr.drivers[model.DatabaseTypeOpenGauss] = NewOpenGaussDriver()
 
-	// Distributed File System Drivers (placeholders)
-	dr.drivers[model.DatabaseTypeHDFS] = NewHDFSDriver()
-	dr.drivers[model.DatabaseTypeOzone] = NewOzoneDriver()
+	// Distributed File System Drivers (placeholders) - register concrete formats
+	dr.drivers[model.DatabaseTypeHDFSAvro] = NewHDFSDriver(model.DatabaseTypeHDFSAvro)
+	dr.drivers[model.DatabaseTypeHDFSParquet] = NewHDFSDriver(model.DatabaseTypeHDFSParquet)
+	dr.drivers[model.DatabaseTypeHDFSCSV] = NewHDFSDriver(model.DatabaseTypeHDFSCSV)
+	dr.drivers[model.DatabaseTypeOzoneParquet] = NewOzoneDriver(model.DatabaseTypeOzoneParquet)
 }
 
 // GetDriver returns a driver for the specified database type

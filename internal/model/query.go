@@ -34,13 +34,6 @@ type FetchQueryResponse struct {
 	TotalCount int          `json:"totalCount"`
 }
 
-// ColumnInfo represents column information in the result set
-type ColumnInfo struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Nullable bool   `json:"nullable"`
-}
-
 // QueryResponse represents the response for a query execution
 type QueryResponse struct {
 	Columns  []ColumnInfo    `json:"columns"`

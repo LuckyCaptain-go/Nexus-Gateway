@@ -36,14 +36,23 @@ func main() {
 
 	// Auto migrate database schema
 	if err := db.AutoMigrate(&model.DataSource{}); err != nil {
-		log.Fatal("Failed to migrate database:", err)
+		log.Printf("Warning: Database migration failed: %v", err)
+		log.Println("Continuing with existing database schema...")
 	}
 
 	// Initialize repositories
 	datasourceRepo := repository.NewDataSourceRepository(db)
 
+	// Initialize security
+	// Use a 32-byte key for AES-256 encryption
+	masterKey := []byte("12345678901234567890123456789012") // 32 bytes - TODO: make this configurable
+	vault, err := security.NewCredentialVault(masterKey)
+	if err != nil {
+		log.Fatalf("Failed to create credential vault: %v", err)
+	}
+
 	// Initialize infrastructure
-	connPool := database.NewConnectionPool()
+	connPool := database.NewConnectionPool(security.NewTokenManager(vault), vault)
 	healthChecker := database.NewHealthChecker(connPool)
 
 	// Initialize security

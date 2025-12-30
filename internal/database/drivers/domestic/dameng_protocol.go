@@ -126,29 +126,33 @@ func (c *DaMengProtocolClient) ExecuteWithTableHint(ctx context.Context, db *sql
 
 // GetTableStatistics retrieves table statistics
 func (c *DaMengProtocolClient) GetTableStatistics(ctx context.Context, db *sql.DB, tableName string) (*DaMengTableStats, error) {
-	sql := `
-		SELECT TABLE_NAME, ROW_COUNT, BLOCKS,
-		       AVG_ROW_LEN, LAST_ANALYZED
-		FROM USER_TABLES
+	// NOTE: Original implementation used Oracle-style USER_TABLES.
+	// DaMeng may expose different system views. Attempt to read basic info
+	// from INFORMATION_SCHEMA.TABLES as a best-effort, but not all
+	// columns (ROW_COUNT, BLOCKS, AVG_ROW_LEN, LAST_ANALYZED) are
+	// standardized. Return what is available and leave others zeroed.
+
+	query := `
+		SELECT TABLE_NAME
+		FROM INFORMATION_SCHEMA.TABLES
 		WHERE TABLE_NAME = ?
 	`
 
-	stats := &DaMengTableStats{
-		TableName: tableName,
-	}
+	stats := &DaMengTableStats{TableName: tableName}
 
-	err := db.QueryRowContext(ctx, sql, tableName).Scan(
-		&stats.TableName,
-		&stats.RowCount,
-		&stats.Blocks,
-		&stats.AvgRowLen,
-		&stats.LastAnalyzed,
-	)
-
+	// Try to get a basic row to validate existence.
+	var foundName string
+	err := db.QueryRowContext(ctx, query, tableName).Scan(&foundName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get table statistics: %w", err)
+		// Fallback: try counting rows (may be expensive)
+		countSQL := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
+		if err2 := db.QueryRowContext(ctx, countSQL).Scan(&stats.RowCount); err2 != nil {
+			return nil, fmt.Errorf("failed to get table statistics (info schema and count failed): %w / %v", err, err2)
+		}
+		return stats, nil
 	}
-
+	// If we found the table, leave other stats as zero (unknown)
+	_ = foundName
 	return stats, nil
 }
 
@@ -163,45 +167,25 @@ type DaMengTableStats struct {
 
 // ExplainQuery explains a query execution plan
 func (c *DaMengProtocolClient) ExplainQuery(ctx context.Context, db *sql.DB, sql string) (*DaMengExplainPlan, error) {
-	explainSQL := "EXPLAIN PLAN FOR " + sql
-	_, err := db.ExecContext(ctx, explainSQL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to explain query: %w", err)
-	}
+	// Different DB engines expose explain plans differently. For DaMeng
+	// try a generic EXPLAIN; return the textual plan as steps.
 
-	// Get the execution plan
-	querySQL := `
-		SELECT ID, OPERATION, OPTIONS, OBJECT_NAME,
-		       CARDINALITY, BYTES, COST
-		FROM PLAN_TABLE
-		ORDER BY ID
-	`
-
-	rows, err := db.QueryContext(ctx, querySQL)
+	explainSQL := "EXPLAIN " + sql
+	rows, err := db.QueryContext(ctx, explainSQL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get plan: %w", err)
+		return nil, fmt.Errorf("failed to run EXPLAIN: %w", err)
 	}
 	defer rows.Close()
 
-	plan := &DaMengExplainPlan{
-		Steps: []DaMengPlanStep{},
-	}
+	plan := &DaMengExplainPlan{Steps: []DaMengPlanStep{}}
 
+	// Read textual explain output rows and store as Operation text.
 	for rows.Next() {
-		var step DaMengPlanStep
-		err := rows.Scan(
-			&step.ID,
-			&step.Operation,
-			&step.Options,
-			&step.ObjectName,
-			&step.Cardinality,
-			&step.Bytes,
-			&step.Cost,
-		)
-		if err != nil {
+		var line string
+		if err := rows.Scan(&line); err != nil {
 			return nil, err
 		}
-		plan.Steps = append(plan.Steps, step)
+		plan.Steps = append(plan.Steps, DaMengPlanStep{Operation: line})
 	}
 
 	return plan, nil
@@ -225,37 +209,9 @@ type DaMengPlanStep struct {
 
 // GetWaitEvents retrieves current wait events
 func (c *DaMengProtocolClient) GetWaitEvents(ctx context.Context, db *sql.DB) ([]DaMengWaitEvent, error) {
-	sql := `
-		SELECT EVENT, TOTAL_WAITS, TIME_WAITED,
-		       AVERAGE_WAIT
-		FROM V$SYSTEM_EVENT
-		WHERE TOTAL_WAITS > 0
-		ORDER BY TIME_WAITED DESC
-	`
-
-	rows, err := db.QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get wait events: %w", err)
-	}
-	defer rows.Close()
-
-	var events []DaMengWaitEvent
-
-	for rows.Next() {
-		var event DaMengWaitEvent
-		err := rows.Scan(
-			&event.EventName,
-			&event.TotalWaits,
-			&event.TimeWaited,
-			&event.AverageWait,
-		)
-		if err != nil {
-			return nil, err
-		}
-		events = append(events, event)
-	}
-
-	return events, nil
+	// V$SYSTEM_EVENT is an Oracle-style view. DaMeng may not expose it.
+	// Return empty slice and let caller handle lack of wait-event visibility.
+	return nil, fmt.Errorf("GetWaitEvents: not implemented for DaMeng — requires DB-specific system view")
 }
 
 // DaMengWaitEvent represents a wait event
@@ -268,36 +224,9 @@ type DaMengWaitEvent struct {
 
 // GetTablespaces retrieves tablespace information
 func (c *DaMengProtocolClient) GetTablespaces(ctx context.Context, db *sql.DB) ([]DaMengTablespace, error) {
-	sql := `
-		SELECT TABLESPACE_NAME, BLOCK_SIZE,
-		       STATUS, CONTENTS, LOGGING
-		FROM USER_TABLESPACES
-	`
-
-	rows, err := db.QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tablespaces: %w", err)
-	}
-	defer rows.Close()
-
-	var tablespaces []DaMengTablespace
-
-	for rows.Next() {
-		var ts DaMengTablespace
-		err := rows.Scan(
-			&ts.Name,
-			&ts.BlockSize,
-			&ts.Status,
-			&ts.Contents,
-			&ts.Logging,
-		)
-		if err != nil {
-			return nil, err
-		}
-		tablespaces = append(tablespaces, ts)
-	}
-
-	return tablespaces, nil
+	// USER_TABLESPACES is Oracle-specific. DaMeng tablespace info may
+	// be exposed differently. Return not implemented to avoid incorrect queries.
+	return nil, fmt.Errorf("GetTablespaces: not implemented for DaMeng — requires DB-specific system view")
 }
 
 // DaMengTablespace represents tablespace info
