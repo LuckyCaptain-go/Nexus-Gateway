@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"nexus-gateway/internal/model"
 	"nexus-gateway/internal/service"
+	"nexus-gateway/internal/utils"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type DataSourceController struct {
@@ -17,11 +19,11 @@ type DataSourceController struct {
 }
 
 type Response struct {
-	Success    bool        `json:"success"`
-	Data       interface{} `json:"data,omitempty"`
-	Error      *ErrorInfo  `json:"error,omitempty"`
-	Message    string      `json:"message,omitempty"`
-	CorrelationID string    `json:"correlationId"`
+	Success       bool        `json:"success"`
+	Data          interface{} `json:"data,omitempty"`
+	Error         *ErrorInfo  `json:"error,omitempty"`
+	Message       string      `json:"message,omitempty"`
+	CorrelationID string      `json:"correlationId"`
 }
 
 type ErrorInfo struct {
@@ -50,22 +52,26 @@ func NewDataSourceController(service service.DataSourceService) *DataSourceContr
 func (dc *DataSourceController) CreateDataSource(c *gin.Context) {
 	var req service.CreateDataSourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		dc.sendError(c, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request body: "+err.Error())
+		appErr := utils.NewValidationError("Invalid request body", err.Error())
+		dc.sendError(c, utils.GetErrorStatus(appErr), appErr.Code, appErr.Message)
 		return
 	}
 
 	if err := dc.validator.Struct(&req); err != nil {
-		dc.sendError(c, http.StatusBadRequest, "VALIDATION_ERROR", err.Error())
+		appErr := utils.NewValidationError("Validation failed", err.Error())
+		dc.sendError(c, utils.GetErrorStatus(appErr), appErr.Code, appErr.Message)
 		return
 	}
 
 	dataSource, err := dc.service.CreateDataSource(c.Request.Context(), &req)
 	if err != nil {
 		if err == service.ErrDataSourceExists {
-			dc.sendError(c, http.StatusConflict, "DATASOURCE_EXISTS", "Data source with this name already exists")
+			appErr := utils.NewConflictError("data source", "Data source with this name already exists")
+			dc.sendError(c, utils.GetErrorStatus(appErr), appErr.Code, appErr.Message)
 			return
 		}
-		dc.sendError(c, http.StatusInternalServerError, "CREATE_FAILED", "Failed to create data source")
+		appErr := utils.NewDatabaseError(err, "Failed to create data source")
+		dc.sendError(c, utils.GetErrorStatus(appErr), appErr.Code, appErr.Message)
 		return
 	}
 

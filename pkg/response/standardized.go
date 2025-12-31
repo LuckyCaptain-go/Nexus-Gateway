@@ -83,7 +83,7 @@ func NotFoundResponse(message string, correlationID string) *StandardResponse {
 
 // ConflictResponse creates a conflict error response
 func ConflictResponse(message string, correlationID string) *StandardResponse {
-	return ErrorResponse(utils.ErrCodeAlreadyExists, message, "", correlationID)
+	return ErrorResponse(utils.ErrCodeConflict, message, "", correlationID)
 }
 
 // InternalServerErrorResponse creates an internal server error response
