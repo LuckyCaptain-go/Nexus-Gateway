@@ -18,29 +18,29 @@ type MetricsCollector struct {
 	globalMutex   sync.RWMutex
 
 	retentionDuration time.Duration
-	cleanupInterval  time.Duration
+	cleanupInterval   time.Duration
 }
 
 // DataSourceMetrics holds metrics for a specific data source
 type DataSourceMetrics struct {
-	DataSourceID          string
-	DatabaseType          model.DatabaseType
-	TotalQueries          int64
-	SuccessfulQueries     int64
-	FailedQueries         int64
-	TotalExecutionTimeNs  int64
-	MinExecutionTimeNs    int64
-	MaxExecutionTimeNs    int64
-	AvgExecutionTimeNs    int64
-	TotalRowsRead         int64
-	TotalBytesRead        int64
-	LastQueryTime         time.Time
-	LastError             string
-	LastErrorTime         time.Time
-	CurrentConnections    int
-	MaxConnections        int
-	QueriesByHour         map[int64]int64 // Hour -> count
-	StatusChanges         []StatusChange
+	DataSourceID         string
+	DatabaseType         model.DatabaseType
+	TotalQueries         int64
+	SuccessfulQueries    int64
+	FailedQueries        int64
+	TotalExecutionTimeNs int64
+	MinExecutionTimeNs   int64
+	MaxExecutionTimeNs   int64
+	AvgExecutionTimeNs   int64
+	TotalRowsRead        int64
+	TotalBytesRead       int64
+	LastQueryTime        time.Time
+	LastError            string
+	LastErrorTime        time.Time
+	CurrentConnections   int
+	MaxConnections       int
+	QueriesByHour        map[int64]int64 // Hour -> count
+	StatusChanges        []StatusChange
 }
 
 // StatusChange represents a status change event
@@ -53,42 +53,42 @@ type StatusChange struct {
 
 // GlobalMetrics holds gateway-wide metrics
 type GlobalMetrics struct {
-	TotalQueries          int64
-	SuccessfulQueries     int64
-	FailedQueries         int64
-	TotalExecutionTimeNs  int64
-	QueriesByDataSource   map[string]int64
-	QueriesByType         map[model.DatabaseType]int64
-	QueriesByHour         map[int64]int64
-	ActiveConnections     int
-	StartTime             time.Time
+	TotalQueries         int64
+	SuccessfulQueries    int64
+	FailedQueries        int64
+	TotalExecutionTimeNs int64
+	QueriesByDataSource  map[string]int64
+	QueriesByType        map[model.DatabaseType]int64
+	QueriesByHour        map[int64]int64
+	ActiveConnections    int
+	StartTime            time.Time
 }
 
 // QueryMetrics represents metrics for a single query execution
 type QueryMetrics struct {
-	QueryID              string
-	DataSourceID         string
-	DatabaseType         model.DatabaseType
-	SQL                  string
-	Success              bool
-	ExecutionTimeNs      int64
-	RowsRead             int64
-	BytesRead            int64
-	Error                string
-	Timestamp            time.Time
+	QueryID         string
+	DataSourceID    string
+	DatabaseType    model.DatabaseType
+	SQL             string
+	Success         bool
+	ExecutionTimeNs int64
+	RowsRead        int64
+	BytesRead       int64
+	Error           string
+	Timestamp       time.Time
 }
 
 // NewMetricsCollector creates a new metrics collector
 func NewMetricsCollector(retention time.Duration) *MetricsCollector {
 	return &MetricsCollector{
-		metrics:          make(map[string]*DataSourceMetrics),
+		metrics:           make(map[string]*DataSourceMetrics),
 		retentionDuration: retention,
 		cleanupInterval:   1 * time.Hour,
 		globalMetrics: &GlobalMetrics{
 			QueriesByDataSource: make(map[string]int64),
 			QueriesByType:       make(map[model.DatabaseType]int64),
 			QueriesByHour:       make(map[int64]int64),
-			StartTime:          time.Now(),
+			StartTime:           time.Now(),
 		},
 	}
 }
@@ -104,12 +104,12 @@ func (mc *MetricsCollector) RecordQuery(metrics *QueryMetrics) {
 	dsMetrics, exists := mc.metrics[metrics.DataSourceID]
 	if !exists {
 		dsMetrics = &DataSourceMetrics{
-			DataSourceID:      metrics.DataSourceID,
-			DatabaseType:      metrics.DatabaseType,
+			DataSourceID:       metrics.DataSourceID,
+			DatabaseType:       metrics.DatabaseType,
 			MinExecutionTimeNs: metrics.ExecutionTimeNs,
 			MaxExecutionTimeNs: metrics.ExecutionTimeNs,
-			QueriesByHour:     make(map[int64]int64),
-			StatusChanges:     []StatusChange{},
+			QueriesByHour:      make(map[int64]int64),
+			StatusChanges:      []StatusChange{},
 		}
 		mc.metrics[metrics.DataSourceID] = dsMetrics
 	}
@@ -235,7 +235,7 @@ func (mc *MetricsCollector) UpdateConnectionCount(dataSourceID string, current, 
 		metrics = &DataSourceMetrics{
 			DataSourceID:  dataSourceID,
 			QueriesByHour: make(map[int64]int64),
-			StatusChanges:  []StatusChange{},
+			StatusChanges: []StatusChange{},
 		}
 		mc.metrics[dataSourceID] = metrics
 	}
@@ -254,7 +254,7 @@ func (mc *MetricsCollector) RecordStatusChange(dataSourceID, fromStatus, toStatu
 		metrics = &DataSourceMetrics{
 			DataSourceID:  dataSourceID,
 			QueriesByHour: make(map[int64]int64),
-			StatusChanges:  []StatusChange{},
+			StatusChanges: []StatusChange{},
 		}
 		mc.metrics[dataSourceID] = metrics
 	}
@@ -317,7 +317,7 @@ func (mc *MetricsCollector) ResetMetrics(dataSourceID string) {
 			DataSourceID:  dsID,
 			DatabaseType:  dbType,
 			QueriesByHour: make(map[int64]int64),
-			StatusChanges:  statusChanges,
+			StatusChanges: statusChanges,
 		}
 	}
 }
@@ -329,16 +329,16 @@ func (mc *MetricsCollector) GetMetricsSummary() map[string]interface{} {
 	uptime := time.Since(global.StartTime)
 
 	summary := map[string]interface{}{
-		"uptime_seconds":            uptime.Seconds(),
-		"total_queries":             global.TotalQueries,
-		"successful_queries":        global.SuccessfulQueries,
-		"failed_queries":            global.FailedQueries,
-		"success_rate":              0.0,
-		"avg_execution_time_ms":     0.0,
-		"queries_per_second":        0.0,
-		"active_data_sources":       len(global.QueriesByDataSource),
-		"queries_by_data_source":    global.QueriesByDataSource,
-		"queries_by_database_type":  global.QueriesByType,
+		"uptime_seconds":           uptime.Seconds(),
+		"total_queries":            global.TotalQueries,
+		"successful_queries":       global.SuccessfulQueries,
+		"failed_queries":           global.FailedQueries,
+		"success_rate":             0.0,
+		"avg_execution_time_ms":    0.0,
+		"queries_per_second":       0.0,
+		"active_data_sources":      len(global.QueriesByDataSource),
+		"queries_by_data_source":   global.QueriesByDataSource,
+		"queries_by_database_type": global.QueriesByType,
 	}
 
 	if global.TotalQueries > 0 {

@@ -12,8 +12,8 @@ type ClickHouseConfig struct {
 	Database        string
 	Username        string
 	Password        string
-	Compress        bool    // Enable data compression
-	Protocol        string  // "native" or "http"
+	Compress        bool   // Enable data compression
+	Protocol        string // "native" or "http"
 	Timeout         time.Duration
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration

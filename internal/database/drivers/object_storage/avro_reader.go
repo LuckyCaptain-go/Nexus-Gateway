@@ -35,7 +35,7 @@ func NewAvroReader(s3Client *S3Client, config *AvroReaderConfig) *AvroReader {
 
 // AvroFileReader wraps Avro file reader
 type AvroFileReader struct {
-	codec *goavro.Codec
+	codec    *goavro.Codec
 	s3Client *S3Client
 	key      string
 }
@@ -122,9 +122,9 @@ func (r *AvroFileReader) Close() error {
 
 // AvroSchema represents Avro file schema
 type AvroSchema struct {
-	JSON  string
-	Name  string
-	Type  string
+	JSON   string
+	Name   string
+	Type   string
 	Fields []AvroField
 }
 

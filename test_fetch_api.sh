@@ -16,7 +16,7 @@ curl -X POST "$BASE_URL/api/v1/fetch" \
     "dataSourceId": "12345678-1234-1234-1234-123456789012",
     "sql": "SELECT * FROM test_table LIMIT 1000",
     "type": 1,
-    "batchSize": 100,
+    "batch_size": 100,
     "timeout": 60
   }'
 
@@ -39,7 +39,7 @@ curl -X POST "$BASE_URL/api/internal/vega-gateway/v2/fetch" \
     "dataSourceId": "12345678-1234-1234-1234-123456789012",
     "sql": "SELECT * FROM test_table LIMIT 1000",
     "type": 1,
-    "batchSize": 100,
+    "batch_size": 100,
     "timeout": 60
   }'
 

@@ -12,8 +12,8 @@ import (
 
 // DruidDriver implements Driver interface for Apache Druid
 type DruidDriver struct {
-	config       *DruidConfig
-	restClient   *DruidRESTClient
+	config     *DruidConfig
+	restClient *DruidRESTClient
 }
 
 // DruidConfig holds Druid configuration
@@ -147,10 +147,10 @@ func (d *DruidDriver) GetClusterInfo(ctx context.Context) (*DruidClusterInfo, er
 	}
 
 	info := &DruidClusterInfo{
-		Version:    status.Version,
-		BrokerURL:  d.config.BrokerURL,
+		Version:        status.Version,
+		BrokerURL:      d.config.BrokerURL,
 		CoordinatorURL: d.config.CoordinatorURL,
-		OverlordURL: d.config.OverlordURL,
+		OverlordURL:    d.config.OverlordURL,
 	}
 
 	return info, nil

@@ -18,9 +18,9 @@ type ParquetReader struct {
 
 // ParquetReaderConfig holds Parquet reader configuration
 type ParquetReaderConfig struct {
-	BatchSize    int
-	Pushdown     bool // Enable predicate pushdown
-	Columns      []string // Specific columns to read (empty = all)
+	BatchSize int
+	Pushdown  bool     // Enable predicate pushdown
+	Columns   []string // Specific columns to read (empty = all)
 }
 
 // NewParquetReader creates a new Parquet reader
@@ -40,9 +40,9 @@ func NewParquetReader(s3Client *S3Client, config *ParquetReaderConfig) *ParquetR
 
 // ParquetFileReader wraps parquet-go reader with S3 integration
 type ParquetFileReader struct {
-	reader *reader.ParquetReader
+	reader   *reader.ParquetReader
 	s3Client *S3Client
-	key     string
+	key      string
 }
 
 // Read reads Parquet file from S3
@@ -150,38 +150,38 @@ type ParquetSchema struct {
 
 // ParquetColumn represents a Parquet column definition
 type ParquetColumn struct {
-	Name       string
-	Type       string
-	RepetitionType string // REQUIRED, OPTIONAL, REPEATED
-	Path       []string // Nested path for complex types
-	LogicalType string // Logical type annotation (e.g., UTF8, TIMESTAMP, etc.)
+	Name           string
+	Type           string
+	RepetitionType string   // REQUIRED, OPTIONAL, REPEATED
+	Path           []string // Nested path for complex types
+	LogicalType    string   // Logical type annotation (e.g., UTF8, TIMESTAMP, etc.)
 }
 
 // ParquetMetadata represents Parquet file metadata
 type ParquetMetadata struct {
-	Version       int32
-	CreatedBy     string
-	NumRows       int64
-	RowGroups     []RowGroupMetadata
-	Schema        ParquetSchema
+	Version   int32
+	CreatedBy string
+	NumRows   int64
+	RowGroups []RowGroupMetadata
+	Schema    ParquetSchema
 }
 
 // RowGroupMetadata represents a row group
 type RowGroupMetadata struct {
-	NumRows      int64
+	NumRows       int64
 	TotalByteSize int64
-	Columns      []ColumnChunkMetadata
+	Columns       []ColumnChunkMetadata
 }
 
 // ColumnChunkMetadata represents column chunk metadata
 type ColumnChunkMetadata struct {
-	FilePath      string
-	Offset        int64
-	NumValues     int64
-	Compression   string
-	Encodings     []string
-	Stats         ColumnStats
-	Type          string
+	FilePath    string
+	Offset      int64
+	NumValues   int64
+	Compression string
+	Encodings   []string
+	Stats       ColumnStats
+	Type        string
 }
 
 // ColumnStats represents column statistics
@@ -327,9 +327,9 @@ type ParquetRowIterator struct {
 // NewParquetRowIterator creates a new row iterator
 func NewParquetRowIterator(reader *ParquetFileReader, batchSize int) *ParquetRowIterator {
 	return &ParquetRowIterator{
-		reader:  reader,
-		buffer:  make([]map[string]interface{}, 0),
-		index:   0,
+		reader: reader,
+		buffer: make([]map[string]interface{}, 0),
+		index:  0,
 	}
 }
 
@@ -368,15 +368,15 @@ func (it *ParquetRowIterator) Close() error {
 
 // ParquetPredicate represents a predicate for pushdown filtering
 type ParquetPredicate struct {
-	Column    string
-	Operator  string // EQ, NEQ, LT, LTE, GT, GTE, IN, IS_NULL
-	Value     interface{}
-	Values    []interface{} // For IN operator
+	Column   string
+	Operator string // EQ, NEQ, LT, LTE, GT, GTE, IN, IS_NULL
+	Value    interface{}
+	Values   []interface{} // For IN operator
 }
 
 // ParquetFilter represents a filter expression
 type ParquetFilter struct {
-	Predicates []ParquetPredicate
+	Predicates      []ParquetPredicate
 	LogicalOperator string // AND, OR
 }
 
@@ -549,7 +549,7 @@ func (r *ParquetReader) EstimateCompressionRatio(ctx context.Context, key string
 
 	for _, rg := range metadata.RowGroups {
 		for _, col := range rg.Columns {
-			totalSize += col.Offset // Approximation
+			totalSize += col.Offset               // Approximation
 			uncompressedSize += col.NumValues * 8 // Rough estimate
 		}
 	}

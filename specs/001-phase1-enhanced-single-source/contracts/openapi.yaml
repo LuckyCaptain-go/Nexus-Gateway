@@ -355,6 +355,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /fetch:
+    post:
+      tags:
+        - Queries
+      summary: Execute a batch SQL query (streaming)
+      description: >-
+        Executes a SQL query and returns a batch of rows. The server will attempt
+        to open a backend streaming cursor when supported and return the first
+        batch along with a `nextUri` to continue fetching additional batches.
+      operationId: fetchQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchQueryRequest'
+      responses:
+        '200':
+          description: Fetch query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchQueryResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error during fetch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /fetch/{query_id}/{slug}/{token}:
+    get:
+      tags:
+        - Queries
+      summary: Fetch next batch of a streaming query
+      description: >-
+        Retrieves the next batch of rows for a previously opened streaming
+        query session. For legacy sessions (offset-based), this endpoint will
+        return the next batch computed via LIMIT/OFFSET.
+      operationId: fetchNextBatch
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: batch_size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 10000
+      responses:
+        '200':
+          description: Next batch fetched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchQueryResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /query/validate:
     post:
       tags:
@@ -712,6 +814,78 @@ components:
           default: 0
           example: 0
 
+    FetchQueryRequest:
+      type: object
+      required:
+        - dataSourceId
+        - sql
+      properties:
+        dataSourceId:
+          type: string
+          format: uuid
+          description: Data source UUID
+        sql:
+          type: string
+          description: SQL SELECT query to execute
+        type:
+          type: integer
+          description: Query type (1 = synchronous/legacy, 2 = streaming)
+          example: 2
+        batch_size:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Desired batch size for streaming fetch
+          default: 10000
+        timeout:
+          type: integer
+          description: Timeout in seconds for opening the streaming cursor
+          default: 60
+
+    FetchQueryResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          required:
+            - queryId
+            - slug
+            - token
+            - columns
+            - entries
+          properties:
+            queryId:
+              type: string
+              description: Server-generated query session ID
+            slug:
+              type: string
+              description: Short slug for session verification
+            token:
+              type: string
+              description: Token for session continuation
+            nextUri:
+              type: string
+              description: URI to fetch the next batch (empty when exhausted)
+            columns:
+              type: array
+              items:
+                $ref: '#/components/schemas/QueryColumn'
+            entries:
+              type: array
+              items:
+                type: array
+                items: {}
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for request tracing
+
     QueryValidateRequest:
       type: object
       required:
@@ -804,6 +978,10 @@ components:
               example:
                 - [1, 'John Doe', 'john@example.com']
                 - [2, 'Jane Smith', 'jane@example.com']
+            nextUri:
+              type: string
+              description: URI to fetch the next batch for streaming queries (empty when exhausted)
+            
             metadata:
               $ref: '#/components/schemas/QueryMetadata'
         correlationId:

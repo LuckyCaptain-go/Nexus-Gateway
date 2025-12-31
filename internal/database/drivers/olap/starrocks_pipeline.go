@@ -112,7 +112,7 @@ func (e *StarRocksPipelineEngine) GetPipelineStatus(ctx context.Context, db *sql
 	}
 
 	return &StarRocksPipelineStatus{
-		Enabled: enabled,
+		Enabled:     enabled,
 		PipelineDOP: dop,
 	}, nil
 }

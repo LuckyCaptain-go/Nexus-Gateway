@@ -22,9 +22,9 @@ func (p *HudiMetadataParser) ParseTableMetadata(hudiMeta *HudiTableMetadata, tab
 	}
 
 	tableSchema := &metadata.TableSchema{
-		Name:   tableName,
-		Type:   "TABLE",
-		Columns: make([]metadata.ColumnSchema, 0),
+		Name:       tableName,
+		Type:       "TABLE",
+		Columns:    make([]metadata.ColumnSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
@@ -154,10 +154,10 @@ func (p *HudiMetadataParser) GetOperationTimeline(commits []HudiCommit) []Operat
 	for i, commit := range commits {
 		timestamp, _ := p.ParseInstantTime(commit.CommitTime)
 		timeline[i] = OperationEvent{
-			Timestamp: timestamp,
-			Operation: commit.Operation,
+			Timestamp:  timestamp,
+			Operation:  commit.Operation,
 			ActionType: commit.ActionType,
-			State:     commit.State,
+			State:      commit.State,
 		}
 	}
 	return timeline
@@ -165,10 +165,10 @@ func (p *HudiMetadataParser) GetOperationTimeline(commits []HudiCommit) []Operat
 
 // OperationEvent represents an operation event
 type OperationEvent struct {
-	Timestamp time.Time
-	Operation string
+	Timestamp  time.Time
+	Operation  string
 	ActionType string
-	State     string
+	State      string
 }
 
 // GetCommitsByOperation filters commits by operation type
@@ -286,8 +286,8 @@ func (p *HudiMetadataParser) GetCommitTimeline(commits []HudiCommit) []CommitTim
 		timestamp, _ := p.ParseInstantTime(commit.CommitTime)
 		timeline[i] = CommitTimelineEntry{
 			Timestamp: timestamp,
-			Version:    commit.CommitTime,
-			Operation:  commit.Operation,
+			Version:   commit.CommitTime,
+			Operation: commit.Operation,
 		}
 	}
 	return timeline

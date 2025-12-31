@@ -18,10 +18,10 @@ func NewIcebergTimeTravel(driver *IcebergDriver) *IcebergTimeTravel {
 
 // TimeTravelQuery represents a time travel query
 type TimeTravelQuery struct {
-	Namespace  string
-	Table      string
-	Timestamp  *time.Time
-	SnapshotID *int64
+	Namespace   string
+	Table       string
+	Timestamp   *time.Time
+	SnapshotID  *int64
 	VersionAsOf int64 // For Spark-style VERSION AS OF
 }
 
@@ -139,10 +139,10 @@ func (tt *IcebergTimeTravel) CompareSnapshots(ctx context.Context, namespace, ta
 	}
 
 	comparison := &SnapshotComparison{
-		SnapshotID1:   snapshotID1,
-		SnapshotID2:   snapshotID2,
-		Timestamp1:    time.UnixMilli(snap1.TimestampMs),
-		Timestamp2:    time.UnixMilli(snap2.TimestampMs),
+		SnapshotID1: snapshotID1,
+		SnapshotID2: snapshotID2,
+		Timestamp1:  time.UnixMilli(snap1.TimestampMs),
+		Timestamp2:  time.UnixMilli(snap2.TimestampMs),
 	}
 
 	// Compare summary
@@ -217,9 +217,9 @@ func (tt *IcebergTimeTravel) GetChangelog(ctx context.Context, namespace, table 
 
 // ChangeLogEntry represents a change between snapshots
 type ChangeLogEntry struct {
-	SnapshotID int64
-	Operation  string
-	FilePath   string
+	SnapshotID  int64
+	Operation   string
+	FilePath    string
 	RecordCount int64
 }
 

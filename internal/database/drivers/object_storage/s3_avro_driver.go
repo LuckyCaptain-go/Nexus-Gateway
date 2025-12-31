@@ -11,9 +11,9 @@ import (
 
 // S3AvroDriver implements Driver interface for querying Avro files on S3
 type S3AvroDriver struct {
-	s3Client    *S3Client
-	avroReader  *AvroReader
-	config      *S3AvroDriverConfig
+	s3Client   *S3Client
+	avroReader *AvroReader
+	config     *S3AvroDriverConfig
 }
 
 // S3AvroDriverConfig holds S3 Avro driver configuration
@@ -138,7 +138,7 @@ func (d *S3AvroDriver) Query(ctx context.Context, key string) (*S3AvroResult, er
 
 // S3AvroResult represents query results
 type S3AvroResult struct {
-	Rows   []map[string]interface{}
+	Rows    []map[string]interface{}
 	NumRows int64
 }
 

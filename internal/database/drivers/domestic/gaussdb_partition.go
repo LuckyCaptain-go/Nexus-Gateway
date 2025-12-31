@@ -59,11 +59,11 @@ func (m *GaussDBPartitionManager) GetPartitionInfo(ctx context.Context, db *sql.
 
 // GaussDBPartitionInfo represents partition information
 type GaussDBPartitionInfo struct {
-	TableName          string
-	PartitionName      string
-	PartitionPosition  int
-	PartitionKey       string
-	PartitionCount     int
+	TableName         string
+	PartitionName     string
+	PartitionPosition int
+	PartitionKey      string
+	PartitionCount    int
 }
 
 // ListPartitions lists all partitions for a table

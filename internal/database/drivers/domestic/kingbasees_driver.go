@@ -18,13 +18,13 @@ type KingbaseESDriver struct {
 
 // KingbaseESConfig holds KingbaseES configuration
 type KingbaseESConfig struct {
-	Host         string
-	Port         int
-	Database     string
-	Username     string
-	Password     string
-	Schema       string
-	SSLMode      string // disable, require, verify-ca, verify-full
+	Host           string
+	Port           int
+	Database       string
+	Username       string
+	Password       string
+	Schema         string
+	SSLMode        string // disable, require, verify-ca, verify-full
 	CompatibleMode string // PG, ORA, MY (PostgreSQL, Oracle, MySQL compatibility)
 }
 
@@ -245,9 +245,9 @@ func (d *KingbaseESDriver) ExecuteOracleCompatQuery(ctx context.Context, db *sql
 	}
 
 	return &KingbaseESQueryResult{
-		Rows:        results,
-		Columns:     columns,
-		Count:       len(results),
+		Rows:       results,
+		Columns:    columns,
+		Count:      len(results),
 		CompatMode: "ORA",
 	}, nil
 }

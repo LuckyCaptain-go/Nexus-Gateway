@@ -31,21 +31,21 @@ const (
 	DatabaseTypeBigQuery   DatabaseType = "bigquery"
 
 	// Object Storage (Phase 1)
-	DatabaseTypeS3Parquet        DatabaseType = "s3_parquet"
-	DatabaseTypeS3ORC            DatabaseType = "s3_orc"
-	DatabaseTypeS3Avro           DatabaseType = "s3_avro"
-	DatabaseTypeS3CSV            DatabaseType = "s3_csv"
-	DatabaseTypeS3JSON           DatabaseType = "s3_json"
-	DatabaseTypeMinIOParquet     DatabaseType = "minio_parquet"
-	DatabaseTypeMinIOCSV         DatabaseType = "minio_csv"
+	DatabaseTypeS3Parquet         DatabaseType = "s3_parquet"
+	DatabaseTypeS3ORC             DatabaseType = "s3_orc"
+	DatabaseTypeS3Avro            DatabaseType = "s3_avro"
+	DatabaseTypeS3CSV             DatabaseType = "s3_csv"
+	DatabaseTypeS3JSON            DatabaseType = "s3_json"
+	DatabaseTypeMinIOParquet      DatabaseType = "minio_parquet"
+	DatabaseTypeMinIOCSV          DatabaseType = "minio_csv"
 	DatabaseTypeAlibabaOSSParquet DatabaseType = "oss_parquet"
 	DatabaseTypeTencentCOSParquet DatabaseType = "cos_parquet"
-	DatabaseTypeAzureBlobParquet DatabaseType = "azure_parquet"
+	DatabaseTypeAzureBlobParquet  DatabaseType = "azure_parquet"
 
 	// Distributed File Systems (Phase 1)
-	DatabaseTypeHDFSAvro    DatabaseType = "hdfs_avro"
-	DatabaseTypeHDFSParquet DatabaseType = "hdfs_parquet"
-	DatabaseTypeHDFSCSV     DatabaseType = "hdfs_csv"
+	DatabaseTypeHDFSAvro     DatabaseType = "hdfs_avro"
+	DatabaseTypeHDFSParquet  DatabaseType = "hdfs_parquet"
+	DatabaseTypeHDFSCSV      DatabaseType = "hdfs_csv"
 	DatabaseTypeOzoneParquet DatabaseType = "ozone_parquet"
 
 	// OLAP Engines (Phase 1)
@@ -55,18 +55,18 @@ const (
 	DatabaseTypeApacheDruid DatabaseType = "druid"
 
 	// Domestic Chinese Databases (Phase 1)
-	DatabaseTypeOceanBaseMySQL   DatabaseType = "oceanbase_mysql"
-	DatabaseTypeOceanBaseOracle  DatabaseType = "oceanbase_oracle"
-	DatabaseTypeTiDB             DatabaseType = "tidb"
-	DatabaseTypeTDSQL            DatabaseType = "tdsql"
-	DatabaseTypeGaussDBMySQL     DatabaseType = "gaussdb_mysql"
-	DatabaseTypeGaussDBPostgres  DatabaseType = "gaussdb_postgres"
-	DatabaseTypeDaMeng           DatabaseType = "dameng"
-	DatabaseTypeKingbaseES       DatabaseType = "kingbasees"
-	DatabaseTypeGBase8s          DatabaseType = "gbase_8s"
-	DatabaseTypeGBase8t          DatabaseType = "gbase_8t"
-	DatabaseTypeOscar            DatabaseType = "oscar"
-	DatabaseTypeOpenGauss        DatabaseType = "opengauss"
+	DatabaseTypeOceanBaseMySQL  DatabaseType = "oceanbase_mysql"
+	DatabaseTypeOceanBaseOracle DatabaseType = "oceanbase_oracle"
+	DatabaseTypeTiDB            DatabaseType = "tidb"
+	DatabaseTypeTDSQL           DatabaseType = "tdsql"
+	DatabaseTypeGaussDBMySQL    DatabaseType = "gaussdb_mysql"
+	DatabaseTypeGaussDBPostgres DatabaseType = "gaussdb_postgres"
+	DatabaseTypeDaMeng          DatabaseType = "dameng"
+	DatabaseTypeKingbaseES      DatabaseType = "kingbasees"
+	DatabaseTypeGBase8s         DatabaseType = "gbase_8s"
+	DatabaseTypeGBase8t         DatabaseType = "gbase_8t"
+	DatabaseTypeOscar           DatabaseType = "oscar"
+	DatabaseTypeOpenGauss       DatabaseType = "opengauss"
 )
 
 type DataSourceStatus string
@@ -95,13 +95,13 @@ type DataSourceConfig struct {
 	Database        string                 `json:"database" validate:"required"`
 	Username        string                 `json:"username" validate:"required"`
 	Password        string                 `json:"password" validate:"required"` // This should be encrypted
-	SSL             bool                  `json:"ssl"`
-	Timeout         int                   `json:"timeout"`        // Connection timeout in seconds, default 30
-	MaxPoolSize     int                   `json:"maxPoolSize"`    // Maximum pool size, default 10
-	IdleTimeout     int                   `json:"idleTimeout"`    // Idle timeout in seconds, default 600
-	MaxLifetime      int                   `json:"maxLifetime"`    // Max connection lifetime in seconds, default 1800
-	Timezone         string                `json:"timezone"`       // Database timezone
-	AdditionalProps  map[string]interface{} `json:"additionalProps,omitempty"`
+	SSL             bool                   `json:"ssl"`
+	Timeout         int                    `json:"timeout"`     // Connection timeout in seconds, default 30
+	MaxPoolSize     int                    `json:"maxPoolSize"` // Maximum pool size, default 10
+	IdleTimeout     int                    `json:"idleTimeout"` // Idle timeout in seconds, default 600
+	MaxLifetime     int                    `json:"maxLifetime"` // Max connection lifetime in seconds, default 1800
+	Timezone        string                 `json:"timezone"`    // Database timezone
+	AdditionalProps map[string]interface{} `json:"additionalProps,omitempty"`
 }
 
 // Value implements driver.Valuer interface for GORM
@@ -184,15 +184,15 @@ func (dsc *DataSourceConfig) GetConnectionURL(dbType DatabaseType) string {
 func IsValidDatabaseType(dbType string) bool {
 	switch DatabaseType(dbType) {
 	case DatabaseTypeMySQL, DatabaseTypeMariaDB, DatabaseTypePostgreSQL, DatabaseTypeOracle,
-	     DatabaseTypeApacheIceberg, DatabaseTypeDeltaLake, DatabaseTypeApacheHudi,
-	     DatabaseTypeSnowflake, DatabaseTypeDatabricks, DatabaseTypeRedshift, DatabaseTypeBigQuery,
-	     DatabaseTypeS3Parquet, DatabaseTypeS3ORC, DatabaseTypeS3Avro, DatabaseTypeS3CSV, DatabaseTypeS3JSON,
-	     DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet,
-	     DatabaseTypeHDFSAvro, DatabaseTypeHDFSParquet, DatabaseTypeHDFSCSV, DatabaseTypeOzoneParquet,
-	     DatabaseTypeClickHouse, DatabaseTypeApacheDoris, DatabaseTypeStarRocks, DatabaseTypeApacheDruid,
-	     DatabaseTypeOceanBaseMySQL, DatabaseTypeOceanBaseOracle, DatabaseTypeTiDB, DatabaseTypeTDSQL,
-	     DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
-	     DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		DatabaseTypeApacheIceberg, DatabaseTypeDeltaLake, DatabaseTypeApacheHudi,
+		DatabaseTypeSnowflake, DatabaseTypeDatabricks, DatabaseTypeRedshift, DatabaseTypeBigQuery,
+		DatabaseTypeS3Parquet, DatabaseTypeS3ORC, DatabaseTypeS3Avro, DatabaseTypeS3CSV, DatabaseTypeS3JSON,
+		DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet,
+		DatabaseTypeHDFSAvro, DatabaseTypeHDFSParquet, DatabaseTypeHDFSCSV, DatabaseTypeOzoneParquet,
+		DatabaseTypeClickHouse, DatabaseTypeApacheDoris, DatabaseTypeStarRocks, DatabaseTypeApacheDruid,
+		DatabaseTypeOceanBaseMySQL, DatabaseTypeOceanBaseOracle, DatabaseTypeTiDB, DatabaseTypeTDSQL,
+		DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
+		DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
 		return true
 	default:
 		return false
@@ -207,15 +207,15 @@ func GetDatabaseCategory(dbType DatabaseType) string {
 	case DatabaseTypeSnowflake, DatabaseTypeDatabricks, DatabaseTypeRedshift, DatabaseTypeBigQuery:
 		return "warehouses"
 	case DatabaseTypeS3Parquet, DatabaseTypeS3ORC, DatabaseTypeS3Avro, DatabaseTypeS3CSV, DatabaseTypeS3JSON,
-	     DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet:
+		DatabaseTypeMinIOParquet, DatabaseTypeMinIOCSV, DatabaseTypeAlibabaOSSParquet, DatabaseTypeTencentCOSParquet, DatabaseTypeAzureBlobParquet:
 		return "object_storage"
 	case DatabaseTypeHDFSAvro, DatabaseTypeHDFSParquet, DatabaseTypeHDFSCSV, DatabaseTypeOzoneParquet:
 		return "filesystems"
 	case DatabaseTypeClickHouse, DatabaseTypeApacheDoris, DatabaseTypeStarRocks, DatabaseTypeApacheDruid:
 		return "olap"
 	case DatabaseTypeOceanBaseMySQL, DatabaseTypeOceanBaseOracle, DatabaseTypeTiDB, DatabaseTypeTDSQL,
-	     DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
-	     DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		DatabaseTypeGaussDBMySQL, DatabaseTypeGaussDBPostgres, DatabaseTypeDaMeng, DatabaseTypeKingbaseES,
+		DatabaseTypeGBase8s, DatabaseTypeGBase8t, DatabaseTypeOscar, DatabaseTypeOpenGauss:
 		return "domestic"
 	default:
 		return "traditional"
@@ -226,10 +226,10 @@ func GetDatabaseCategory(dbType DatabaseType) string {
 func RequiresSQLProtocol(dbType DatabaseType) bool {
 	switch dbType {
 	case DatabaseTypeOceanBaseMySQL, DatabaseTypeTiDB, DatabaseTypeTDSQL,
-	     DatabaseTypeGaussDBMySQL, DatabaseTypeGBase8t:
+		DatabaseTypeGaussDBMySQL, DatabaseTypeGBase8t:
 		return true // MySQL protocol
 	case DatabaseTypeGaussDBPostgres, DatabaseTypeKingbaseES,
-	     DatabaseTypeOscar, DatabaseTypeOpenGauss:
+		DatabaseTypeOscar, DatabaseTypeOpenGauss:
 		return true // PostgreSQL protocol
 	default:
 		return false

@@ -185,9 +185,9 @@ func (d *TiDBDriver) GetTableDistribution(ctx context.Context, db *sql.DB, table
 
 // TiDBTableDistribution represents TiDB table distribution
 type TiDBTableDistribution struct {
-	TableName      string
-	RegionCount    int
-	StrictSQLMode  string
+	TableName     string
+	RegionCount   int
+	StrictSQLMode string
 }
 
 // ExecuteDistributedQuery executes a distributed query
@@ -227,18 +227,18 @@ func (d *TiDBDriver) ExecuteDistributedQuery(ctx context.Context, db *sql.DB, sq
 	}
 
 	return &TiDBQueryResult{
-		Rows:       results,
-		Columns:    columns,
-		RowCount:   len(results),
+		Rows:          results,
+		Columns:       columns,
+		RowCount:      len(results),
 		IsDistributed: d.IsDistributedQuery(sql),
 	}, nil
 }
 
 // TiDBQueryResult represents TiDB query results
 type TiDBQueryResult struct {
-	Rows         []map[string]interface{}
-	Columns      []string
-	RowCount     int
+	Rows          []map[string]interface{}
+	Columns       []string
+	RowCount      int
 	IsDistributed bool
 }
 

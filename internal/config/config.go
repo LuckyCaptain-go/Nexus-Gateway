@@ -12,6 +12,7 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Security SecurityConfig `mapstructure:"security"`
 	Logging  LoggingConfig  `mapstructure:"logging"`
+	Query    QueryConfig    `mapstructure:"query"`
 }
 
 type ServerConfig struct {
@@ -30,12 +31,12 @@ type DatabaseConfig struct {
 }
 
 type SecurityConfig struct {
-	JWTSecret         string        `mapstructure:"jwt_secret"`
-	JWTExpiration     time.Duration `mapstructure:"jwt_expiration"`
-	RateLimitPerMinute int          `mapstructure:"rate_limit_per_minute"`
-	RateLimitBurst    int           `mapstructure:"rate_limit_burst"`
-	EnableAuth        bool          `mapstructure:"enable_auth"`
-	EnableRateLimit   bool          `mapstructure:"enable_rate_limit"`
+	JWTSecret          string        `mapstructure:"jwt_secret"`
+	JWTExpiration      time.Duration `mapstructure:"jwt_expiration"`
+	RateLimitPerMinute int           `mapstructure:"rate_limit_per_minute"`
+	RateLimitBurst     int           `mapstructure:"rate_limit_burst"`
+	EnableAuth         bool          `mapstructure:"enable_auth"`
+	EnableRateLimit    bool          `mapstructure:"enable_rate_limit"`
 }
 
 type LoggingConfig struct {
@@ -97,4 +98,12 @@ func setDefaults() {
 	// Logging defaults
 	viper.SetDefault("logging.level", "info")
 	viper.SetDefault("logging.format", "json")
+
+	// Query defaults
+	viper.SetDefault("query.prefer_streaming", true)
+}
+
+// QueryConfig holds settings related to query execution
+type QueryConfig struct {
+	PreferStreaming bool `mapstructure:"prefer_streaming"`
 }

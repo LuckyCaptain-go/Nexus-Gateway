@@ -112,10 +112,10 @@ func (d *OzoneTextDriver) QueryTextFile(ctx context.Context, key string) (*Ozone
 
 	// Parse text file (placeholder)
 	return &OzoneTextResult{
-		Rows:     []string{string(data)},
+		Rows:      []string{string(data)},
 		LineCount: 1,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 

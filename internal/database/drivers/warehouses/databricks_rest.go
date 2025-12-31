@@ -12,9 +12,9 @@ import (
 
 // DatabricksRESTClient implements REST API client for Databricks
 type DatabricksRESTClient struct {
-	baseURL    string // Databricks workspace URL
-	httpClient *http.Client
-	token      string // Personal Access Token
+	baseURL     string // Databricks workspace URL
+	httpClient  *http.Client
+	token       string // Personal Access Token
 	warehouseID string // SQL Warehouse ID
 }
 
@@ -28,9 +28,9 @@ func NewDatabricksRESTClient(workspaceURL, token, warehouseID string) (*Databric
 	}
 
 	return &DatabricksRESTClient{
-		baseURL:    workspaceURL,
-		httpClient: &http.Client{Timeout: 120 * time.Second},
-		token:      token,
+		baseURL:     workspaceURL,
+		httpClient:  &http.Client{Timeout: 120 * time.Second},
+		token:       token,
 		warehouseID: warehouseID,
 	}, nil
 }
@@ -40,7 +40,7 @@ func (c *DatabricksRESTClient) ExecuteStatement(ctx context.Context, sql string)
 	url := fmt.Sprintf("%s/api/2.0/sql/statements", c.baseURL)
 
 	payload := DatabricksStatementRequest{
-		Statement:  sql,
+		Statement:   sql,
 		WarehouseID: c.warehouseID,
 		WaitTimeout: "50s",
 	}
@@ -290,39 +290,39 @@ func (c *DatabricksRESTClient) setAuthHeader(req *http.Request) {
 
 // DatabricksStatementRequest represents a statement request
 type DatabricksStatementRequest struct {
-	Statement  string `json:"statement"`
+	Statement   string `json:"statement"`
 	WarehouseID string `json:"warehouse_id"`
 	WaitTimeout string `json:"wait_timeout,omitempty"`
 	// Additional parameters
 	Parameters map[string]interface{} `json:"parameters,omitempty"`
-	Catalog    string `json:"catalog,omitempty"`
-	Schema     string `json:"schema,omitempty"`
+	Catalog    string                 `json:"catalog,omitempty"`
+	Schema     string                 `json:"schema,omitempty"`
 }
 
 // DatabricksStatementExecution represents statement execution response
 type DatabricksStatementExecution struct {
-	StatementID  string                      `json:"statement_id"`
-	Status       DatabricksStatementStatus   `json:"status"`
-	ResultSet   *DatabricksQueryResult       `json:"result,omitempty"`
-	Manifest    *DatabricksResultManifest   `json:"manifest,omitempty"`
+	StatementID string                    `json:"statement_id"`
+	Status      DatabricksStatementStatus `json:"status"`
+	ResultSet   *DatabricksQueryResult    `json:"result,omitempty"`
+	Manifest    *DatabricksResultManifest `json:"manifest,omitempty"`
 }
 
 // DatabricksStatementStatus represents statement status
 type DatabricksStatementStatus struct {
-	State   string `json:"state"` // PENDING, RUNNING, SUCCEEDED, FAILED, CANCELED
-	Error    *DatabricksError `json:"error,omitempty"`
+	State string           `json:"state"` // PENDING, RUNNING, SUCCEEDED, FAILED, CANCELED
+	Error *DatabricksError `json:"error,omitempty"`
 }
 
 // DatabricksQueryResult represents query results
 type DatabricksQueryResult struct {
-	Data    [][]interface{} `json:"data"`
-	Schema  DatabricksResultSchema `json:"schema"`
+	Data   [][]interface{}        `json:"data"`
+	Schema DatabricksResultSchema `json:"schema"`
 }
 
 // DatabricksResultManifest represents result manifest
 type DatabricksResultManifest struct {
 	Schema   DatabricksResultSchema `json:"schema"`
-	IsStaged bool   `json:"is_staged"`
+	IsStaged bool                   `json:"is_staged"`
 }
 
 // DatabricksResultSchema represents result schema
@@ -339,34 +339,34 @@ type DatabricksColumn struct {
 
 // DatabricksWarehouse represents a SQL warehouse
 type DatabricksWarehouse struct {
-	ID              string `json:"id"`
-	Name            string `json:"name"`
-	ClusterID       string `json:"cluster_id"`
-	Size            string `json:"size"` // SMALL, MEDIUM, LARGE, XLARGE, XXLARGE
-	AutoStop        int    `json:"auto_stop_min"`
-	EnableServerlessCompute bool `json:"enable_serverless_compute"`
+	ID                      string `json:"id"`
+	Name                    string `json:"name"`
+	ClusterID               string `json:"cluster_id"`
+	Size                    string `json:"size"` // SMALL, MEDIUM, LARGE, XLARGE, XXLARGE
+	AutoStop                int    `json:"auto_stop_min"`
+	EnableServerlessCompute bool   `json:"enable_serverless_compute"`
 }
 
 // DatabricksWarehouseStatus represents warehouse status
 type DatabricksWarehouseStatus struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Size         string `json:"size"`
-	State        string `json:"state"` // RUNNING, STARTING, STOPPING, STOPPED
-	AutoStop     int    `json:"auto_stop_min"`
-	Clusters     []DatabricksClusterInfo `json:"clusters"`
+	ID       string                  `json:"id"`
+	Name     string                  `json:"name"`
+	Size     string                  `json:"size"`
+	State    string                  `json:"state"` // RUNNING, STARTING, STOPPING, STOPPED
+	AutoStop int                     `json:"auto_stop_min"`
+	Clusters []DatabricksClusterInfo `json:"clusters"`
 }
 
 // DatabricksClusterInfo contains cluster information
 type DatabricksClusterInfo struct {
-	ClusterID string `json:"cluster_id"`
-	JDBCPort   int    `json:"jdbc_port"`
-	NumExecutors int  `json:"num_executors"`
+	ClusterID    string `json:"cluster_id"`
+	JDBCPort     int    `json:"jdbc_port"`
+	NumExecutors int    `json:"num_executors"`
 }
 
 // DatabricksError represents an error response
 type DatabricksError struct {
-	Message string `json:"message"`
+	Message   string `json:"message"`
 	ErrorCode string `json:"error_code"`
 }
 
@@ -402,11 +402,11 @@ func (c *DatabricksRESTClient) ExecuteCommand(ctx context.Context, clusterID, co
 	url := fmt.Sprintf("%s/api/2.0/commands/execute", c.baseURL)
 
 	payload := map[string]interface{}{
-		"clusterId":    clusterID,
-		"language":     "sql",
-		"commandId":    commandID,
-		"parameters":   parameters,
-		"context":       map[string]interface{}{},
+		"clusterId":  clusterID,
+		"language":   "sql",
+		"commandId":  commandID,
+		"parameters": parameters,
+		"context":    map[string]interface{}{},
 	}
 
 	body, err := json.Marshal(payload)
@@ -443,15 +443,15 @@ func (c *DatabricksRESTClient) ExecuteCommand(ctx context.Context, clusterID, co
 
 // DatabricksCommandExecution represents command execution response
 type DatabricksCommandExecution struct {
-	ID              string `json:"id"`
-	Status          string `json:"status"`
-	Results         *DatabricksCommandResult `json:"results,omitempty"`
+	ID      string                   `json:"id"`
+	Status  string                   `json:"status"`
+	Results *DatabricksCommandResult `json:"results,omitempty"`
 }
 
 // DatabricksCommandResult represents command results
 type DatabricksCommandResult struct {
-	Data           [][]interface{} `json:"data"`
-	Schema         DatabricksResultSchema `json:"schema"`
+	Data   [][]interface{}        `json:"data"`
+	Schema DatabricksResultSchema `json:"schema"`
 }
 
 // CancelCommand cancels a running command

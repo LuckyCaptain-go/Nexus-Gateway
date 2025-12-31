@@ -123,10 +123,10 @@ func (d *HDFSORCCompressionDriver) QueryCompressedORCFile(ctx context.Context, p
 
 	// Parse compressed ORC file (placeholder)
 	return &HDFSORCResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		FilePath: path,
+		FilePath:  path,
 	}, nil
 }
 

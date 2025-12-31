@@ -14,7 +14,7 @@ import (
 
 // SnowflakeDriver implements Driver interface for Snowflake data warehouse
 type SnowflakeDriver struct {
-	config    *SnowflakeConfig
+	config     *SnowflakeConfig
 	typeMapper *SnowflakeTypeMapper
 }
 
@@ -25,7 +25,7 @@ func NewSnowflakeDriver(config *SnowflakeConfig) (*SnowflakeDriver, error) {
 	}
 
 	return &SnowflakeDriver{
-		config:    config,
+		config:     config,
 		typeMapper: NewSnowflakeTypeMapper(),
 	}, nil
 }
@@ -181,11 +181,11 @@ func (d *SnowflakeDriver) GetSchema(ctx context.Context, db *sql.DB, schemaName 
 		if tableName != currentTable {
 			currentTable = tableName
 			tableSchema = &metadata.TableSchema{
-				Name:      tableName,
-				Schema:    schemaName,
-				Type:      "TABLE",
-				Columns:   []metadata.ColumnSchema{},
-				Indexes:   []metadata.IndexSchema{},
+				Name:       tableName,
+				Schema:     schemaName,
+				Type:       "TABLE",
+				Columns:    []metadata.ColumnSchema{},
+				Indexes:    []metadata.IndexSchema{},
 				Properties: make(map[string]interface{}),
 			}
 			schema.Tables[tableName] = tableSchema
@@ -261,16 +261,16 @@ func (d *SnowflakeDriver) GetWarehouseInfo(ctx context.Context, db *sql.DB, ware
 
 // SnowflakeWarehouseInfo contains warehouse information
 type SnowflakeWarehouseInfo struct {
-	Name              string
-	State             string
-	Type              string
-	Size              string
-	MinClusters       int
-	MaxClusters       int
+	Name               string
+	State              string
+	Type               string
+	Size               string
+	MinClusters        int
+	MaxClusters        int
 	AutoscalingEnabled bool
-	Running           int
-	Queued            int
-	IsCurrent         bool
+	Running            int
+	Queued             int
+	IsCurrent          bool
 }
 
 // SetWarehouseSize changes the warehouse size
@@ -346,14 +346,14 @@ func (d *SnowflakeDriver) QueryHistory(ctx context.Context, db *sql.DB, limit in
 
 // SnowflakeQueryHistory contains query history information
 type SnowflakeQueryHistory struct {
-	QueryID        string
-	QueryText      string
-	Status         string
-	StartTime      time.Time
-	EndTime        time.Time
-	ElapsedTime    int64
-	WarehouseSize  string
-	WarehouseType  string
+	QueryID       string
+	QueryText     string
+	Status        string
+	StartTime     time.Time
+	EndTime       time.Time
+	ElapsedTime   int64
+	WarehouseSize string
+	WarehouseType string
 }
 
 // RegisterSnowflakeDriver registers the Snowflake driver globally

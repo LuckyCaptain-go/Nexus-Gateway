@@ -7,18 +7,18 @@ import (
 
 // AWSIAMAuth handles AWS IAM-based authentication
 type AWSIAMAuth struct {
-	region     string
+	region    string
 	accountID string
-	roleARN    string
+	roleARN   string
 	//credentialsProvider aws.CredentialsProvider
 }
 
 // NewAWSIAMAuth creates a new AWS IAM authenticator
 func NewAWSIAMAuth(region, accountID, roleARN string) *AWSIAMAuth {
 	return &AWSIAMAuth{
-		region:     region,
-		accountID:  accountID,
-		roleARN:    roleARN,
+		region:    region,
+		accountID: accountID,
+		roleARN:   roleARN,
 	}
 }
 

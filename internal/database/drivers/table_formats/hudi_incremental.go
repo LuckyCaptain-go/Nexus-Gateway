@@ -18,20 +18,20 @@ func NewHudiIncrementalQuery(driver *HudiDriver) *HudiIncrementalQuery {
 
 // IncrementalQueryRequest represents an incremental query request
 type IncrementalQueryRequest struct {
-	BasePath           string
-	BeginInstantTime   string // Start instant (exclusive)
-	EndInstantTime     string // End instant (inclusive)
-	QueryType          string // "query_instant", "query_between_instants"
-	SelectedFields     []string
-	TableType          string // "COPY_ON_WRITE" or "MERGE_ON_READ"
+	BasePath         string
+	BeginInstantTime string // Start instant (exclusive)
+	EndInstantTime   string // End instant (inclusive)
+	QueryType        string // "query_instant", "query_between_instants"
+	SelectedFields   []string
+	TableType        string // "COPY_ON_WRITE" or "MERGE_ON_READ"
 }
 
 // IncrementalQueryResult represents incremental query results
 type IncrementalQueryResult struct {
-	Data       [][]interface{} `json:"data"`
-	Schema     []HudiField     `json:"schema"`
-	BeginTime  string          `json:"beginTime"`
-	EndTime    string          `json:"endTime"`
+	Data      [][]interface{} `json:"data"`
+	Schema    []HudiField     `json:"schema"`
+	BeginTime string          `json:"beginTime"`
+	EndTime   string          `json:"endTime"`
 }
 
 // QueryIncremental executes an incremental query
@@ -46,8 +46,8 @@ func (iq *HudiIncrementalQuery) QueryIncremental(ctx context.Context, req *Incre
 	}
 
 	return &IncrementalQueryResult{
-		Data:    result.Rows,
-		Schema:  convertToHudiFields(result.Schema.Fields),
+		Data:      result.Rows,
+		Schema:    convertToHudiFields(result.Schema.Fields),
 		BeginTime: req.BeginInstantTime,
 		EndTime:   req.EndInstantTime,
 	}, nil
@@ -112,7 +112,7 @@ func (iq *HudiIncrementalQuery) GetLatestChanges(ctx context.Context, basePath s
 		return nil, err
 	}
 
-	if len(commits) < numCommits + 1 {
+	if len(commits) < numCommits+1 {
 		return nil, fmt.Errorf("not enough commits (need at least %d, have %d)", numCommits+1, len(commits))
 	}
 
@@ -147,8 +147,8 @@ func (iq *HudiIncrementalQuery) GetInserts(ctx context.Context, basePath, beginI
 	}
 
 	return &IncrementalQueryResult{
-		Data:    result.Rows,
-		Schema:  convertToHudiFields(result.Schema.Fields),
+		Data:      result.Rows,
+		Schema:    convertToHudiFields(result.Schema.Fields),
 		BeginTime: beginInstantTime,
 		EndTime:   endInstantTime,
 	}, nil
@@ -165,8 +165,8 @@ func (iq *HudiIncrementalQuery) GetUpdates(ctx context.Context, basePath, beginI
 	}
 
 	return &IncrementalQueryResult{
-		Data:    result.Rows,
-		Schema:  convertToHudiFields(result.Schema.Fields),
+		Data:      result.Rows,
+		Schema:    convertToHudiFields(result.Schema.Fields),
 		BeginTime: beginInstantTime,
 		EndTime:   endInstantTime,
 	}, nil
@@ -183,8 +183,8 @@ func (iq *HudiIncrementalQuery) GetDeletes(ctx context.Context, basePath, beginI
 	}
 
 	return &IncrementalQueryResult{
-		Data:    result.Rows,
-		Schema:  convertToHudiFields(result.Schema.Fields),
+		Data:      result.Rows,
+		Schema:    convertToHudiFields(result.Schema.Fields),
 		BeginTime: beginInstantTime,
 		EndTime:   endInstantTime,
 	}, nil
@@ -256,33 +256,33 @@ func (iq *HudiIncrementalQuery) StreamChanges(ctx context.Context, basePath stri
 func (iq *HudiIncrementalQuery) GetHudiMetadataFields() []HudiMetadataField {
 	return []HudiMetadataField{
 		{
-			Name: "_hoodie_commit_time",
-			Type: "string",
+			Name:        "_hoodie_commit_time",
+			Type:        "string",
 			Description: "Commit instant time",
 		},
 		{
-			Name: "_hoodie_commit_seqno",
-			Type: "string",
+			Name:        "_hoodie_commit_seqno",
+			Type:        "string",
 			Description: "Commit sequence number",
 		},
 		{
-			Name: "_hoodie_record_key",
-			Type: "string",
+			Name:        "_hoodie_record_key",
+			Type:        "string",
 			Description: "Record key",
 		},
 		{
-			Name: "_hoodie_partition_path",
-			Type: "string",
+			Name:        "_hoodie_partition_path",
+			Type:        "string",
 			Description: "Partition path",
 		},
 		{
-			Name: "_hoodie_file_name",
-			Type: "string",
+			Name:        "_hoodie_file_name",
+			Type:        "string",
 			Description: "File name",
 		},
 		{
-			Name: "_hoodie_operation",
-			Type: "string",
+			Name:        "_hoodie_operation",
+			Type:        "string",
 			Description: "Operation type (INSERT/UPDATE/DELETE)",
 		},
 	}

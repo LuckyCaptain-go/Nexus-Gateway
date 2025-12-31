@@ -10,10 +10,10 @@ import (
 
 // BigQueryPaginationHandler handles pagination for BigQuery results
 type BigQueryPaginationHandler struct {
-	driver     *BigQueryDriver
-	pageSize   int64
-	maxRows    int64
-	timeout    time.Duration
+	driver   *BigQueryDriver
+	pageSize int64
+	maxRows  int64
+	timeout  time.Duration
 }
 
 // NewBigQueryPaginationHandler creates a new pagination handler
@@ -43,27 +43,27 @@ func (p *BigQueryPaginationHandler) SetTimeout(timeout time.Duration) {
 
 // PaginatedQueryResult contains paginated query results
 type PaginatedQueryResult struct {
-	PageToken      string                 `json:"pageToken"`
-	Rows           [][]interface{}        `json:"rows"`
-	Schema         bigquery.Schema        `json:"schema"`
-	TotalRows      int64                  `json:"totalRows"`
-	PageNumber     int64                  `json:"pageNumber"`
-	RowsReturned   int64                  `json:"rowsReturned"`
-	HasMore        bool                   `json:"hasMore"`
-	QueryInfo      *QueryExecutionInfo    `json:"queryInfo"`
+	PageToken    string              `json:"pageToken"`
+	Rows         [][]interface{}     `json:"rows"`
+	Schema       bigquery.Schema     `json:"schema"`
+	TotalRows    int64               `json:"totalRows"`
+	PageNumber   int64               `json:"pageNumber"`
+	RowsReturned int64               `json:"rowsReturned"`
+	HasMore      bool                `json:"hasMore"`
+	QueryInfo    *QueryExecutionInfo `json:"queryInfo"`
 }
 
 // QueryExecutionInfo contains query execution metadata
 type QueryExecutionInfo struct {
-	JobID           string        `json:"jobId"`
-	StartTime       time.Time     `json:"startTime"`
-	EndTime         time.Time     `json:"endTime"`
-	Duration        time.Duration `json:"duration"`
-	BytesProcessed  int64         `json:"bytesProcessed"`
-	BytesBilled     int64         `json:"bytesBilled"`
-	CacheHit        bool          `json:"cacheHit"`
-	SlotMillis      int64         `json:"slotMillis"`
-	DMLStats        *DMLStatistics `json:"dmlStats,omitempty"`
+	JobID          string         `json:"jobId"`
+	StartTime      time.Time      `json:"startTime"`
+	EndTime        time.Time      `json:"endTime"`
+	Duration       time.Duration  `json:"duration"`
+	BytesProcessed int64          `json:"bytesProcessed"`
+	BytesBilled    int64          `json:"bytesBilled"`
+	CacheHit       bool           `json:"cacheHit"`
+	SlotMillis     int64          `json:"slotMillis"`
+	DMLStats       *DMLStatistics `json:"dmlStats,omitempty"`
 }
 
 // DMLStatistics contains DML operation statistics
@@ -173,7 +173,7 @@ func (p *BigQueryPaginationHandler) QueryPaginated(ctx context.Context, sql stri
 
 	// Generate next page token
 	if result.HasMore {
-		result.PageToken = p.generatePageToken(pageNum + 1, totalRowsRead)
+		result.PageToken = p.generatePageToken(pageNum+1, totalRowsRead)
 	}
 
 	// Get total rows from statistics
@@ -385,10 +385,10 @@ func isTransientBigQueryError(err error) bool {
 
 // AsyncQueryResult represents an asynchronous query execution
 type AsyncQueryResult struct {
-	JobID      string
-	Job        *bigquery.Job
-	Status     string
-	StartTime  time.Time
+	JobID     string
+	Job       *bigquery.Job
+	Status    string
+	StartTime time.Time
 }
 
 // StartAsyncQuery starts an async query execution
@@ -455,7 +455,7 @@ func (p *BigQueryPaginationHandler) GetAsyncQueryResults(ctx context.Context, jo
 
 // QueryWithResultOptions executes query with advanced result options
 type QueryResultOptions struct {
-	Format          string // "json", "csv", "avro"
+	Format           string // "json", "csv", "avro"
 	DestinationTable string // BigQuery table ID for results
 	WriteDisposition string // "WRITE_TRUNCATE", "WRITE_APPEND", "WRITE_EMPTY"
 	MaxResults       int64
@@ -550,7 +550,7 @@ func (p *BigQueryPaginationHandler) BatchQuery(ctx context.Context, queries []st
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) &&
 		(s == substr ||
-		 len(s) > len(substr) && containsHelper(s, substr))
+			len(s) > len(substr) && containsHelper(s, substr))
 }
 
 func containsHelper(s, substr string) bool {

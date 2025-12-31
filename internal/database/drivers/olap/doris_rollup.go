@@ -110,12 +110,12 @@ func (m *DorisRollupManager) GetRollupStatus(ctx context.Context, db *sql.DB, ta
 
 // DorisRollupStatus represents rollup status
 type DorisRollupStatus struct {
-	TableName   string
-	RollupName  string
-	State       string // PENDING, LOADING, FINISHED, CANCELLED
-	Progress    int
-	RowsTotal   int64
-	RowsLoaded  int64
+	TableName  string
+	RollupName string
+	State      string // PENDING, LOADING, FINISHED, CANCELLED
+	Progress   int
+	RowsTotal  int64
+	RowsLoaded int64
 }
 
 // RebuildRollup rebuilds a rollup index

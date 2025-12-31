@@ -172,10 +172,10 @@ func (d *OpenGaussDriver) GetTableDistribution(ctx context.Context, db *sql.DB, 
 
 // OpenGaussTableDistribution represents table distribution info
 type OpenGaussTableDistribution struct {
-	TableName         string
-	DistributionType  string // HASH, RANGE, REPLICATION
-	DistributionKey   string
-	NodeCount         int
+	TableName        string
+	DistributionType string // HASH, RANGE, REPLICATION
+	DistributionKey  string
+	NodeCount        int
 }
 
 // EnableRowSecurity enables row-level security
@@ -195,9 +195,9 @@ func (d *OpenGaussDriver) CreateRowSecurityPolicy(ctx context.Context, db *sql.D
 
 // OpenGaussRLSPolicy represents row-level security policy
 type OpenGaussRLSPolicy struct {
-	PolicyName       string
-	TableName        string
-	UsingExpression  string
+	PolicyName          string
+	TableName           string
+	UsingExpression     string
 	WithCheckExpression string
 }
 

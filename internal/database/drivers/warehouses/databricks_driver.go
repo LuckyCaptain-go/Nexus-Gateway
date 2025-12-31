@@ -251,14 +251,14 @@ func (d *DatabricksDriver) GetClusterInfo(ctx context.Context, clusterID string)
 
 // DatabricksClusterInfo contains cluster information
 type DatabricksClusterInfo struct {
-	ClusterID       string
-	SparkVersion    string
-	DriverNodeType  string
-	WorkerNodeType  string
-	NumWorkers      int
-	AutoScale       bool
-	AutoScaleMin    int
-	AutoScaleMax    int
+	ClusterID      string
+	SparkVersion   string
+	DriverNodeType string
+	WorkerNodeType string
+	NumWorkers     int
+	AutoScale      bool
+	AutoScaleMin   int
+	AutoScaleMax   int
 }
 
 // CreateWarehouse creates a new SQL warehouse

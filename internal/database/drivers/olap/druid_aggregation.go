@@ -56,8 +56,8 @@ func (h *DruidAggregationHandler) ExecuteTopNQuery(ctx context.Context, datasour
 
 // DruidAggregation represents a Druid aggregation
 type DruidAggregation struct {
-	Type     string // count, sum, avg, min, max
-	Name     string
+	Type      string // count, sum, avg, min, max
+	Name      string
 	FieldName string
 }
 
@@ -99,11 +99,11 @@ func (h *DruidAggregationHandler) ExecutePostAggregation(ctx context.Context, da
 
 // DruidPostAggregation represents a Druid post-aggregation
 type DruidPostAggregation struct {
-	Type      string // arithmetic, fieldAccess
-	Name      string
-	Fields    []string
-	Formula   string // for arithmetic
-	Function  string
+	Type     string // arithmetic, fieldAccess
+	Name     string
+	Fields   []string
+	Formula  string // for arithmetic
+	Function string
 }
 
 // formatPostAggregations formats post-aggregations

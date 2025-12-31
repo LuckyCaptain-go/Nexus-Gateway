@@ -11,9 +11,9 @@ import (
 
 // AzureBlobClient wraps Azure Blob Storage client
 type AzureBlobClient struct {
-	client     *azblob.Client
-	container  string
-	config     *AzureBlobConfig
+	client    *azblob.Client
+	container string
+	config    *AzureBlobConfig
 }
 
 // AzureBlobConfig holds Azure Blob Storage configuration
@@ -118,12 +118,12 @@ func (c *AzureBlobClient) GetBlobMetadata(ctx context.Context, name string) (*Az
 	}
 
 	metadata := &AzureBlobMetadata{
-		Name:           name,
-		ContentLength:  *props.ContentLength,
-		ContentType:    *props.ContentType,
-		LastModified:   *props.LastModified,
-		ETag:           *props.Etag,
-		BlobType:       *props.BlobType,
+		Name:          name,
+		ContentLength: *props.ContentLength,
+		ContentType:   *props.ContentType,
+		LastModified:  *props.LastModified,
+		ETag:          *props.Etag,
+		BlobType:      *props.BlobType,
 	}
 
 	if props.ContentEncoding != nil {
@@ -210,14 +210,14 @@ type AzureBlob struct {
 
 // AzureBlobMetadata represents Azure blob metadata
 type AzureBlobMetadata struct {
-	Name             string
-	ContentLength    int64
-	ContentType      string
-	ContentEncoding  string
-	LastModified     time.Time
-	ETag             string
-	CacheControl     string
-	BlobType         azblob.BlobType
+	Name            string
+	ContentLength   int64
+	ContentType     string
+	ContentEncoding string
+	LastModified    time.Time
+	ETag            string
+	CacheControl    string
+	BlobType        azblob.BlobType
 }
 
 // ListBlobsByExtension lists blobs with a specific extension
@@ -240,7 +240,7 @@ func (c *AzureBlobClient) ListBlobsByExtension(ctx context.Context, prefix, exte
 // GetContainerInfo returns container information
 func (c *AzureBlobClient) GetContainerInfo(ctx context.Context) *AzureContainerInfo {
 	return &AzureContainerInfo{
-		Name:       c.container,
+		Name:        c.container,
 		AccountName: c.config.AccountName,
 	}
 }

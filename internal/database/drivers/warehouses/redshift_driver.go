@@ -13,11 +13,11 @@ import (
 
 // RedshiftDriver implements Driver interface for Amazon Redshift
 type RedshiftDriver struct {
-	region          string
-	clusterID       string
-	iamRoleARN      string
-	rdsDataService  *rdsdata.Service
-	useIAM          bool
+	region         string
+	clusterID      string
+	iamRoleARN     string
+	rdsDataService *rdsdata.Service
+	useIAM         bool
 }
 
 // NewRedshiftDriver creates a new Redshift driver

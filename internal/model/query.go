@@ -24,6 +24,9 @@ type FetchQueryRequest struct {
 }
 
 // FetchQueryResponse represents the response for a fetch query
+// When a streaming cursor is used, `NextURI` will be populated and can be
+// called to retrieve the next batch of rows. If `NextURI` is empty, the
+// result set is exhausted.
 type FetchQueryResponse struct {
 	QueryID    string       `json:"queryId"`
 	Slug       string       `json:"slug"`
@@ -38,6 +41,7 @@ type FetchQueryResponse struct {
 type QueryResponse struct {
 	Columns  []ColumnInfo    `json:"columns"`
 	Rows     [][]interface{} `json:"rows"`
+	NextURI  string          `json:"nextUri,omitempty"`
 	Metadata QueryMetadata   `json:"metadata"`
 	Success  bool            `json:"success"`
 	Error    *QueryError     `json:"error,omitempty"`

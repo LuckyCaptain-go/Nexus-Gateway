@@ -18,16 +18,16 @@ type GaussDBDriver struct {
 
 // GaussDBConfig holds GaussDB configuration
 type GaussDBConfig struct {
-	Host            string
-	Port            int
-	Database        string
-	Username        string
-	Password        string
-	ReplicaCount    int    // Number of replicas
-	PrimaryNode     string // Primary node address
-	StandbyNodes    []string // Standby node addresses
-	EnableHA        bool   // Enable high availability
-	SSLMode         string // disable, require, verify-ca, verify-full
+	Host         string
+	Port         int
+	Database     string
+	Username     string
+	Password     string
+	ReplicaCount int      // Number of replicas
+	PrimaryNode  string   // Primary node address
+	StandbyNodes []string // Standby node addresses
+	EnableHA     bool     // Enable high availability
+	SSLMode      string   // disable, require, verify-ca, verify-full
 }
 
 // NewGaussDBDriver creates a new GaussDB driver
@@ -207,10 +207,10 @@ func (d *GaussDBDriver) GetDatabaseInfo(ctx context.Context, db *sql.DB) (*Gauss
 
 // GaussDBDatabaseInfo represents GaussDB database information
 type GaussDBDatabaseInfo struct {
-	Version     string
+	Version      string
 	ReplicaCount int
-	ClusterSize int
-	StorageType string
+	ClusterSize  int
+	StorageType  string
 }
 
 // IsPrimaryNode checks if current connection is to primary node

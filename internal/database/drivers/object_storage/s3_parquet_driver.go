@@ -12,10 +12,10 @@ import (
 
 // S3ParquetDriver implements Driver interface for querying Parquet files on S3
 type S3ParquetDriver struct {
-	s3Client       *S3Client
-	parquetReader  *ParquetReader
-	selectHandler  *S3SelectHandler
-	config         *S3ParquetDriverConfig
+	s3Client      *S3Client
+	parquetReader *ParquetReader
+	selectHandler *S3SelectHandler
+	config        *S3ParquetDriverConfig
 }
 
 // S3ParquetDriverConfig holds S3 Parquet driver configuration
@@ -148,13 +148,13 @@ func (d *S3ParquetDriver) Query(ctx context.Context, query *S3ParquetQuery) (*S3
 
 // S3ParquetQuery represents a query against S3 Parquet files
 type S3ParquetQuery struct {
-	Key           string
-	Columns       []string
-	Filters       map[string]interface{}
-	Limit         int
-	Offset        int
-	UseSelectAPI  bool
-	SelectSQL     string // Custom SQL for S3 Select
+	Key          string
+	Columns      []string
+	Filters      map[string]interface{}
+	Limit        int
+	Offset       int
+	UseSelectAPI bool
+	SelectSQL    string // Custom SQL for S3 Select
 }
 
 // S3ParquetResult represents query results
@@ -179,8 +179,8 @@ func (d *S3ParquetDriver) queryWithSelect(ctx context.Context, query *S3ParquetQ
 	}
 
 	return &S3ParquetResult{
-		Rows:     result.Records,
-		NumRows:  int64(len(result.Records)),
+		Rows:      result.Records,
+		NumRows:   int64(len(result.Records)),
 		BytesRead: result.BytesProcessed,
 	}, nil
 }
@@ -365,9 +365,9 @@ func (d *S3ParquetDriver) ScanPartition(ctx context.Context, prefix string) (*Pa
 	}
 
 	partition := &PartitionMetadata{
-		Prefix:      prefix,
-		FileCount:   len(files),
-		Files:       make([]FileMetadata, 0, len(files)),
+		Prefix:    prefix,
+		FileCount: len(files),
+		Files:     make([]FileMetadata, 0, len(files)),
 	}
 
 	var totalSize int64
@@ -451,11 +451,11 @@ func (d *S3ParquetDriver) GetFileStatistics(ctx context.Context, key string) (*F
 	}
 
 	return &FileStatistics{
-		Key:        key,
-		NumRows:    metadata.NumRows,
-		FileSize:   objMetadata.ContentLength,
-		RowGroups:  len(metadata.RowGroups),
-		Columns:    len(metadata.Schema.Columns),
+		Key:       key,
+		NumRows:   metadata.NumRows,
+		FileSize:  objMetadata.ContentLength,
+		RowGroups: len(metadata.RowGroups),
+		Columns:   len(metadata.Schema.Columns),
 	}, nil
 }
 

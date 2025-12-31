@@ -28,7 +28,7 @@ curl -X POST "http://localhost:8080/api/v1/fetch" \
     "dataSourceId": "12345678-1234-1234-1234-123456789012",
     "sql": "SELECT * FROM large_table WHERE created_at > \"2024-01-01\"",
     "type": 1,
-    "batchSize": 1000,
+    "batch_size": 1000,
     "timeout": 120
   }'
 ```
@@ -95,7 +95,7 @@ curl -X POST "http://localhost:8080/api/internal/vega-gateway/v2/fetch" \
     "dataSourceId": "12345678-1234-1234-1234-123456789012",
     "sql": "SELECT * FROM large_table WHERE created_at > \"2024-01-01\"",
     "type": 1,
-    "batchSize": 1000,
+    "batch_size": 1000,
     "timeout": 120
   }'
 ```
@@ -120,6 +120,7 @@ curl -X GET "http://localhost:8080/api/internal/vega-gateway/v2/fetch/550e8400-e
 | `sql` | string | 是 | SQL查询语句 (只支持SELECT) |
 | `type` | integer | 是 | 查询类型: 1-同步查询, 2-流式查询 |
 | `batchSize` | integer | 否 | 每批次数据量，范围: 1-10000，默认10000 |
+| `batch_size` | integer | 否 | 每批次数据量，范围: 1-10000，默认10000 |
 | `timeout` | integer | 否 | 查询超时时间(秒)，范围: 1-1800，默认60 |
 
 ### 查询参数

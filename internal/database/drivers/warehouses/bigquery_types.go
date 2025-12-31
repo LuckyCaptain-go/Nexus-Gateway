@@ -25,10 +25,10 @@ func NewBigQueryTypeMapper(location string) *BigQueryTypeMapper {
 
 // BigQueryTypeInfo contains detailed type information
 type BigQueryTypeInfo struct {
-	Name           string
-	IsRepeated     bool // Is ARRAY
-	IsNullable     bool
-	FieldType      *BigQueryTypeInfo // For STRUCT fields
+	Name             string
+	IsRepeated       bool // Is ARRAY
+	IsNullable       bool
+	FieldType        *BigQueryTypeInfo // For STRUCT fields
 	ArrayElementType *BigQueryTypeInfo // For ARRAY element types
 }
 
@@ -165,7 +165,7 @@ func (m *BigQueryTypeMapper) convertArrayValue(value interface{}, fieldSchema *b
 	for _, item := range arr {
 		// Create a temporary field schema for array element
 		elementSchema := &bigquery.FieldSchema{
-			Type: fieldSchema.Type,
+			Type:   fieldSchema.Type,
 			Schema: fieldSchema.Schema,
 		}
 		converted, err := m.ConvertBigQueryValue(item, elementSchema)
@@ -537,8 +537,8 @@ func (c *BigQuerySchemaConverter) BuildBigQuerySchema(stdSchema model.TableSchem
 
 	for _, col := range stdSchema.Columns {
 		field := &bigquery.FieldSchema{
-			Name: col.Name,
-			Type: c.convertStandardTypeToBigQuery(col.Type),
+			Name:     col.Name,
+			Type:     c.convertStandardTypeToBigQuery(col.Type),
 			Required: !col.Nullable,
 		}
 
@@ -594,8 +594,8 @@ func (c *BigQuerySchemaConverter) buildNestedSchema(cols []model.ColumnInfo) big
 
 	for _, col := range cols {
 		field := &bigquery.FieldSchema{
-			Name: col.Name,
-			Type: c.convertStandardTypeToBigQuery(col.Type),
+			Name:     col.Name,
+			Type:     c.convertStandardTypeToBigQuery(col.Type),
 			Required: !col.Nullable,
 		}
 

@@ -18,17 +18,17 @@ type TDSQLDriver struct {
 
 // TDSQLConfig holds TDSQL configuration
 type TDSQLConfig struct {
-	Host            string
-	Port            int
-	Database        string
-	Username        string
-	Password        string
-	ShardKey        string // Shard key for distributed queries
-	ProxyHost       string // Proxy host for connection routing
-	ProxyPort       int    // Proxy port
-	ReadWriteSplit  bool   // Enable read-write splitting
-	Consistency     string // Strong, Eventual, Session
-	Charset         string // utf8mb4, utf8, etc.
+	Host           string
+	Port           int
+	Database       string
+	Username       string
+	Password       string
+	ShardKey       string // Shard key for distributed queries
+	ProxyHost      string // Proxy host for connection routing
+	ProxyPort      int    // Proxy port
+	ReadWriteSplit bool   // Enable read-write splitting
+	Consistency    string // Strong, Eventual, Session
+	Charset        string // utf8mb4, utf8, etc.
 }
 
 // NewTDSQLDriver creates a new TDSQL driver
@@ -166,12 +166,12 @@ func (d *TDSQLDriver) GetShardInfo(ctx context.Context, db *sql.DB, tableName st
 
 // TDSQLShardInfo represents TDSQL shard information
 type TDSQLShardInfo struct {
-	TableName        string
-	ShardKey         string
-	ShardCount       int
-	PartitionName    string
-	PartitionMethod  string
-	ShardNodes       []string
+	TableName       string
+	ShardKey        string
+	ShardCount      int
+	PartitionName   string
+	PartitionMethod string
+	ShardNodes      []string
 }
 
 // ExecuteDistributedQuery executes a distributed query with routing
@@ -204,11 +204,11 @@ func (d *TDSQLDriver) ExecuteDistributedQuery(ctx context.Context, db *sql.DB, s
 	}
 
 	return &TDSQLQueryResult{
-		Rows:       results,
-		Columns:    columns,
-		Count:      len(results),
-		ShardKey:   shardKey,
-		IsRouted:   shardKey != "",
+		Rows:     results,
+		Columns:  columns,
+		Count:    len(results),
+		ShardKey: shardKey,
+		IsRouted: shardKey != "",
 	}, nil
 }
 

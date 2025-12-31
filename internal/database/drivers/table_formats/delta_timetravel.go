@@ -18,9 +18,9 @@ func NewDeltaTimeTravel(driver *DeltaDriver) *DeltaTimeTravel {
 
 // TimeTravelQuery represents a time travel query
 type DeltaTimeTravelQuery struct {
-	TablePath  string
-	Timestamp  *time.Time
-	Version    *int64
+	TablePath string
+	Timestamp *time.Time
+	Version   *int64
 }
 
 // QueryForVersion builds a query for a specific version
@@ -116,14 +116,14 @@ func (tt *DeltaTimeTravel) CompareVersions(ctx context.Context, tablePath string
 	}
 
 	comparison := &VersionComparison{
-		Version1:    version1,
-		Version2:    version2,
-		Timestamp1:  commit1.Timestamp,
-		Timestamp2:  commit2.Timestamp,
-		Operation1:  commit1.Operation,
-		Operation2:  commit2.Operation,
-		User1:       commit1.UserName,
-		User2:       commit2.UserName,
+		Version1:   version1,
+		Version2:   version2,
+		Timestamp1: commit1.Timestamp,
+		Timestamp2: commit2.Timestamp,
+		Operation1: commit1.Operation,
+		Operation2: commit2.Operation,
+		User1:      commit1.UserName,
+		User2:      commit2.UserName,
 	}
 
 	return comparison, nil
@@ -217,12 +217,12 @@ func (tt *DeltaTimeTravel) GetVersionSummary(ctx context.Context, tablePath stri
 	}
 
 	summary := &VersionSummary{
-		Version:     commit.Version,
-		Timestamp:   commit.Timestamp,
-		User:        commit.UserName,
-		Operation:   commit.Operation,
-		Parameters:  commit.OperationParameters,
-		Note:        commit.Note,
+		Version:    commit.Version,
+		Timestamp:  commit.Timestamp,
+		User:       commit.UserName,
+		Operation:  commit.Operation,
+		Parameters: commit.OperationParameters,
+		Note:       commit.Note,
 	}
 
 	return summary, nil

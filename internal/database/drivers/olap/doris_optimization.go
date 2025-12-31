@@ -163,8 +163,8 @@ func (o *DorisQueryOptimizer) GetTabletDistribution(ctx context.Context, db *sql
 
 // DorisTabletDistribution represents tablet distribution
 type DorisTabletDistribution struct {
-	TableName      string
-	TabletCount    int
-	ReplicaCount   int
-	StorageMedium  string // SSD, HDD
+	TableName     string
+	TabletCount   int
+	ReplicaCount  int
+	StorageMedium string // SSD, HDD
 }

@@ -127,10 +127,10 @@ func (d *HDFSJSONDriver) QueryJSONFile(ctx context.Context, path string) (*HDFSJ
 
 	// Parse JSON file (placeholder)
 	return &HDFSJSONResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		FilePath: path,
+		FilePath:  path,
 	}, nil
 }
 

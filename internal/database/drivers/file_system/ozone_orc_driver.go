@@ -112,10 +112,10 @@ func (d *OzoneORCDriver) QueryORCFile(ctx context.Context, key string) (*OzoneOR
 
 	// Parse ORC file (placeholder)
 	return &OzoneORCResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 

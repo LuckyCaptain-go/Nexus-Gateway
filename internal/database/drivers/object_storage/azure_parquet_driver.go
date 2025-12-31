@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -116,8 +116,8 @@ func (d *AzureBlobParquetDriver) Query(ctx context.Context, name string) (*Azure
 
 	// Parse Parquet file (placeholder)
 	return &AzureBlobParquetResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
 	}, nil
 }

@@ -34,19 +34,19 @@ func (m *ClickHouseDictionaryManager) CreateDictionary(ctx context.Context, db *
 
 // ClickHouseDictionary represents a dictionary definition
 type ClickHouseDictionary struct {
-	Name     string
-	Layout   string // FLAT, HASHED, SPARSE_HASHED, COMPLEX_KEY_HASHED, RANGE_HASHED
-	Source   string // HTTP, MYSQL, POSTGRESQL, CLICKHOUSE, FILE, SQLITE
-	Fields   []ClickHouseDictionaryField
+	Name       string
+	Layout     string // FLAT, HASHED, SPARSE_HASHED, COMPLEX_KEY_HASHED, RANGE_HASHED
+	Source     string // HTTP, MYSQL, POSTGRESQL, CLICKHOUSE, FILE, SQLITE
+	Fields     []ClickHouseDictionaryField
 	PrimaryKey []string
-	Lifetime ClickHouseDictionaryLifetime
+	Lifetime   ClickHouseDictionaryLifetime
 }
 
 // ClickHouseDictionaryField represents a dictionary field
 type ClickHouseDictionaryField struct {
-	Name     string
-	Type     string
-	Nullable bool
+	Name      string
+	Type      string
+	Nullable  bool
 	Expressed bool // Is calculated expression
 }
 
@@ -140,13 +140,13 @@ func (m *ClickHouseDictionaryManager) ListDictionaries(ctx context.Context, db *
 
 // ClickHouseDictionaryInfo represents dictionary information
 type ClickHouseDictionaryInfo struct {
-	Name     string
-	Type     string
-	Origin   string
-	Key      string
-	Layout   string
-	Bytes    uint64
-	Rows     uint64
+	Name   string
+	Type   string
+	Origin string
+	Key    string
+	Layout string
+	Bytes  uint64
+	Rows   uint64
 }
 
 // GetDictionaryInfo retrieves information about a dictionary

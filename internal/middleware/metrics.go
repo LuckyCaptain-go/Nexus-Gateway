@@ -12,16 +12,16 @@ import (
 // PrometheusMetrics holds all Prometheus metrics
 type PrometheusMetrics struct {
 	// HTTP request metrics
-	HttpRequestsTotal    *prometheus.CounterVec
-	HttpRequestDuration  *prometheus.HistogramVec
-	HttpRequestSize      *prometheus.HistogramVec
-	HttpResponseSize     *prometheus.HistogramVec
+	HttpRequestsTotal   *prometheus.CounterVec
+	HttpRequestDuration *prometheus.HistogramVec
+	HttpRequestSize     *prometheus.HistogramVec
+	HttpResponseSize    *prometheus.HistogramVec
 
 	// Database query metrics
-	QueryTotal           *prometheus.CounterVec
-	QueryDuration        *prometheus.HistogramVec
-	QueryRowsRead        *prometheus.CounterVec
-	QueryErrors          *prometheus.CounterVec
+	QueryTotal    *prometheus.CounterVec
+	QueryDuration *prometheus.HistogramVec
+	QueryRowsRead *prometheus.CounterVec
+	QueryErrors   *prometheus.CounterVec
 
 	// Connection pool metrics
 	ConnectionPoolActive *prometheus.GaugeVec
@@ -29,17 +29,17 @@ type PrometheusMetrics struct {
 	ConnectionPoolWait   *prometheus.HistogramVec
 
 	// Data source health metrics
-	DataSourceHealth     *prometheus.GaugeVec
-	DataSourceUp         *prometheus.GaugeVec
+	DataSourceHealth *prometheus.GaugeVec
+	DataSourceUp     *prometheus.GaugeVec
 
 	// Streaming metrics
-	ActiveStreams        *prometheus.GaugeVec
-	StreamRowsSent       *prometheus.CounterVec
-	StreamDuration       *prometheus.HistogramVec
+	ActiveStreams  *prometheus.GaugeVec
+	StreamRowsSent *prometheus.CounterVec
+	StreamDuration *prometheus.HistogramVec
 
 	// Token rotation metrics
-	TokenRotations       *prometheus.CounterVec
-	TokenRotationErrors  *prometheus.CounterVec
+	TokenRotations      *prometheus.CounterVec
+	TokenRotationErrors *prometheus.CounterVec
 }
 
 var (

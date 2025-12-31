@@ -47,11 +47,11 @@ func (m *OscarPartitionManager) GetPartitionInfo(ctx context.Context, db *sql.DB
 
 // OscarPartitionInfo represents partition information
 type OscarPartitionInfo struct {
-	TableName          string
-	PartitionName      string
-	PartitionPosition  int
-	PartitionKey       string
-	PartitionCount     int
+	TableName         string
+	PartitionName     string
+	PartitionPosition int
+	PartitionKey      string
+	PartitionCount    int
 }
 
 // CreateFragment creates a fragment (Oscar's term for partition)

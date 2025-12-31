@@ -132,10 +132,10 @@ func (h *GBaseCharsetHandler) GetSupportedCharsets(ctx context.Context, db *sql.
 
 // GBaseCharsetInfo represents charset information
 type GBaseCharsetInfo struct {
-	Charset    string
-	Description string
+	Charset          string
+	Description      string
 	DefaultCollation string
-	MaxLength   int
+	MaxLength        int
 }
 
 // GetCharsetInfo retrieves information about a specific charset

@@ -112,10 +112,10 @@ func (d *OzoneCSVDriver) QueryCSVFile(ctx context.Context, key string, delimiter
 
 	// Parse CSV file (placeholder)
 	return &OzoneCSVResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 
