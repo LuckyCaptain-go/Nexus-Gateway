@@ -11,16 +11,16 @@ import (
 
 // S3ORCDriver implements Driver interface for querying ORC files on S3
 type S3ORCDriver struct {
-	s3Client     *S3Client
-	orcReader    *ORCReader
-	config       *S3ORCDriverConfig
+	s3Client  *S3Client
+	orcReader *ORCReader
+	config    *S3ORCDriverConfig
 }
 
 // S3ORCDriverConfig holds S3 ORC driver configuration
 type S3ORCDriverConfig struct {
-	S3Config        *S3Config
-	BatchSize       int
-	EnablePushdown  bool
+	S3Config       *S3Config
+	BatchSize      int
+	EnablePushdown bool
 }
 
 // NewS3ORCDriver creates a new S3 ORC driver

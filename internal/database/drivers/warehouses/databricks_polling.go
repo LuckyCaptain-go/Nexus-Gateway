@@ -8,7 +8,7 @@ import (
 
 // DatabricksStatementPoller handles polling for statement completion
 type DatabricksStatementPoller struct {
-	client      *DatabricksRESTClient
+	client       *DatabricksRESTClient
 	pollInterval time.Duration
 	maxAttempts  int
 }
@@ -16,7 +16,7 @@ type DatabricksStatementPoller struct {
 // NewDatabricksStatementPoller creates a new statement poller
 func NewDatabricksStatementPoller(client *DatabricksRESTClient) *DatabricksStatementPoller {
 	return &DatabricksStatementPoller{
-		client:      client,
+		client:       client,
 		pollInterval: 1 * time.Second,
 		maxAttempts:  300, // 5 minutes max with 1s polling
 	}
@@ -162,11 +162,11 @@ func (p *DatabricksStatementPoller) GetStatementProgress(ctx context.Context, st
 
 // DatabricksStatementProgress represents statement progress
 type DatabricksStatementProgress struct {
-	StatementID string
-	State       string
-	RowsProcessed int64
+	StatementID    string
+	State          string
+	RowsProcessed  int64
 	BytesProcessed int64
-	Error       string
+	Error          string
 }
 
 // CancelAndWait cancels a statement and waits for cancellation
@@ -312,12 +312,12 @@ func (p *DatabricksStatementPoller) GetStatementMetrics(ctx context.Context, sta
 
 // DatabricksStatementMetrics contains statement execution metrics
 type DatabricksStatementMetrics struct {
-	StatementID     string
-	ExecutionTime   time.Duration
-	RowsScanned     int64
-	BytesScanned    int64
-	RowsProduced    int64
-	DurationMs      int64
+	StatementID   string
+	ExecutionTime time.Duration
+	RowsScanned   int64
+	BytesScanned  int64
+	RowsProduced  int64
+	DurationMs    int64
 }
 
 // MonitorLongRunningQuery monitors long-running queries

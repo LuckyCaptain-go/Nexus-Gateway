@@ -142,7 +142,7 @@ func (c *DeltaRESTClient) QueryTable(ctx context.Context, warehouseID, sql strin
 	url := fmt.Sprintf("%s/api/2.0/sql/warehouses/%s/statements", c.baseURL, warehouseID)
 
 	payload := map[string]interface{}{
-		"statement": sql,
+		"statement":    sql,
 		"wait_timeout": "50s",
 	}
 
@@ -214,22 +214,22 @@ type DeltaTableIdentifier struct {
 // DeltaTableDetails represents table details
 type DeltaTableDetails struct {
 	DeltaTableIdentifier
-	Comment          string                 `json:"comment,omitempty"`
-	CreatedAt        int64                  `json:"created_at"`
-	CreatedBy        string                 `json:"created_by"`
-	Properties       map[string]string      `json:"properties,omitempty"`
-	Columns          []DeltaColumn          `json:"columns"`
-	StorageLocation  string                 `json:"storage_location"`
-	Format           DeltaFormat            `json:"format"`
+	Comment         string            `json:"comment,omitempty"`
+	CreatedAt       int64             `json:"created_at"`
+	CreatedBy       string            `json:"created_by"`
+	Properties      map[string]string `json:"properties,omitempty"`
+	Columns         []DeltaColumn     `json:"columns"`
+	StorageLocation string            `json:"storage_location"`
+	Format          DeltaFormat       `json:"format"`
 }
 
 // DeltaColumn represents a column definition
 type DeltaColumn struct {
-	Name           string `json:"name"`
-	TypeText       string `json:"type_text"`
+	Name              string `json:"name"`
+	TypeText          string `json:"type_text"`
 	TypeQualifiedName string `json:"type_name,omitempty"`
-	Nullable        bool   `json:"nullable"`
-	Comment        string `json:"comment,omitempty"`
+	Nullable          bool   `json:"nullable"`
+	Comment           string `json:"comment,omitempty"`
 }
 
 // DeltaFormat represents table format
@@ -239,9 +239,9 @@ type DeltaFormat struct {
 
 // DeltaQueryResult represents query results
 type DeltaQueryResult struct {
-	StatementID string                 `json:"statement_id"`
-	Status      DeltaStatementStatus   `json:"status"`
-	Manifest    DeltaResultManifest    `json:"result"`
+	StatementID string               `json:"statement_id"`
+	Status      DeltaStatementStatus `json:"status"`
+	Manifest    DeltaResultManifest  `json:"result"`
 }
 
 // DeltaStatementStatus represents statement status
@@ -251,8 +251,8 @@ type DeltaStatementStatus struct {
 
 // DeltaResultManifest represents result manifest
 type DeltaResultManifest struct {
-	Schema   DeltaResultSchema `json:"schema"`
-	Data     [][]interface{}  `json:"data"`
+	Schema DeltaResultSchema `json:"schema"`
+	Data   [][]interface{}   `json:"data"`
 }
 
 // DeltaResultSchema represents result schema
@@ -262,20 +262,20 @@ type DeltaResultSchema struct {
 
 // DeltaResultColumn represents a result column
 type DeltaResultColumn struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
+	Name     string                 `json:"name"`
+	Type     string                 `json:"type"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // DeltaCommitInfo represents a commit in Delta log
 type DeltaCommitInfo struct {
-	Version     int64     `json:"version"`
-	Timestamp   time.Time `json:"timestamp"`
-	UserId      string    `json:"user_id"`
-	UserName    string    `json:"user_name"`
-	Operation   string    `json:"operation"`
+	Version             int64                  `json:"version"`
+	Timestamp           time.Time              `json:"timestamp"`
+	UserId              string                 `json:"user_id"`
+	UserName            string                 `json:"user_name"`
+	Operation           string                 `json:"operation"`
 	OperationParameters map[string]interface{} `json:"operation_parameters,omitempty"`
-	Note        string    `json:"note,omitempty"`
+	Note                string                 `json:"note,omitempty"`
 }
 
 // ConvertDeltaTypeToStandardType converts Delta Lake types to standard types

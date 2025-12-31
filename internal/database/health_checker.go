@@ -34,18 +34,18 @@ type HealthCheckResult struct {
 
 // DatabaseHealthSummary represents a summary of database health
 type DatabaseHealthSummary struct {
-	TotalConnections int                `json:"totalConnections"`
-	HealthyConnections int             `json:"healthyConnections"`
-	UnhealthyConnections int           `json:"unhealthyConnections"`
-	Results           []HealthCheckResult `json:"results"`
-	SummaryByType     map[string]TypeHealthSummary `json:"summaryByType"`
-	CheckedAt         time.Time                `json:"checkedAt"`
+	TotalConnections     int                          `json:"totalConnections"`
+	HealthyConnections   int                          `json:"healthyConnections"`
+	UnhealthyConnections int                          `json:"unhealthyConnections"`
+	Results              []HealthCheckResult          `json:"results"`
+	SummaryByType        map[string]TypeHealthSummary `json:"summaryByType"`
+	CheckedAt            time.Time                    `json:"checkedAt"`
 }
 
 // TypeHealthSummary represents health summary by database type
 type TypeHealthSummary struct {
-	Total   int `json:"total"`
-	Healthy int `json:"healthy"`
+	Total     int `json:"total"`
+	Healthy   int `json:"healthy"`
 	Unhealthy int `json:"unhealthy"`
 }
 
@@ -97,12 +97,12 @@ func (hc *HealthChecker) CheckAllConnectionsHealth(ctx context.Context) (*Databa
 	stats := hc.connPool.GetStats()
 
 	summary := &DatabaseHealthSummary{
-		TotalConnections:    len(stats),
-		HealthyConnections:  0,
+		TotalConnections:     len(stats),
+		HealthyConnections:   0,
 		UnhealthyConnections: 0,
-		Results:             make([]HealthCheckResult, 0),
-		SummaryByType:       make(map[string]TypeHealthSummary),
-		CheckedAt:           time.Now(),
+		Results:              make([]HealthCheckResult, 0),
+		SummaryByType:        make(map[string]TypeHealthSummary),
+		CheckedAt:            time.Now(),
 	}
 
 	// Check each connection
@@ -203,10 +203,10 @@ func (hc *HealthChecker) PeriodicHealthCheck(ctx context.Context, interval time.
 					// Create error summary
 					summary = &DatabaseHealthSummary{
 						CheckedAt: time.Now(),
-						Results:   []HealthCheckResult{
+						Results: []HealthCheckResult{
 							{
-								Status:  "error",
-								Message: fmt.Sprintf("Health check failed: %v", err),
+								Status:    "error",
+								Message:   fmt.Sprintf("Health check failed: %v", err),
 								CheckedAt: time.Now(),
 							},
 						},
@@ -314,10 +314,10 @@ func (hc *HealthChecker) GetDriverInfo() map[string]DriverInfo {
 	for _, dbType := range supportedTypes {
 		driver, _ := hc.registry.GetDriver(dbType)
 		info[string(dbType)] = DriverInfo{
-			Type:         string(dbType),
-			DriverName:   driver.GetDriverName(),
-			DefaultPort:  driver.GetDefaultPort(),
-			Supported:    true,
+			Type:        string(dbType),
+			DriverName:  driver.GetDriverName(),
+			DefaultPort: driver.GetDefaultPort(),
+			Supported:   true,
 		}
 	}
 

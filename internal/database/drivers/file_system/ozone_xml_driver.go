@@ -112,11 +112,11 @@ func (d *OzoneXMLDriver) QueryXMLFile(ctx context.Context, key string, xpath str
 
 	// Parse XML file (placeholder)
 	return &OzoneXMLResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
-		XPath:    xpath,
+		Key:       key,
+		XPath:     xpath,
 	}, nil
 }
 

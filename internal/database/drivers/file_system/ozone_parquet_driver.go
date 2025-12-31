@@ -112,10 +112,10 @@ func (d *OzoneParquetDriver) QueryParquetFile(ctx context.Context, key string) (
 
 	// Parse Parquet file (placeholder)
 	return &OzoneParquetResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 

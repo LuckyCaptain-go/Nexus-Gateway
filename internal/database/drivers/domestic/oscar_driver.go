@@ -195,7 +195,7 @@ func (d *OscarDriver) GetClusterStatus(ctx context.Context, db *sql.DB) (*OscarC
 
 // OscarClusterStatus represents cluster status
 type OscarClusterStatus struct {
-	Nodes   []OscarNode
+	Nodes      []OscarNode
 	TotalNodes int
 }
 
@@ -242,18 +242,18 @@ func (d *OscarDriver) ExecuteDistributedQuery(ctx context.Context, db *sql.DB, s
 	}
 
 	return &OscarDistributedResult{
-		Rows:         results,
-		Columns:      columns,
-		Count:        len(results),
+		Rows:          results,
+		Columns:       columns,
+		Count:         len(results),
 		IsDistributed: true,
 	}, nil
 }
 
 // OscarDistributedResult represents distributed query result
 type OscarDistributedResult struct {
-	Rows         []map[string]interface{}
-	Columns      []string
-	Count        int
+	Rows          []map[string]interface{}
+	Columns       []string
+	Count         int
 	IsDistributed bool
 	NodesInvolved []string
 }
@@ -287,11 +287,11 @@ func (d *OscarDriver) GetTablePartitionInfo(ctx context.Context, db *sql.DB, tab
 
 // OscarPartitionInfo represents partition information
 type OscarPartitionInfo struct {
-	TableName          string
-	PartitionName      string
-	PartitionPosition  int
-	PartitionKey       string
-	PartitionCount     int
+	TableName         string
+	PartitionName     string
+	PartitionPosition int
+	PartitionKey      string
+	PartitionCount    int
 }
 
 // RegisterOscarDriver registers the Oscar driver globally

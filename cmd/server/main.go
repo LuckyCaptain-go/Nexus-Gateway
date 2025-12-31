@@ -69,7 +69,7 @@ func main() {
 
 	// Initialize services
 	datasourceService := service.NewDataSourceService(datasourceRepo)
-	queryService := service.NewQueryService(datasourceRepo, connPool)
+	queryService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)
 
 	// Initialize controllers
 	datasourceController := controller.NewDataSourceController(datasourceService)

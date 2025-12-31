@@ -94,10 +94,10 @@ func (r *OpenGaussRowSecurity) ListRowSecurityPolicies(ctx context.Context, db *
 
 // OpenGaussRLSPolicy represents row-level security policy
 type OpenGaussRLSPolicy struct {
-	PolicyName         string
-	TableName          string
-	Command            string // ALL, SELECT, INSERT, UPDATE, DELETE
-	UsingExpression    string
+	PolicyName          string
+	TableName           string
+	Command             string // ALL, SELECT, INSERT, UPDATE, DELETE
+	UsingExpression     string
 	WithCheckExpression string
 }
 

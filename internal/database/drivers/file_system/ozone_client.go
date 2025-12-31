@@ -16,15 +16,15 @@ type OzoneClient struct {
 
 // OzoneConfig holds Ozone configuration
 type OzoneConfig struct {
-	OMHost        string // Ozone Manager host
-	OMPort        int    // Ozone Manager port
-	Volume        string // Ozone volume name
-	Bucket        string // Ozone bucket name
-	Username      string // Ozone user
+	OMHost         string // Ozone Manager host
+	OMPort         int    // Ozone Manager port
+	Volume         string // Ozone volume name
+	Bucket         string // Ozone bucket name
+	Username       string // Ozone user
 	Authentication string // SIMPLE, KERBEROS
 	KrbServiceName string // Kerberos service name
-	KrbRealm      string // Kerberos realm
-	KrbKeytab     string // Kerberos keytab path
+	KrbRealm       string // Kerberos realm
+	KrbKeytab      string // Kerberos keytab path
 }
 
 // NewOzoneClient creates a new Ozone client

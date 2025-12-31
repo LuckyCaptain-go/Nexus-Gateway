@@ -187,8 +187,8 @@ func (c *KingbaseESOracleCompat) GetOracleCompatibilityInfo(ctx context.Context,
 
 // KingbaseESOracleInfo represents Oracle compatibility information
 type KingbaseESOracleInfo struct {
-	Mode             string
-	PLSQLSupported   bool
+	Mode              string
+	PLSQLSupported    bool
 	SynonymsSupported bool
 	DBLinksSupported  bool
 }

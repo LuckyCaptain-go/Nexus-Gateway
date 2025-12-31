@@ -18,7 +18,7 @@ type ORCReader struct {
 // ORCReaderConfig holds ORC reader configuration
 type ORCReaderConfig struct {
 	BatchSize       int
-	EnablePredicate bool // Enable predicate pushdown
+	EnablePredicate bool     // Enable predicate pushdown
 	Columns         []string // Specific columns to read
 }
 
@@ -102,22 +102,22 @@ type ORCSchema struct {
 
 // ORCColumn represents an ORC column definition
 type ORCColumn struct {
-	Name           string
-	Type           string
-	Precision      int
-	Scale          int
-	Nullable       bool
-	Comment        string
+	Name      string
+	Type      string
+	Precision int
+	Scale     int
+	Nullable  bool
+	Comment   string
 }
 
 // ORCStatistics represents ORC column statistics for predicate pushdown
 type ORCStatistics struct {
-	HasNull        bool
-	MinValue       interface{}
-	MaxValue       interface{}
-	NumValues      int64
-	NumDistinct    int64
-	FractionNulls  float64
+	HasNull       bool
+	MinValue      interface{}
+	MaxValue      interface{}
+	NumValues     int64
+	NumDistinct   int64
+	FractionNulls float64
 }
 
 // GetStripeStatistics returns statistics for each stripe (for pushdown)
@@ -128,13 +128,13 @@ func (r *ORCFileReader) GetStripeStatistics() ([]ORCStripeStatistics, error) {
 
 // ORCStripeStatistics represents statistics for a single stripe
 type ORCStripeStatistics struct {
-	StripeNumber  int
-	Offset        int64
-	IndexLength   int64
-	DataLength    int64
-	FooterLength  int64
-	NumberOfRows  int64
-	ColumnStats   []ORCStatistics
+	StripeNumber int
+	Offset       int64
+	IndexLength  int64
+	DataLength   int64
+	FooterLength int64
+	NumberOfRows int64
+	ColumnStats  []ORCStatistics
 }
 
 // ApplyPredicatePushdown applies predicate filters using ORC statistics

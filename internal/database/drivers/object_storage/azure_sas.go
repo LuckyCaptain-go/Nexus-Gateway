@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 )
 
 // AzureSASTokenHandler handles SAS token generation and management
@@ -196,7 +196,7 @@ func (i *SASTokenInfo) GetExpiryStatus() SASTokenStatus {
 type SASTokenStatus int
 
 const (
-	SASTokenStatusValid      SASTokenStatus = iota
+	SASTokenStatusValid SASTokenStatus = iota
 	SASTokenStatusExpiringSoon
 	SASTokenStatusExpired
 	SASTokenStatusUnknown

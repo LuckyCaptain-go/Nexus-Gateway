@@ -123,10 +123,10 @@ func (d *HDFSParquetCompressionDriver) QueryCompressedParquetFile(ctx context.Co
 
 	// Parse compressed Parquet file (placeholder)
 	return &HDFSParquetResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		FilePath: path,
+		FilePath:  path,
 	}, nil
 }
 

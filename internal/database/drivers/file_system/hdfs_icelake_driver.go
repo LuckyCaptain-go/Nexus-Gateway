@@ -124,8 +124,8 @@ type IcebergMetadata struct {
 func (d *HDFSIcebergDriver) QueryTable(ctx context.Context, tablePath string, snapshotID int64) (*IcebergQueryResult, error) {
 	// Query Iceberg table (placeholder)
 	return &IcebergQueryResult{
-		Rows:      []map[string]interface{}{},
-		NumRows:   0,
+		Rows:       []map[string]interface{}{},
+		NumRows:    0,
 		SnapshotID: snapshotID,
 	}, nil
 }

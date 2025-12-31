@@ -74,11 +74,11 @@ func (c *DruidRESTClient) ExecuteSQLQuery(ctx context.Context, sql string) (*Dru
 
 // DruidSQLRequest represents Druid SQL request
 type DruidSQLRequest struct {
-	Query          string `json:"query"`
-	ResultFormat   string `json:"resultFormat,omitempty"`
-	Header         bool   `json:"header,omitempty"`
-	Parameters     []DruidQueryParameter `json:"parameters,omitempty"`
-	Context        map[string]interface{} `json:"context,omitempty"`
+	Query        string                 `json:"query"`
+	ResultFormat string                 `json:"resultFormat,omitempty"`
+	Header       bool                   `json:"header,omitempty"`
+	Parameters   []DruidQueryParameter  `json:"parameters,omitempty"`
+	Context      map[string]interface{} `json:"context,omitempty"`
 }
 
 // DruidQueryParameter represents query parameter
@@ -89,11 +89,11 @@ type DruidQueryParameter struct {
 
 // DruidQueryResult represents query result
 type DruidQueryResult struct {
-	Rows       []map[string]interface{}
-	Columns    []string
-	RowCount   int
-	QueryID    string
-	ElapsedMS  int64
+	Rows      []map[string]interface{}
+	Columns   []string
+	RowCount  int
+	QueryID   string
+	ElapsedMS int64
 }
 
 // parseResults parses Druid query results
@@ -177,9 +177,9 @@ func (c *DruidRESTClient) GetDatasourceMetadata(ctx context.Context, datasource 
 
 // DruidDatasourceMetadata represents datasource metadata
 type DruidDatasourceMetadata struct {
-	Name       string    `json:"name"`
-	Segments   int       `json:"segments"`
-	Columns    []string  `json:"columns"`
+	Name       string                 `json:"name"`
+	Segments   int                    `json:"segments"`
+	Columns    []string               `json:"columns"`
 	Properties map[string]interface{} `json:"properties"`
 }
 
@@ -213,10 +213,10 @@ func (c *DruidRESTClient) GetClusterStatus(ctx context.Context) (*DruidClusterSt
 
 // DruidClusterStatus represents cluster status
 type DruidClusterStatus struct {
-	Version    string `json:"version"`
-	Coordinator bool  `json:"coordinator"`
-	Overlord   bool   `json:"overlord"`
-	Broker     bool   `json:"broker"`
+	Version     string `json:"version"`
+	Coordinator bool   `json:"coordinator"`
+	Overlord    bool   `json:"overlord"`
+	Broker      bool   `json:"broker"`
 }
 
 // CancelQuery cancels a running query

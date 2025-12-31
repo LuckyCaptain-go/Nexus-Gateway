@@ -231,6 +231,47 @@ curl -X POST http://localhost:8099/api/v1/query \
   }'
 ```
 
+### Streaming Large Result Sets (new)
+
+For large result sets the gateway supports a streaming mode that keeps a server-side cursor
+open and returns results in batches to avoid re-executing the full query with LIMIT/OFFSET.
+
+- Use `/api/v1/query` for an inline query. When the backend supports streaming, the
+  response may contain a `nextUri` field. Call that URI to retrieve the next batch.
+- Use `/api/v1/fetch` to explicitly request batch/streaming behavior. This endpoint
+  attempts to open a streaming cursor and returns a `queryId`, `slug`, `token`, and
+  `nextUri` when more data is available.
+
+Example: Execute query and get `nextUri` from `/query` (or use `/fetch`):
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-large-datasource",
+    "sql": "SELECT * FROM very_large_table WHERE created_at >= ?",
+    "parameters": ["2024-01-01"],
+    "limit": 1000
+  }'
+```
+
+If the response contains `nextUri`, call it to fetch subsequent batches:
+
+```bash
+curl -X GET "http://localhost:8099/api/v1/fetch/{queryId}/{slug}/{token}?batch_size=1000" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+Notes:
+
+- The gateway will try to establish a streaming cursor (server-side rows). If the
+  backend does not support streaming and `query.prefer_streaming` is `false`, the
+  gateway automatically falls back to LIMIT/OFFSET continuation.
+- Streaming sessions are maintained server-side for a configurable TTL (default 30 minutes).
+- Always close or exhaust the stream; the gateway will clean up expired sessions automatically.
+
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
@@ -300,6 +341,14 @@ drivers:
     mode: "mysql"  # or "oracle"
   tidb:
     pd_addresses: ["pd1:2379", "pd2:2379"]
+
+query:
+  # When true, the gateway prefers establishing a server-side streaming cursor
+  # for large result sets. If the backend driver doesn't support streaming and
+  # prefer_streaming is true, the query will fail. If set to false, the gateway
+  # will fall back to LIMIT/OFFSET continuation automatically when streaming
+  # is not available.
+  prefer_streaming: true
 ```
 
 ## Security Features

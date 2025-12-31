@@ -17,8 +17,8 @@ type COSParquetDriver struct {
 
 // COSParquetDriverConfig holds COS Parquet driver configuration
 type COSParquetDriverConfig struct {
-	COSConfig  *COSConfig
-	BatchSize  int
+	COSConfig *COSConfig
+	BatchSize int
 }
 
 // NewCOSParquetDriver creates a new COS Parquet driver
@@ -112,8 +112,8 @@ func (d *COSParquetDriver) Query(ctx context.Context, key string) (*COSParquetRe
 
 	// Parse Parquet file (placeholder)
 	return &COSParquetResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
 	}, nil
 }

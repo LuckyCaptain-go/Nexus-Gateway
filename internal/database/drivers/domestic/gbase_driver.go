@@ -18,12 +18,12 @@ type GBaseDriver struct {
 
 // GBaseConfig holds GBase configuration
 type GBaseConfig struct {
-	Host            string
-	Port            int
-	Database        string
-	Username        string
-	Password        string
-	Charset         string // UTF8, GB18030
+	Host              string
+	Port              int
+	Database          string
+	Username          string
+	Password          string
+	Charset           string // UTF8, GB18030
 	CompatibilityMode string // INFORMIX, ORACLE
 }
 
@@ -220,11 +220,11 @@ func (d *GBaseDriver) GetFragmentInfo(ctx context.Context, db *sql.DB, tableName
 
 // GBaseFragmentInfo represents fragment information
 type GBaseFragmentInfo struct {
-	TableName     string
-	FragmentType  string // ROUND-ROBIN, HASH, EXPRESSION
-	FragmentKey   string
-	NumFragments  int
-	Strategy      string
+	TableName    string
+	FragmentType string // ROUND-ROBIN, HASH, EXPRESSION
+	FragmentKey  string
+	NumFragments int
+	Strategy     string
 }
 
 // RegisterGBaseDriver registers the GBase driver globally

@@ -279,10 +279,10 @@ const iteratorDone = "iterator done"
 
 // BigQueryMetrics contains BigQuery-specific metrics
 type BigQueryMetrics struct {
-	BytesBilled    int64
+	BytesBilled       int64
 	MillisecondsSpent int64
-	SlotsUsed      int64
-	Cached         bool
+	SlotsUsed         int64
+	Cached            bool
 }
 
 // GetJobMetrics retrieves metrics from a completed job

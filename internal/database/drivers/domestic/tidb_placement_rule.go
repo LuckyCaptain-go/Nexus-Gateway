@@ -190,9 +190,9 @@ func (m *TiDBPlacementRuleManager) GetHotRegions(ctx context.Context, db *sql.DB
 
 // TiDBHotRegion represents a hot region
 type TiDBHotRegion struct {
-	RegionID    int64
-	TableName   string
-	IndexName   string
-	HotDegree   int
-	QueryCount  int64
+	RegionID   int64
+	TableName  string
+	IndexName  string
+	HotDegree  int
+	QueryCount int64
 }

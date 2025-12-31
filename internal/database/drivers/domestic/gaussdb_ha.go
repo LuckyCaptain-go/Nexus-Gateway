@@ -61,12 +61,12 @@ type GaussDBClusterState struct {
 
 // GaussDBNodeState represents node state
 type GaussDBNodeState struct {
-	NodeName    string
-	NodeType    string // primary, standby
-	NodeState   string // normal, abnormal, etc.
-	CurrentSCN  int64
-	ReplaySCN   int64
-	Lag         int64
+	NodeName   string
+	NodeType   string // primary, standby
+	NodeState  string // normal, abnormal, etc.
+	CurrentSCN int64
+	ReplaySCN  int64
+	Lag        int64
 }
 
 // PromoteStandby promotes a standby node to primary

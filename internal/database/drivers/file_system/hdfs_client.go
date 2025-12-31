@@ -17,13 +17,13 @@ type HDFSClient struct {
 
 // HDFSConfig holds HDFS configuration
 type HDFSConfig struct {
-	NameNodes    []string // List of NameNode addresses
-	Username     string   // HDFS user
-	KrbServiceName string // Kerberos service name
-	KrbRealm     string   // Kerberos realm
-	KrbKeytab    string   // Kerberos keytab path
-	BlockSize    int64    // Block size
-	Replication  int      // Replication factor
+	NameNodes      []string // List of NameNode addresses
+	Username       string   // HDFS user
+	KrbServiceName string   // Kerberos service name
+	KrbRealm       string   // Kerberos realm
+	KrbKeytab      string   // Kerberos keytab path
+	BlockSize      int64    // Block size
+	Replication    int      // Replication factor
 }
 
 // NewHDFSClient creates a new HDFS client
@@ -96,11 +96,11 @@ func (c *HDFSClient) ListFiles(ctx context.Context, path string) ([]HDFSFileInfo
 	files := make([]HDFSFileInfo, len(fileInfos))
 	for i, info := range fileInfos {
 		files[i] = HDFSFileInfo{
-			Name:     info.Name(),
-			Size:     info.Size(),
-			ModTime:  info.ModTime(),
-			IsDir:    info.IsDir(),
-			Owner:    info.Owner(),
+			Name:        info.Name(),
+			Size:        info.Size(),
+			ModTime:     info.ModTime(),
+			IsDir:       info.IsDir(),
+			Owner:       info.Owner(),
 			Replication: int(info.BlockSize()),
 		}
 	}
@@ -125,11 +125,11 @@ func (c *HDFSClient) GetFileInfo(ctx context.Context, path string) (*HDFSFileInf
 	}
 
 	return &HDFSFileInfo{
-		Name:     info.Name(),
-		Size:     info.Size(),
-		ModTime:  info.ModTime(),
-		IsDir:    info.IsDir(),
-		Owner:    info.Owner(),
+		Name:        info.Name(),
+		Size:        info.Size(),
+		ModTime:     info.ModTime(),
+		IsDir:       info.IsDir(),
+		Owner:       info.Owner(),
 		Replication: int(info.BlockSize()),
 	}, nil
 }
@@ -248,8 +248,8 @@ func (c *HDFSClient) GetCapacity(ctx context.Context) (*HDFSCapacity, error) {
 	}
 
 	return &HDFSCapacity{
-		Total:    capacity,
-		Used:     used,
+		Total:     capacity,
+		Used:      used,
 		Remaining: capacity - used,
 	}, nil
 }

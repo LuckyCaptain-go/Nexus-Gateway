@@ -236,20 +236,20 @@ func (c *HudiRESTClient) setAuthHeader(req *http.Request) {
 
 // HudiPartition represents a Hudi partition
 type HudiPartition struct {
-	Path       string                 `json:"path"`
-	Values     map[string]interface{} `json:"values"`
-	FileCount  int                    `json:"fileCount"`
-	SizeBytes  int64                  `json:"sizeBytes"`
+	Path      string                 `json:"path"`
+	Values    map[string]interface{} `json:"values"`
+	FileCount int                    `json:"fileCount"`
+	SizeBytes int64                  `json:"sizeBytes"`
 }
 
 // HudiTableMetadata represents Hudi table metadata
 type HudiTableMetadata struct {
-	TableType       string                   `json:"tableType"` // "COPY_ON_WRITE" or "MERGE_ON_READ"
-	RecordFields    []HudiField              `json:"fields"`
-	PartitionFields []string                 `json:"partitionFields"`
-	KeyField        string                   `json:"keyField"`
-	Properties      map[string]string        `json:"properties"`
-	HudiVersion     string                   `json:"hudiVersion"`
+	TableType       string            `json:"tableType"` // "COPY_ON_WRITE" or "MERGE_ON_READ"
+	RecordFields    []HudiField       `json:"fields"`
+	PartitionFields []string          `json:"partitionFields"`
+	KeyField        string            `json:"keyField"`
+	Properties      map[string]string `json:"properties"`
+	HudiVersion     string            `json:"hudiVersion"`
 }
 
 // HudiField represents a field in the schema
@@ -261,14 +261,14 @@ type HudiField struct {
 
 // HudiCommit represents a commit instant
 type HudiCommit struct {
-	CommitTime    string                 `json:"commitTime"`
-	CommitSeqNo   string                 `json:"commitSeqNo"`
-	ActionType    string                 `json:"actionType"`
-	State         string                 `json:"state"`
-	TimestampMs   int64                  `json:"timestampMs"`
-	Operation     string                 `json:"operation"`
-	RecordsStats  HudiRecordsStats       `json:"recordsStats,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	CommitTime   string                 `json:"commitTime"`
+	CommitSeqNo  string                 `json:"commitSeqNo"`
+	ActionType   string                 `json:"actionType"`
+	State        string                 `json:"state"`
+	TimestampMs  int64                  `json:"timestampMs"`
+	Operation    string                 `json:"operation"`
+	RecordsStats HudiRecordsStats       `json:"recordsStats,omitempty"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // HudiRecordsStats contains record statistics
@@ -287,9 +287,9 @@ type HudiSavepoint struct {
 
 // HudiQueryResult represents query results
 type HudiQueryResult struct {
-	Schema    HudiResultSchema   `json:"schema"`
-	Rows      [][]interface{}    `json:"rows"`
-	Timestamp int64              `json:"timestamp"`
+	Schema    HudiResultSchema `json:"schema"`
+	Rows      [][]interface{}  `json:"rows"`
+	Timestamp int64            `json:"timestamp"`
 }
 
 // HudiResultSchema represents result schema

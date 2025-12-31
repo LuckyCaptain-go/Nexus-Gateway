@@ -15,8 +15,8 @@ type JSONParser struct {
 
 // JSONParserConfig holds JSON parser configuration
 type JSONParserConfig struct {
-	DetectTypes   bool // Auto-detect types from values
-	FlattenNested bool // Flatten nested structures
+	DetectTypes   bool   // Auto-detect types from values
+	FlattenNested bool   // Flatten nested structures
 	Separator     string // Separator for flattened keys (default: "_")
 }
 
@@ -44,12 +44,12 @@ type JSONSchema struct {
 
 // JSONField represents a JSON field definition
 type JSONField struct {
-	Name        string
-	Path        string // Dot-notation path for nested fields
-	Type        string
-	Nullable    bool
-	NestedFields []JSONField // For object types
-	ArrayElementType *JSONField // For array types
+	Name             string
+	Path             string // Dot-notation path for nested fields
+	Type             string
+	Nullable         bool
+	NestedFields     []JSONField // For object types
+	ArrayElementType *JSONField  // For array types
 }
 
 // ParsedJSON represents parsed JSON data with schema

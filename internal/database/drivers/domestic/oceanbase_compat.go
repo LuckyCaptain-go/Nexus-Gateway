@@ -33,14 +33,14 @@ func (d *OceanBaseCompatibilityDetector) parseModeFromVersion(version string) (O
 
 	// Check for Oracle mode indicators
 	if strings.Contains(version, "oracle") ||
-	   strings.Contains(version, "_pl") ||
-	   strings.Contains(version, "compatibility=oracle") {
+		strings.Contains(version, "_pl") ||
+		strings.Contains(version, "compatibility=oracle") {
 		return OceanBaseCompatModeOracle, nil
 	}
 
 	// Default to MySQL mode
 	if strings.Contains(version, "oceanbase") ||
-	   strings.Contains(version, "mysql") {
+		strings.Contains(version, "mysql") {
 		return OceanBaseCompatModeMySQL, nil
 	}
 

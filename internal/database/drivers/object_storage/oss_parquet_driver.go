@@ -11,14 +11,14 @@ import (
 
 // OSSParquetDriver implements Driver interface for querying Parquet files on Alibaba Cloud OSS
 type OSSParquetDriver struct {
-	ossClient  *OSSClient
-	config     *OSSParquetDriverConfig
+	ossClient *OSSClient
+	config    *OSSParquetDriverConfig
 }
 
 // OSSParquetDriverConfig holds OSS Parquet driver configuration
 type OSSParquetDriverConfig struct {
-	OSSConfig     *OSSConfig
-	BatchSize     int
+	OSSConfig      *OSSConfig
+	BatchSize      int
 	EnablePushdown bool
 }
 
@@ -131,8 +131,8 @@ func (d *OSSParquetDriver) Query(ctx context.Context, key string) (*OSSParquetRe
 	// Full implementation would use Parquet reader
 
 	return &OSSParquetResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
 	}, nil
 }

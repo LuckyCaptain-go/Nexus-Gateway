@@ -31,7 +31,7 @@ func DefaultRateLimiterConfig() RateLimiterConfig {
 
 // RateLimiter implements rate limiting middleware
 type RateLimiter struct {
-	config RateLimiterConfig
+	config  RateLimiterConfig
 	clients map[string]*ClientLimiter
 	mutex   sync.RWMutex
 }
@@ -55,7 +55,7 @@ func NewRateLimiter(config RateLimiterConfig) *RateLimiter {
 	}
 
 	rl := &RateLimiter{
-		config: config,
+		config:  config,
 		clients: make(map[string]*ClientLimiter),
 	}
 
@@ -178,8 +178,8 @@ func (rl *RateLimiter) GetStats() RateLimitStats {
 
 // RateLimitStats contains rate limiting statistics
 type RateLimitStats struct {
-	ActiveClients int                `json:"activeClients"`
-	Config        RateLimiterConfig  `json:"config"`
+	ActiveClients int               `json:"activeClients"`
+	Config        RateLimiterConfig `json:"config"`
 }
 
 // Global rate limiter instance

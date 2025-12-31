@@ -112,10 +112,10 @@ func (d *OzoneAvroDriver) QueryAvroFile(ctx context.Context, key string) (*Ozone
 
 	// Parse Avro file (placeholder)
 	return &OzoneAvroResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 

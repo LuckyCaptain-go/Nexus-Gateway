@@ -27,8 +27,8 @@ func NewS3SelectHandler(client *S3Client) *S3SelectHandler {
 
 // SelectQuery represents an S3 Select query
 type SelectQuery struct {
-	Key              string
-	SQL              string
+	Key                 string
+	SQL                 string
 	InputSerialization  *InputSerialization
 	OutputSerialization *OutputSerialization
 }
@@ -81,22 +81,22 @@ type JSONOutput struct {
 
 // SelectResult represents the result of an S3 Select query
 type SelectResult struct {
-	Records   []map[string]interface{}
-	Columns   []string
-	Schema    map[string]string // Column name -> type
-	BytesScanned int64
+	Records        []map[string]interface{}
+	Columns        []string
+	Schema         map[string]string // Column name -> type
+	BytesScanned   int64
 	BytesProcessed int64
-	BytesReturned int64
+	BytesReturned  int64
 }
 
 // Query executes an S3 Select query
 func (h *S3SelectHandler) Query(ctx context.Context, query *SelectQuery) (*SelectResult, error) {
 	input := &s3.SelectObjectContentInput{
-		Bucket:         aws.String(h.client.config.Bucket),
-		Key:            aws.String(query.Key),
-		Expression:     aws.String(query.SQL),
-		ExpressionType: types.ExpressionTypeSql,
-		InputSerialization: h.buildInputSerialization(query.InputSerialization),
+		Bucket:              aws.String(h.client.config.Bucket),
+		Key:                 aws.String(query.Key),
+		Expression:          aws.String(query.SQL),
+		ExpressionType:      types.ExpressionTypeSql,
+		InputSerialization:  h.buildInputSerialization(query.InputSerialization),
 		OutputSerialization: h.buildOutputSerialization(query.OutputSerialization),
 	}
 
@@ -316,10 +316,10 @@ func (h *S3SelectHandler) QueryCSV(ctx context.Context, key, sql string, headerP
 		SQL: sql,
 		InputSerialization: &InputSerialization{
 			CSV: &CSVInput{
-				FileHeaderInfo:  map[bool]string{true: "USE", false: "NONE"}[headerPresent],
-				FieldDelimiter:   delimiter,
-				RecordDelimiter:  "\n",
-				QuoteCharacter:   "\"",
+				FileHeaderInfo:       map[bool]string{true: "USE", false: "NONE"}[headerPresent],
+				FieldDelimiter:       delimiter,
+				RecordDelimiter:      "\n",
+				QuoteCharacter:       "\"",
 				QuoteEscapeCharacter: "\"",
 			},
 		},
@@ -453,11 +453,11 @@ type StreamingSelectResult struct {
 // QueryStreaming executes a streaming S3 Select query
 func (h *S3SelectHandler) QueryStreaming(ctx context.Context, query *SelectQuery) (*StreamingSelectResult, error) {
 	input := &s3.SelectObjectContentInput{
-		Bucket:         aws.String(h.client.config.Bucket),
-		Key:            aws.String(query.Key),
-		Expression:     aws.String(query.SQL),
-		ExpressionType: types.ExpressionTypeSql,
-		InputSerialization: h.buildInputSerialization(query.InputSerialization),
+		Bucket:              aws.String(h.client.config.Bucket),
+		Key:                 aws.String(query.Key),
+		Expression:          aws.String(query.SQL),
+		ExpressionType:      types.ExpressionTypeSql,
+		InputSerialization:  h.buildInputSerialization(query.InputSerialization),
 		OutputSerialization: h.buildOutputSerialization(query.OutputSerialization),
 	}
 

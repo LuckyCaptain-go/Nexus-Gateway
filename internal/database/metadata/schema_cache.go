@@ -33,13 +33,13 @@ type DataSourceSchema struct {
 
 // TableSchema represents the schema of a single table
 type TableSchema struct {
-	Name        string          `json:"name"`
-	Schema      string          `json:"schema,omitempty"` // Database/schema name
-	Type        string          `json:"type,omitempty"`   // TABLE, VIEW, etc.
-	Columns     []ColumnSchema  `json:"columns"`
-	PrimaryKey  []string        `json:"primaryKey,omitempty"`
-	Indexes     []IndexSchema   `json:"indexes,omitempty"`
-	ForeignKeys []ForeignKeySchema `json:"foreignKeys,omitempty"`
+	Name        string                 `json:"name"`
+	Schema      string                 `json:"schema,omitempty"` // Database/schema name
+	Type        string                 `json:"type,omitempty"`   // TABLE, VIEW, etc.
+	Columns     []ColumnSchema         `json:"columns"`
+	PrimaryKey  []string               `json:"primaryKey,omitempty"`
+	Indexes     []IndexSchema          `json:"indexes,omitempty"`
+	ForeignKeys []ForeignKeySchema     `json:"foreignKeys,omitempty"`
 	Properties  map[string]interface{} `json:"properties,omitempty"` // Table-specific properties (e.g., Iceberg partitioning)
 }
 
@@ -51,9 +51,9 @@ type ColumnSchema struct {
 	Default  string `json:"default,omitempty"`
 	Comment  string `json:"comment,omitempty"`
 	// Extended type information
-	Length   int64  `json:"length,omitempty"`
+	Length    int64 `json:"length,omitempty"`
 	Precision int   `json:"precision,omitempty"`
-	Scale    int    `json:"scale,omitempty"`
+	Scale     int   `json:"scale,omitempty"`
 }
 
 // IndexSchema represents an index definition
@@ -66,12 +66,12 @@ type IndexSchema struct {
 
 // ForeignKeySchema represents a foreign key constraint
 type ForeignKeySchema struct {
-	Name            string   `json:"name"`
-	Columns         []string `json:"columns"`
-	RefTable        string   `json:"refTable"`
-	RefColumns      []string `json:"refColumns"`
-	OnDelete        string   `json:"onDelete,omitempty"`
-	OnUpdate        string   `json:"onUpdate,omitempty"`
+	Name       string   `json:"name"`
+	Columns    []string `json:"columns"`
+	RefTable   string   `json:"refTable"`
+	RefColumns []string `json:"refColumns"`
+	OnDelete   string   `json:"onDelete,omitempty"`
+	OnUpdate   string   `json:"onUpdate,omitempty"`
 }
 
 // NewSchemaCache creates a new schema cache
@@ -135,10 +135,10 @@ func (sc *SchemaCache) Set(dataSourceID string, schema *DataSourceSchema, versio
 
 	sc.cache[dataSourceID] = &CachedSchema{
 		DataSourceID: dataSourceID,
-		Schema:      schema,
-		CachedAt:    time.Now(),
-		ExpiresAt:   time.Now().Add(sc.ttl),
-		Version:     version,
+		Schema:       schema,
+		CachedAt:     time.Now(),
+		ExpiresAt:    time.Now().Add(sc.ttl),
+		Version:      version,
 	}
 }
 

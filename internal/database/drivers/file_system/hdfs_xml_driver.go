@@ -123,11 +123,11 @@ func (d *HDFSXMLDriver) QueryXMLFile(ctx context.Context, path string, xpath str
 
 	// Parse XML file (placeholder)
 	return &HDFSXMLResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		FilePath: path,
-		XPath:    xpath,
+		FilePath:  path,
+		XPath:     xpath,
 	}, nil
 }
 

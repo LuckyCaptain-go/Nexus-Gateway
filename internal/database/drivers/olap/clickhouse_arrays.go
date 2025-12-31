@@ -115,10 +115,10 @@ func (m *ClickHouseArrayMapper) mapNestedArray(value interface{}) (interface{}, 
 
 // ArrayTypeInfo holds array type information
 type ArrayTypeInfo struct {
-	BaseType    string
-	Dimensions  int
-	IsNullable  bool
-	Size        int
+	BaseType   string
+	Dimensions int
+	IsNullable bool
+	Size       int
 }
 
 // ParseArrayType parses Array(T) type string

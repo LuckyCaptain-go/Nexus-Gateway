@@ -13,17 +13,17 @@ import (
 
 // CSVSchemadDetector detects schema from CSV files
 type CSVSchemadDetector struct {
-	config      *CSVDetectionConfig
+	config *CSVDetectionConfig
 }
 
 // CSVDetectionConfig holds CSV detection configuration
 type CSVDetectionConfig struct {
-	SampleSize        int     // Number of rows to sample for type detection
-	Delimiter         rune    // Field delimiter
-	HasHeader         bool    // Whether file has header row
-	QuoteChar         rune    // Quote character
-	HeaderRowsToSkip  int     // Number of header rows to skip
-	NullValues        []string // Values to treat as null
+	SampleSize       int      // Number of rows to sample for type detection
+	Delimiter        rune     // Field delimiter
+	HasHeader        bool     // Whether file has header row
+	QuoteChar        rune     // Quote character
+	HeaderRowsToSkip int      // Number of header rows to skip
+	NullValues       []string // Values to treat as null
 }
 
 // NewCSVSchemadDetector creates a new CSV schema detector
@@ -46,26 +46,26 @@ func NewCSVSchemadDetector(config *CSVDetectionConfig) *CSVSchemadDetector {
 
 // DetectedSchema represents detected CSV schema
 type DetectedSchema struct {
-	Columns       []DetectedColumn
-	Delimiter     rune
-	HasHeader     bool
-	HeaderRow     []string
-	RowCount      int
-	SampleSize    int
-	Confidence    float64
+	Columns    []DetectedColumn
+	Delimiter  rune
+	HasHeader  bool
+	HeaderRow  []string
+	RowCount   int
+	SampleSize int
+	Confidence float64
 }
 
 // DetectedColumn represents a detected column
 type DetectedColumn struct {
-	Name         string
-	Type         string
-	Nullable     bool
-	UniqueCount  int
-	NullCount    int
-	MinValue     interface{}
-	MaxValue     interface{}
+	Name          string
+	Type          string
+	Nullable      bool
+	UniqueCount   int
+	NullCount     int
+	MinValue      interface{}
+	MaxValue      interface{}
 	ExampleValues []interface{}
-	Confidence   float64
+	Confidence    float64
 }
 
 // DetectSchema detects schema from CSV data
@@ -160,11 +160,11 @@ func (d *CSVSchemadDetector) DetectSchema(data []byte) (*DetectedSchema, error) 
 // detectColumn detects type for a single column
 func (d *CSVSchemadDetector) detectColumn(name string, colIdx int, rows [][]string) DetectedColumn {
 	col := DetectedColumn{
-		Name:         name,
-		Type:         "string",
-		Nullable:     false,
-		UniqueCount:  0,
-		NullCount:    0,
+		Name:          name,
+		Type:          "string",
+		Nullable:      false,
+		UniqueCount:   0,
+		NullCount:     0,
 		ExampleValues: make([]interface{}, 0, 5),
 	}
 

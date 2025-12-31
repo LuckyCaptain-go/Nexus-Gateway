@@ -170,10 +170,10 @@ func (m *TDSQLShardingManager) BroadcastQuery(ctx context.Context, db *sql.DB, s
 	}
 
 	return &TDSQLQueryResult{
-		Rows:       results,
-		Columns:    columns,
-		Count:      len(results),
-		IsRouted:   false,
+		Rows:        results,
+		Columns:     columns,
+		Count:       len(results),
+		IsRouted:    false,
 		IsBroadcast: true,
 	}, nil
 }

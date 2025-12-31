@@ -125,10 +125,10 @@ func (d *HDFSTextDriver) QueryTextFile(ctx context.Context, path string) (*HDFST
 
 	// Parse text file (placeholder)
 	return &HDFSTextResult{
-		Rows:     []string{string(data)},
+		Rows:      []string{string(data)},
 		LineCount: 1,
 		BytesRead: int64(len(data)),
-		FilePath: path,
+		FilePath:  path,
 	}, nil
 }
 

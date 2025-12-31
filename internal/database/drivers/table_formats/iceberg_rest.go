@@ -46,7 +46,7 @@ func NewIcebergRESTClient(config *IcebergConfig) (*IcebergRESTClient, error) {
 	}
 
 	return &IcebergRESTClient{
-		baseURL: config.BaseURL,
+		baseURL:   config.BaseURL,
 		warehouse: config.Warehouse,
 		httpClient: &http.Client{
 			Timeout: timeout,
@@ -272,7 +272,7 @@ func (c *IcebergRESTClient) setAuthHeader(req *http.Request) {
 
 // IcebergNamespace represents a namespace (database) in Iceberg
 type IcebergNamespace struct {
-	Name     string   `json:"name"`
+	Name       string            `json:"name"`
 	Properties map[string]string `json:"properties,omitempty"`
 }
 
@@ -284,31 +284,31 @@ type IcebergTableIdentifier struct {
 
 // IcebergTableMetadata represents table metadata
 type IcebergTableMetadata struct {
-	Format       string                 `json:"format"`
-	Schema       IcebergSchema          `json:"schema"`
-	PartitionSpec []IcebergPartitionField `json:"partition-spec"`
-	SpecID       int                    `json:"spec-id"`
-	Snapshots    []IcebergSnapshot      `json:"snapshots"`
-	CurrentSchemaID int                 `json:"current-schema-id"`
-	Properties   map[string]string      `json:"properties,omitempty"`
-	SnapshotLog  []IcebergSnapshotLog   `json:"snapshot-log"`
-	MetadataLog  []IcebergMetadataLog   `json:"metadata-log"`
+	Format          string                  `json:"format"`
+	Schema          IcebergSchema           `json:"schema"`
+	PartitionSpec   []IcebergPartitionField `json:"partition-spec"`
+	SpecID          int                     `json:"spec-id"`
+	Snapshots       []IcebergSnapshot       `json:"snapshots"`
+	CurrentSchemaID int                     `json:"current-schema-id"`
+	Properties      map[string]string       `json:"properties,omitempty"`
+	SnapshotLog     []IcebergSnapshotLog    `json:"snapshot-log"`
+	MetadataLog     []IcebergMetadataLog    `json:"metadata-log"`
 }
 
 // IcebergSchema represents table schema
 type IcebergSchema struct {
-	SchemaID   int                `json:"schema-id"`
-	Fields     []IcebergField     `json:"fields"`
-	IdentifierFieldIds []int      `json:"identifier-field-ids,omitempty"`
+	SchemaID           int            `json:"schema-id"`
+	Fields             []IcebergField `json:"fields"`
+	IdentifierFieldIds []int          `json:"identifier-field-ids,omitempty"`
 }
 
 // IcebergField represents a column in the schema
 type IcebergField struct {
-	ID     int               `json:"id"`
-	Name   string            `json:"name"`
-	Type   IcebergType       `json:"type"`
-	Required bool            `json:"required"`
-	Doc    string            `json:"doc,omitempty"`
+	ID       int         `json:"id"`
+	Name     string      `json:"name"`
+	Type     IcebergType `json:"type"`
+	Required bool        `json:"required"`
+	Doc      string      `json:"doc,omitempty"`
 }
 
 // IcebergType represents a field type (can be nested)
@@ -316,19 +316,19 @@ type IcebergType interface{}
 
 // IcebergPartitionField represents a partition field
 type IcebergPartitionField struct {
-	SourceID int    `json:"source-id"`
-	Name     string `json:"name"`
+	SourceID  int    `json:"source-id"`
+	Name      string `json:"name"`
 	Transform string `json:"transform"`
 }
 
 // IcebergSnapshot represents a table snapshot
 type IcebergSnapshot struct {
-	SnapshotID int64     `json:"snapshot-id"`
-	SchemaID   int       `json:"schema-id"`
-	ParentSnapshotID *int64 `json:"parent-snapshot-id,omitempty"`
-	TimestampMs int64    `json:"timestamp-ms"`
-	Summary     IcebergSnapshotSummary `json:"summary"`
-_manifests   []string  `json:"manifests,omitempty"`
+	SnapshotID       int64                  `json:"snapshot-id"`
+	SchemaID         int                    `json:"schema-id"`
+	ParentSnapshotID *int64                 `json:"parent-snapshot-id,omitempty"`
+	TimestampMs      int64                  `json:"timestamp-ms"`
+	Summary          IcebergSnapshotSummary `json:"summary"`
+	_manifests       []string               `json:"manifests,omitempty"`
 }
 
 // IcebergSnapshotSummary contains snapshot summary information
@@ -338,7 +338,7 @@ type IcebergSnapshotSummary struct {
 
 // IcebergSnapshotLog represents a snapshot log entry
 type IcebergSnapshotLog struct {
-	SnapshotID int64 `json:"snapshot-id"`
+	SnapshotID  int64 `json:"snapshot-id"`
 	TimestampMs int64 `json:"timestamp-ms"`
 }
 
@@ -350,11 +350,11 @@ type IcebergMetadataLog struct {
 
 // IcebergView represents a view definition
 type IcebergView struct {
-	Name       string                 `json:"name"`
-	Namespace  []string               `json:"namespace"`
-	Schema     IcebergSchema          `json:"schema"`
-	ViewSQL    string                 `json:"sql"`
-	Properties map[string]string      `json:"properties,omitempty"`
+	Name       string            `json:"name"`
+	Namespace  []string          `json:"namespace"`
+	Schema     IcebergSchema     `json:"schema"`
+	ViewSQL    string            `json:"sql"`
+	Properties map[string]string `json:"properties,omitempty"`
 }
 
 // IcebergQueryResult represents query results

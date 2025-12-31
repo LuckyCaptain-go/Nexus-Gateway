@@ -18,16 +18,16 @@ type OceanBaseOracleDriver struct {
 
 // OceanBaseOracleConfig holds OceanBase Oracle mode configuration
 type OceanBaseOracleConfig struct {
-	Host         string
-	Port         int
-	Database     string // Usually 'SYS' or service name
-	Username     string
-	Password     string
-	Schema       string
-	ConnectDesc  string // Connection description string (TNS-like)
-	Role         string // SYSDBA, SYSOPER, etc.
-	Charset      string // AL32UTF8, ZHS16GBK, etc.
-	Edition      string // Edition for edition-based redefinition
+	Host        string
+	Port        int
+	Database    string // Usually 'SYS' or service name
+	Username    string
+	Password    string
+	Schema      string
+	ConnectDesc string // Connection description string (TNS-like)
+	Role        string // SYSDBA, SYSOPER, etc.
+	Charset     string // AL32UTF8, ZHS16GBK, etc.
+	Edition     string // Edition for edition-based redefinition
 }
 
 // NewOceanBaseOracleDriver creates a new OceanBase Oracle mode driver
@@ -214,17 +214,17 @@ func (d *OceanBaseOracleDriver) GetOracleCompatibilityMode(ctx context.Context, 
 	}
 
 	return &OceanBaseCompatibilityInfo{
-		Version:      version,
+		Version:       version,
 		Compatibility: compatibility,
-		Mode:         "ORACLE",
+		Mode:          "ORACLE",
 	}, nil
 }
 
 // OceanBaseCompatibilityInfo represents compatibility mode info
 type OceanBaseCompatibilityInfo struct {
-	Version      string
+	Version       string
 	Compatibility string
-	Mode         string
+	Mode          string
 }
 
 // RegisterOceanBaseOracleDriver registers the OceanBase Oracle driver globally

@@ -24,10 +24,10 @@ func (p *IcebergMetadataParser) ParseTableMetadata(icebergMeta *IcebergTableMeta
 	}
 
 	tableSchema := &metadata.TableSchema{
-		Name:   tableName,
-		Type:   "TABLE",
-		Columns: make([]metadata.ColumnSchema, 0),
-		Indexes: make([]metadata.IndexSchema, 0),
+		Name:       tableName,
+		Type:       "TABLE",
+		Columns:    make([]metadata.ColumnSchema, 0),
+		Indexes:    make([]metadata.IndexSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
@@ -52,9 +52,9 @@ func (p *IcebergMetadataParser) ParseTableMetadata(icebergMeta *IcebergTableMeta
 		snapshots := make([]map[string]interface{}, 0)
 		for _, snap := range icebergMeta.Snapshots {
 			snapshotInfo := map[string]interface{}{
-				"id":         snap.SnapshotID,
-				"timestamp":  snap.TimestampMs,
-				"schema-id":  snap.SchemaID,
+				"id":        snap.SnapshotID,
+				"timestamp": snap.TimestampMs,
+				"schema-id": snap.SchemaID,
 			}
 			if snap.ParentSnapshotID != nil {
 				snapshotInfo["parent-id"] = *snap.ParentSnapshotID
@@ -156,11 +156,11 @@ func (p *IcebergMetadataParser) GetStatisticsFromMetadata(metadata *IcebergTable
 
 // TableStatistics contains table-level statistics
 type TableStatistics struct {
-	SnapshotCount      int
-	SchemaID           int
-	LastSnapshotTime   time.Time
-	LatestSnapshotID   int64
-	PartitionSpec      []string
+	SnapshotCount    int
+	SchemaID         int
+	LastSnapshotTime time.Time
+	LatestSnapshotID int64
+	PartitionSpec    []string
 }
 
 // ParseManifestFile parses an Iceberg manifest file (Avro format)
@@ -181,11 +181,11 @@ type IcebergManifest struct {
 
 // IcebergManifestEntry represents a data file entry in a manifest
 type IcebergManifestEntry struct {
-	Status      string
-	SnapshotID  int64
-	DataFilePath string
-	Partition   map[string]interface{}
-	RecordCount int64
+	Status          string
+	SnapshotID      int64
+	DataFilePath    string
+	Partition       map[string]interface{}
+	RecordCount     int64
 	FileSizeInBytes int64
 }
 
@@ -231,8 +231,8 @@ func (p *IcebergMetadataParser) GetSchemaEvolutionHistory(metadata *IcebergTable
 	// Each snapshot may reference a different schema ID
 	for _, snapshot := range metadata.Snapshots {
 		change := SchemaChange{
-			SchemaID:  snapshot.SchemaID,
-			Timestamp: time.UnixMilli(snapshot.TimestampMs),
+			SchemaID:   snapshot.SchemaID,
+			Timestamp:  time.UnixMilli(snapshot.TimestampMs),
 			SnapshotID: snapshot.SnapshotID,
 		}
 		history = append(history, change)

@@ -16,26 +16,26 @@ import (
 
 // S3Client wraps AWS S3 client with convenience methods
 type S3Client struct {
-	client     *s3.Client
+	client        *s3.Client
 	presignClient *s3.PresignClient
-	region     string
-	config     *S3Config
+	region        string
+	config        *S3Config
 }
 
 // S3Config holds S3 configuration
 type S3Config struct {
-	Region          string
-	Bucket          string
-	AccessKey       string
-	SecretKey       string
-	SessionToken    string // For temporary credentials
-	RoleARN         string // For IAM role assumption
-	ExternalID      string // For IAM role assumption
-	EndpointURL     string // For S3-compatible services (MinIO, LocalStack)
-	DisableSSL      bool
-	ForcePathStyle  bool // Required for MinIO
-	MaxRetries      int
-	Timeout         time.Duration
+	Region         string
+	Bucket         string
+	AccessKey      string
+	SecretKey      string
+	SessionToken   string // For temporary credentials
+	RoleARN        string // For IAM role assumption
+	ExternalID     string // For IAM role assumption
+	EndpointURL    string // For S3-compatible services (MinIO, LocalStack)
+	DisableSSL     bool
+	ForcePathStyle bool // Required for MinIO
+	MaxRetries     int
+	Timeout        time.Duration
 }
 
 // NewS3Client creates a new S3 client
@@ -74,7 +74,7 @@ func NewS3Client(ctx context.Context, s3Config *S3Config) (*S3Client, error) {
 	// Assume IAM role if specified
 	if s3Config.RoleARN != "" {
 		stsClient := stscreds.NewAssumeRoleProvider(stscreds.NewAssumeRoleProvider(
-			// STS client would be created here
+		// STS client would be created here
 		))
 		cfg.Credentials = stsClient
 	}
@@ -151,7 +151,7 @@ func (c *S3Client) ListObjectsWithDelimiter(ctx context.Context, prefix, delimit
 	}
 
 	s3Result := &S3ListResult{
-		Objects: make([]S3Object, 0, len(result.Contents)),
+		Objects:  make([]S3Object, 0, len(result.Contents)),
 		Prefixes: make([]string, 0, len(result.CommonPrefixes)),
 	}
 
@@ -231,7 +231,7 @@ func (c *S3Client) GetObjectMetadata(ctx context.Context, key string) (*S3Object
 	}
 
 	metadata := &S3ObjectMetadata{
-		Key:          key,
+		Key:           key,
 		ContentLength: aws.ToInt64(result.ContentLength),
 		ContentType:   aws.ToString(result.ContentType),
 		LastModified:  aws.ToTime(result.LastModified),
@@ -422,9 +422,9 @@ type S3Object struct {
 
 // S3ListResult represents the result of listing objects
 type S3ListResult struct {
-	Objects              []S3Object
-	Prefixes             []string
-	IsTruncated          bool
+	Objects               []S3Object
+	Prefixes              []string
+	IsTruncated           bool
 	NextContinuationToken string
 }
 

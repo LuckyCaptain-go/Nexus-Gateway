@@ -157,14 +157,14 @@ func (dc *DatabaseController) ValidateDataSourceConfig(c *gin.Context) {
 	// Validate configuration
 	if err := dc.healthChecker.ValidateDataSourceConfiguration(&req.Config, dbType); err != nil {
 		c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
-			"valid": false,
+			"valid":  false,
 			"errors": []string{err.Error()},
 		}, correlationID))
 		return
 	}
 
 	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
-		"valid": true,
+		"valid":    true,
 		"warnings": dc.getConfigWarnings(&req.Config, dbType),
 	}, correlationID))
 }
@@ -182,10 +182,10 @@ func (dc *DatabaseController) GetConnectionStats(c *gin.Context) {
 	// This would need access to the connection pool
 	// For now, return a placeholder response
 	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
-		"message": "Connection pool statistics not yet implemented",
-		"totalConnections": 0,
+		"message":           "Connection pool statistics not yet implemented",
+		"totalConnections":  0,
 		"activeConnections": 0,
-		"idleConnections": 0,
+		"idleConnections":   0,
 	}, correlationID))
 }
 
@@ -202,11 +202,11 @@ func (dc *DatabaseController) GetDatabaseHealth(c *gin.Context) {
 	// This would need access to the health checker with connection pool
 	// For now, return a placeholder response
 	c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
-		"message": "Database health check not yet implemented",
-		"healthyConnections": 0,
+		"message":              "Database health check not yet implemented",
+		"healthyConnections":   0,
 		"unhealthyConnections": 0,
-		"totalConnections": 0,
-		"checkedAt": "2025-12-22T10:00:00Z",
+		"totalConnections":     0,
+		"checkedAt":            "2025-12-22T10:00:00Z",
 	}, correlationID))
 }
 
@@ -222,32 +222,32 @@ func (dc *DatabaseController) GetDatabaseCompatibility(c *gin.Context) {
 
 	compatibility := map[string]DatabaseCompatibility{
 		"mysql": {
-			Supported:    true,
-			Version:      "5.7+",
-			Features:     []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
-			Limitations:  []string{"No DML/DDL operations", "No stored procedures"},
-			Recommended:  true,
+			Supported:   true,
+			Version:     "5.7+",
+			Features:    []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
+			Limitations: []string{"No DML/DDL operations", "No stored procedures"},
+			Recommended: true,
 		},
 		"mariadb": {
-			Supported:    true,
-			Version:      "10.2+",
-			Features:     []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
-			Limitations:  []string{"No DML/DDL operations", "No stored procedures"},
-			Recommended:  true,
+			Supported:   true,
+			Version:     "10.2+",
+			Features:    []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
+			Limitations: []string{"No DML/DDL operations", "No stored procedures"},
+			Recommended: true,
 		},
 		"postgresql": {
-			Supported:    true,
-			Version:      "9.6+",
-			Features:     []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT", "Window functions"},
-			Limitations:  []string{"No DML/DDL operations", "No stored procedures"},
-			Recommended:  true,
+			Supported:   true,
+			Version:     "9.6+",
+			Features:    []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT", "Window functions"},
+			Limitations: []string{"No DML/DDL operations", "No stored procedures"},
+			Recommended: true,
 		},
 		"oracle": {
-			Supported:    true,
-			Version:      "12c+",
-			Features:     []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY"},
-			Limitations:  []string{"No DML/DDL operations", "No stored procedures", "Limited pagination support"},
-			Recommended:  true,
+			Supported:   true,
+			Version:     "12c+",
+			Features:    []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY"},
+			Limitations: []string{"No DML/DDL operations", "No stored procedures", "Limited pagination support"},
+			Recommended: true,
 		},
 	}
 
@@ -257,7 +257,7 @@ func (dc *DatabaseController) GetDatabaseCompatibility(c *gin.Context) {
 // Request/Response types
 
 type ValidateConfigRequest struct {
-	Type   string                `json:"type" validate:"required"`
+	Type   string                 `json:"type" validate:"required"`
 	Config model.DataSourceConfig `json:"config" validate:"required"`
 }
 

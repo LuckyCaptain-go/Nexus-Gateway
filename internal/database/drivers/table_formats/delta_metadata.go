@@ -32,10 +32,10 @@ func (p *DeltaLogParser) ParseTableMetadata(deltaMeta *DeltaTableDetails, tableN
 	}
 
 	tableSchema := &metadata.TableSchema{
-		Name:   tableName,
-		Type:   "TABLE",
-		Schema: deltaMeta.SchemaName,
-		Columns: make([]metadata.ColumnSchema, 0),
+		Name:       tableName,
+		Type:       "TABLE",
+		Schema:     deltaMeta.SchemaName,
+		Columns:    make([]metadata.ColumnSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
@@ -100,11 +100,11 @@ func (p *DeltaLogParser) GetLatestVersion(commits []DeltaCommitInfo) (int64, err
 
 // DeltaLogEntry represents a Delta log entry
 type DeltaLogEntry struct {
-	CommitInfo  DeltaCommitInfo    `json:"commitInfo"`
-	Protocol    DeltaProtocol      `json:"protocol"`
-	MetaData    *DeltaMetaData     `json:"metaData,omitempty"`
-	Add        []DeltaFileAction  `json:"add,omitempty"`
-	Remove     []DeltaFileAction  `json:"remove,omitempty"`
+	CommitInfo DeltaCommitInfo   `json:"commitInfo"`
+	Protocol   DeltaProtocol     `json:"protocol"`
+	MetaData   *DeltaMetaData    `json:"metaData,omitempty"`
+	Add        []DeltaFileAction `json:"add,omitempty"`
+	Remove     []DeltaFileAction `json:"remove,omitempty"`
 }
 
 // DeltaProtocol represents the Delta protocol version
@@ -115,23 +115,23 @@ type DeltaProtocol struct {
 
 // DeltaMetaData represents table metadata in Delta log
 type DeltaMetaData struct {
-	ID                string                 `json:"id"`
-	Format            DeltaFormat            `json:"format"`
-	SchemaString      string                 `json:"schemaString"`
-	PartitionColumns  []string               `json:"partitionColumns"`
-	Configuration     map[string]string      `json:"configuration"`
-	CreatedTime       int64                  `json:"createdTime"`
+	ID               string            `json:"id"`
+	Format           DeltaFormat       `json:"format"`
+	SchemaString     string            `json:"schemaString"`
+	PartitionColumns []string          `json:"partitionColumns"`
+	Configuration    map[string]string `json:"configuration"`
+	CreatedTime      int64             `json:"createdTime"`
 }
 
 // DeltaFileAction represents a file add/remove action
 type DeltaFileAction struct {
-	Path         string                 `json:"path"`
-	Size         int64                  `json:"size"`
-	ModificationTime int64              `json:"modificationTime"`
-	DataChange   bool                   `json:"dataChange"`
-	Stats        string                 `json:"stats,omitempty"`
-	PartitionValues map[string]string   `json:"partitionValues,omitempty"`
-	Tags         map[string]string      `json:"tags,omitempty"`
+	Path             string            `json:"path"`
+	Size             int64             `json:"size"`
+	ModificationTime int64             `json:"modificationTime"`
+	DataChange       bool              `json:"dataChange"`
+	Stats            string            `json:"stats,omitempty"`
+	PartitionValues  map[string]string `json:"partitionValues,omitempty"`
+	Tags             map[string]string `json:"tags,omitempty"`
 }
 
 // ParseStats parses the stats field of a file action
@@ -150,10 +150,10 @@ func (p *DeltaLogParser) ParseStats(statsJSON string) (*DeltaFileStats, error) {
 
 // DeltaFileStats contains file-level statistics
 type DeltaFileStats struct {
-	NumRecords          int64 `json:"numRecords"`
-	MinValues          map[string]interface{} `json:"minValues"`
-	MaxValues          map[string]interface{} `json:"maxValues"`
-	NullCount          map[string]int64        `json:"nullCount"`
+	NumRecords int64                  `json:"numRecords"`
+	MinValues  map[string]interface{} `json:"minValues"`
+	MaxValues  map[string]interface{} `json:"maxValues"`
+	NullCount  map[string]int64       `json:"nullCount"`
 }
 
 // GetPartitionColumns returns partition columns from metadata
@@ -204,10 +204,10 @@ func (p *DeltaLogParser) GetSchemaEvolutionHistory(commits []DeltaCommitInfo) []
 		// Check if this commit involved schema changes
 		if commit.Operation == "WRITE" || commit.Operation == "CREATE TABLE" {
 			change := DeltaSchemaChange{
-				Version:    commit.Version,
-				Timestamp:  commit.Timestamp,
-				Operation:  commit.Operation,
-				UserName:   commit.UserName,
+				Version:   commit.Version,
+				Timestamp: commit.Timestamp,
+				Operation: commit.Operation,
+				UserName:  commit.UserName,
 			}
 			history = append(history, change)
 		}
@@ -229,8 +229,8 @@ func (p *DeltaLogParser) ParsePartitionSpec(partitionCols []string) []PartitionF
 	fields := make([]PartitionField, len(partitionCols))
 	for i, col := range partitionCols {
 		fields[i] = PartitionField{
-			SourceID: i,
-			Name:     col,
+			SourceID:  i,
+			Name:      col,
 			Transform: "value", // Delta uses partition by value
 		}
 	}
@@ -239,8 +239,8 @@ func (p *DeltaLogParser) ParsePartitionSpec(partitionCols []string) []PartitionF
 
 // PartitionField represents a partition field (compatible with Iceberg)
 type PartitionField struct {
-	SourceID int
-	Name     string
+	SourceID  int
+	Name      string
 	Transform string
 }
 

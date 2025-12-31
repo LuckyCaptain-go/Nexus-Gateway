@@ -53,12 +53,13 @@ type SessionManager struct {
 }
 
 type queryService struct {
-	datasourceRepo repository.DataSourceRepository
-	connPool       *database.ConnectionPool
-	sqlValidator   *security.SQLValidator
-	typeMapper     *utils.DataTypeMapper
-	stats          *queryStats
-	sessionManager *SessionManager
+	datasourceRepo  repository.DataSourceRepository
+	connPool        *database.ConnectionPool
+	sqlValidator    *security.SQLValidator
+	typeMapper      *utils.DataTypeMapper
+	stats           *queryStats
+	sessionManager  *SessionManager
+	preferStreaming bool
 }
 
 type queryStats struct {
@@ -72,14 +73,15 @@ type queryStats struct {
 }
 
 // NewQueryService creates a new instance of QueryService
-func NewQueryService(datasourceRepo repository.DataSourceRepository, connPool *database.ConnectionPool) QueryService {
+func NewQueryService(datasourceRepo repository.DataSourceRepository, connPool *database.ConnectionPool, preferStreaming bool) QueryService {
 	return &queryService{
-		datasourceRepo: datasourceRepo,
-		connPool:       connPool,
-		sqlValidator:   security.NewSQLValidator(10000),
-		typeMapper:     utils.NewDataTypeMapper(),
-		stats:          newQueryStats(),
-		sessionManager: NewSessionManager(),
+		datasourceRepo:  datasourceRepo,
+		connPool:        connPool,
+		sqlValidator:    security.NewSQLValidator(10000),
+		typeMapper:      utils.NewDataTypeMapper(),
+		stats:           newQueryStats(),
+		sessionManager:  NewSessionManager(),
+		preferStreaming: preferStreaming,
 	}
 }
 

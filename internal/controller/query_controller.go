@@ -29,7 +29,14 @@ func NewQueryController(queryService service.QueryService) *QueryController {
 
 // ExecuteQuery godoc
 // @Summary Execute a SQL query
-// @Description Executes a read-only SQL query against the specified data source
+// @Description Executes a read-only SQL query against the specified data source.
+// Supports two modes:
+//   - Inline (default): returns rows up to `limit` in the response.
+//   - Streaming: when supported by the backend, the service will open a server-side cursor
+//     and return the first batch of rows plus a `nextUri` which can be used to fetch
+//     subsequent batches from the `/fetch` endpoint. Clients should follow `nextUri`
+//     to continue streaming results without re-running the query.
+//
 // @Tags queries
 // @Accept json
 // @Produce json
@@ -95,7 +102,10 @@ func (qc *QueryController) ExecuteQuery(c *gin.Context) {
 
 // FetchQuery godoc
 // @Summary Execute a batch SQL query
-// @Description Executes a SQL query and returns batch data with pagination support
+// @Description Executes a SQL query and returns batch data with pagination support.
+// This endpoint will attempt to open a streaming cursor on the backend when possible
+// and return the first batch of rows. If streaming is established, the response
+// includes a `nextUri` for continuing the stream via `/fetch/{query_id}/{slug}/{token}`.
 // @Tags queries
 // @Accept json
 // @Produce json
@@ -170,7 +180,10 @@ func (qc *QueryController) FetchQuery(c *gin.Context) {
 
 // FetchNextBatch godoc
 // @Summary Fetch next batch of data
-// @Description Fetches the next batch of data using the query ID, slug, and token
+// @Description Fetches the next batch of data using the query ID, slug, and token.
+// This endpoint retrieves subsequent batches for streaming queries (created by
+// either `/query` when it returned a `nextUri` or `/fetch`), and also supports
+// offset-based continuation for legacy sessions that fall back to LIMIT/OFFSET.
 // @Tags queries
 // @Accept json
 // @Produce json

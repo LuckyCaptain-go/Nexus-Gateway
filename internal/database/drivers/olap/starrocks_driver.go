@@ -18,11 +18,11 @@ type StarRocksDriver struct {
 
 // StarRocksConfig holds StarRocks configuration
 type StarRocksConfig struct {
-	Host         string
-	Port         int
-	Database     string
-	Username     string
-	Password     string
+	Host           string
+	Port           int
+	Database       string
+	Username       string
+	Password       string
 	EnablePipeline bool
 }
 
@@ -151,10 +151,10 @@ func (d *StarRocksDriver) ExecutePipelineQuery(ctx context.Context, db *sql.DB, 
 	}
 
 	return &StarRocksPipelineResult{
-		Rows:          results,
-		Columns:       columns,
-		RowCount:      len(results),
-		PipelineUsed:  d.config.EnablePipeline,
+		Rows:         results,
+		Columns:      columns,
+		RowCount:     len(results),
+		PipelineUsed: d.config.EnablePipeline,
 	}, nil
 }
 

@@ -26,15 +26,15 @@ type dataSourceService struct {
 }
 
 type CreateDataSourceRequest struct {
-	Name   string                   `json:"name" validate:"required,min=1,max=255"`
-	Type   model.DatabaseType       `json:"type" validate:"required"`
-	Config model.DataSourceConfig   `json:"config" validate:"required"`
+	Name   string                 `json:"name" validate:"required,min=1,max=255"`
+	Type   model.DatabaseType     `json:"type" validate:"required"`
+	Config model.DataSourceConfig `json:"config" validate:"required"`
 }
 
 type UpdateDataSourceRequest struct {
-	Name   *string                  `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
-	Config *model.DataSourceConfig  `json:"config,omitempty"`
-	Status *model.DataSourceStatus  `json:"status,omitempty"`
+	Name   *string                 `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Config *model.DataSourceConfig `json:"config,omitempty"`
+	Status *model.DataSourceStatus `json:"status,omitempty"`
 }
 
 type ListDataSourcesRequest struct {
@@ -45,13 +45,13 @@ type ListDataSourcesRequest struct {
 
 type ListDataSourcesResponse struct {
 	DataSources []*model.DataSource `json:"dataSources"`
-	Total       int64              `json:"total"`
-	Limit       int                `json:"limit"`
-	Offset      int                `json:"offset"`
+	Total       int64               `json:"total"`
+	Limit       int                 `json:"limit"`
+	Offset      int                 `json:"offset"`
 }
 
 type DataSourceStatsResponse struct {
-	Total   int64                           `json:"total"`
+	Total    int64                            `json:"total"`
 	ByStatus map[model.DataSourceStatus]int64 `json:"byStatus"`
 }
 
@@ -214,7 +214,7 @@ func (s *dataSourceService) GetDataSourceStats(ctx context.Context) (*DataSource
 	}
 
 	return &DataSourceStatsResponse{
-		Total:   total,
+		Total:    total,
 		ByStatus: counts,
 	}, nil
 }

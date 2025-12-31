@@ -112,10 +112,10 @@ func (d *OzoneJSONDriver) QueryJSONFile(ctx context.Context, key string) (*Ozone
 
 	// Parse JSON file (placeholder)
 	return &OzoneJSONResult{
-		Rows:     []map[string]interface{}{},
-		NumRows:  0,
+		Rows:      []map[string]interface{}{},
+		NumRows:   0,
 		BytesRead: int64(len(data)),
-		Key:      key,
+		Key:       key,
 	}, nil
 }
 

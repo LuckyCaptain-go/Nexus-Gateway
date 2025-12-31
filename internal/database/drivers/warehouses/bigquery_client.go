@@ -17,20 +17,20 @@ import (
 // This serves as an alternative to the native Go client for scenarios
 // where REST API is preferred or for compatibility layers
 type BigQueryRESTClient struct {
-	baseURL    string // BigQuery API endpoint
-	httpClient *http.Client
+	baseURL     string // BigQuery API endpoint
+	httpClient  *http.Client
 	accessToken string // OAuth2 access token
-	projectID  string
-	location   string
+	projectID   string
+	location    string
 }
 
 // BigQueryRESTConfig holds REST client configuration
 type BigQueryRESTConfig struct {
-	Endpoint   string // BigQuery API endpoint (default: https://bigquery.googleapis.com)
+	Endpoint    string // BigQuery API endpoint (default: https://bigquery.googleapis.com)
 	AccessToken string // OAuth2 access token
-	ProjectID  string
-	Location   string
-	Timeout    time.Duration
+	ProjectID   string
+	Location    string
+	Timeout     time.Duration
 }
 
 // NewBigQueryRESTClient creates a new BigQuery REST client
@@ -53,11 +53,11 @@ func NewBigQueryRESTClient(config *BigQueryRESTConfig) (*BigQueryRESTClient, err
 	}
 
 	return &BigQueryRESTClient{
-		baseURL:    endpoint,
-		httpClient: &http.Client{Timeout: timeout},
+		baseURL:     endpoint,
+		httpClient:  &http.Client{Timeout: timeout},
 		accessToken: config.AccessToken,
-		projectID:  config.ProjectID,
-		location:   config.Location,
+		projectID:   config.ProjectID,
+		location:    config.Location,
 	}, nil
 }
 
@@ -67,20 +67,20 @@ func NewBigQueryRESTClient(config *BigQueryRESTConfig) (*BigQueryRESTClient, err
 
 // QueryRequest represents a BigQuery query request
 type QueryRequest struct {
-	Query              string                 `json:"query"`
-	Kind               string                 `json:"kind,omitempty"`
-	TimeoutMs          int64                  `json:"timeoutMs,omitempty"`
-	UseLegacySQL       bool                   `json:"useLegacySql,omitempty"`
-	UseQueryCache      bool                   `json:"useQueryCache,omitempty"`
-	DefaultDataset     *DatasetReference      `json:"defaultDataset,omitempty"`
-	MaxResults         int64                  `json:"maxResults,omitempty"`
-	ParameterMode      string                 `json:"parameterMode,omitempty"`
-	QueryParameters    []QueryParameter       `json:"queryParameters,omitempty"`
-	DryRun             bool                   `json:"dryRun,omitempty"`
-	PreserveNulls      bool                   `json:"preserveNulls,omitempty"`
-	Labels             map[string]string      `json:"labels,omitempty"`
-	RequestID          string                 `json:"requestId,omitempty"`
-	ConnectionProperties []ConnectionProperty  `json:"connectionProperties,omitempty"`
+	Query                string               `json:"query"`
+	Kind                 string               `json:"kind,omitempty"`
+	TimeoutMs            int64                `json:"timeoutMs,omitempty"`
+	UseLegacySQL         bool                 `json:"useLegacySql,omitempty"`
+	UseQueryCache        bool                 `json:"useQueryCache,omitempty"`
+	DefaultDataset       *DatasetReference    `json:"defaultDataset,omitempty"`
+	MaxResults           int64                `json:"maxResults,omitempty"`
+	ParameterMode        string               `json:"parameterMode,omitempty"`
+	QueryParameters      []QueryParameter     `json:"queryParameters,omitempty"`
+	DryRun               bool                 `json:"dryRun,omitempty"`
+	PreserveNulls        bool                 `json:"preserveNulls,omitempty"`
+	Labels               map[string]string    `json:"labels,omitempty"`
+	RequestID            string               `json:"requestId,omitempty"`
+	ConnectionProperties []ConnectionProperty `json:"connectionProperties,omitempty"`
 }
 
 // DatasetReference represents a dataset reference
@@ -91,21 +91,21 @@ type DatasetReference struct {
 
 // QueryParameter represents a query parameter
 type QueryParameter struct {
-	Name         string      `json:"name"`
-	ParameterValue interface{} `json:"parameterValue"`
-	ParameterType *QueryParameterType `json:"parameterType"`
+	Name           string              `json:"name"`
+	ParameterValue interface{}         `json:"parameterValue"`
+	ParameterType  *QueryParameterType `json:"parameterType"`
 }
 
 // QueryParameterType represents parameter type
 type QueryParameterType struct {
-	Type    string `json:"type"`
-	ArrayType *QueryParameterType `json:"arrayType,omitempty"`
-	StructTypes []StructType `json:"structTypes,omitempty"`
+	Type        string              `json:"type"`
+	ArrayType   *QueryParameterType `json:"arrayType,omitempty"`
+	StructTypes []StructType        `json:"structTypes,omitempty"`
 }
 
 // StructType represents struct field type
 type StructType struct {
-	Name string `json:"name"`
+	Name string              `json:"name"`
 	Type *QueryParameterType `json:"type"`
 }
 
@@ -117,16 +117,16 @@ type ConnectionProperty struct {
 
 // QueryResponse represents a BigQuery query response
 type QueryResponse struct {
-	Kind              string          `json:"kind"`
-	Schema            *TableSchema    `json:"schema,omitempty"`
-	JobReference      *JobReference   `json:"jobReference"`
-	TotalRows         int64           `json:"totalRows,omitempty"`
-	PageToken         string          `json:"pageToken,omitempty"`
-	Rows              []TableRow      `json:"rows,omitempty"`
-	Errors            []ErrorProto    `json:"errors,omitempty"`
-	JobComplete       bool            `json:"jobComplete"`
-	CacheHit          bool            `json:"cacheHit,omitempty"`
-	DMLStats          *DmlStatistics  `json:"dmlStats,omitempty"`
+	Kind         string         `json:"kind"`
+	Schema       *TableSchema   `json:"schema,omitempty"`
+	JobReference *JobReference  `json:"jobReference"`
+	TotalRows    int64          `json:"totalRows,omitempty"`
+	PageToken    string         `json:"pageToken,omitempty"`
+	Rows         []TableRow     `json:"rows,omitempty"`
+	Errors       []ErrorProto   `json:"errors,omitempty"`
+	JobComplete  bool           `json:"jobComplete"`
+	CacheHit     bool           `json:"cacheHit,omitempty"`
+	DMLStats     *DmlStatistics `json:"dmlStats,omitempty"`
 }
 
 // TableSchema represents table schema
@@ -136,10 +136,10 @@ type TableSchema struct {
 
 // TableFieldSchema represents field schema
 type TableFieldSchema struct {
-	Name       string            `json:"name"`
-	Type       string            `json:"type"`
-	Mode       string            `json:"mode,omitempty"`
-	Fields     []TableFieldSchema `json:"fields,omitempty"`
+	Name   string             `json:"name"`
+	Type   string             `json:"type"`
+	Mode   string             `json:"mode,omitempty"`
+	Fields []TableFieldSchema `json:"fields,omitempty"`
 }
 
 // TableRow represents a table row
@@ -161,9 +161,9 @@ type JobReference struct {
 
 // ErrorProto represents an error
 type ErrorProto struct {
-	Reason  string `json:"reason"`
+	Reason   string `json:"reason"`
 	Location string `json:"location,omitempty"`
-	Message string `json:"message"`
+	Message  string `json:"message"`
 }
 
 // DmlStatistics represents DML statistics
@@ -278,61 +278,61 @@ func (c *BigQueryRESTClient) GetQueryResults(ctx context.Context, jobID string, 
 
 // Job represents a BigQuery job
 type Job struct {
-	JobReference  *JobReference `json:"jobReference"`
+	JobReference  *JobReference     `json:"jobReference"`
 	Configuration *JobConfiguration `json:"configuration"`
-	Status        *JobStatus `json:"status"`
-	Statistics    *JobStatistics `json:"statistics,omitempty"`
+	Status        *JobStatus        `json:"status"`
+	Statistics    *JobStatistics    `json:"statistics,omitempty"`
 }
 
 // JobConfiguration represents job configuration
 type JobConfiguration struct {
-	Query    *QueryJobConfig    `json:"query,omitempty"`
-	Load     *LoadJobConfig     `json:"load,omitempty"`
-	Extract  *ExtractJobConfig  `json:"extract,omitempty"`
+	Query     *QueryJobConfig     `json:"query,omitempty"`
+	Load      *LoadJobConfig      `json:"load,omitempty"`
+	Extract   *ExtractJobConfig   `json:"extract,omitempty"`
 	TableCopy *TableCopyJobConfig `json:"tableCopy,omitempty"`
 }
 
 // QueryJobConfig represents query job configuration
 type QueryJobConfig struct {
-	Query              string `json:"query"`
-	DestinationTable   *TableReference `json:"destinationTable,omitempty"`
-	CreateDisposition  string `json:"createDisposition,omitempty"`
-	WriteDisposition   string `json:"writeDisposition,omitempty"`
-	DefaultDataset     *DatasetReference `json:"defaultDataset,omitempty"`
-	Priority           string `json:"priority,omitempty"`
-	UseLegacySQL       bool   `json:"useLegacySql,omitempty"`
-	UseQueryCache      bool   `json:"useQueryCache,omitempty"`
+	Query             string            `json:"query"`
+	DestinationTable  *TableReference   `json:"destinationTable,omitempty"`
+	CreateDisposition string            `json:"createDisposition,omitempty"`
+	WriteDisposition  string            `json:"writeDisposition,omitempty"`
+	DefaultDataset    *DatasetReference `json:"defaultDataset,omitempty"`
+	Priority          string            `json:"priority,omitempty"`
+	UseLegacySQL      bool              `json:"useLegacySql,omitempty"`
+	UseQueryCache     bool              `json:"useQueryCache,omitempty"`
 }
 
 // LoadJobConfig represents load job configuration
 type LoadJobConfig struct {
-	DestinationTable *TableReference `json:"destinationTable"`
-	SourceURIs       []string        `json:"sourceUris"`
-	Schema           *TableSchema    `json:"schema,omitempty"`
-	SourceFormat     string          `json:"sourceFormat,omitempty"`
-	WriteDisposition string         `json:"writeDisposition,omitempty"`
-	CreateDisposition string        `json:"createDisposition,omitempty"`
-	SkipLeadingRows  int64           `json:"skipLeadingRows,omitempty"`
-	FieldDelimiter   string         `json:"fieldDelimiter,omitempty"`
-	Quote            string         `json:"quote,omitempty"`
-	AllowQuotedNewlines bool        `json:"allowQuotedNewlines,omitempty"`
+	DestinationTable    *TableReference `json:"destinationTable"`
+	SourceURIs          []string        `json:"sourceUris"`
+	Schema              *TableSchema    `json:"schema,omitempty"`
+	SourceFormat        string          `json:"sourceFormat,omitempty"`
+	WriteDisposition    string          `json:"writeDisposition,omitempty"`
+	CreateDisposition   string          `json:"createDisposition,omitempty"`
+	SkipLeadingRows     int64           `json:"skipLeadingRows,omitempty"`
+	FieldDelimiter      string          `json:"fieldDelimiter,omitempty"`
+	Quote               string          `json:"quote,omitempty"`
+	AllowQuotedNewlines bool            `json:"allowQuotedNewlines,omitempty"`
 }
 
 // ExtractJobConfig represents extract job configuration
 type ExtractJobConfig struct {
-	SourceTable      *TableReference `json:"sourceTable"`
-	DestinationURIs  []string        `json:"destinationUris"`
-	DestinationFormat string         `json:"destinationFormat,omitempty"`
-	Compression      string         `json:"compression,omitempty"`
-	FieldDelimiter   string         `json:"fieldDelimiter,omitempty"`
+	SourceTable       *TableReference `json:"sourceTable"`
+	DestinationURIs   []string        `json:"destinationUris"`
+	DestinationFormat string          `json:"destinationFormat,omitempty"`
+	Compression       string          `json:"compression,omitempty"`
+	FieldDelimiter    string          `json:"fieldDelimiter,omitempty"`
 }
 
 // TableCopyJobConfig represents table copy job configuration
 type TableCopyJobConfig struct {
 	SourceTables      []*TableReference `json:"sourceTables"`
-	DestinationTable  *TableReference `json:"destinationTable"`
-	WriteDisposition  string          `json:"writeDisposition,omitempty"`
-	CreateDisposition string          `json:"createDisposition,omitempty"`
+	DestinationTable  *TableReference   `json:"destinationTable"`
+	WriteDisposition  string            `json:"writeDisposition,omitempty"`
+	CreateDisposition string            `json:"createDisposition,omitempty"`
 }
 
 // TableReference represents a table reference
@@ -344,43 +344,43 @@ type TableReference struct {
 
 // JobStatus represents job status
 type JobStatus struct {
-	State       string      `json:"state"`
-	ErrorResult *ErrorProto `json:"errorResult,omitempty"`
+	State       string       `json:"state"`
+	ErrorResult *ErrorProto  `json:"errorResult,omitempty"`
 	Errors      []ErrorProto `json:"errors,omitempty"`
 }
 
 // JobStatistics represents job statistics
 type JobStatistics struct {
-	Query        *QueryStatistics `json:"query,omitempty"`
-	Load         *LoadStatistics `json:"load,omitempty"`
-	Extract      *ExtractStatistics `json:"extract,omitempty"`
-	StartTime    string `json:"startTime,omitempty"`
-	EndTime      string `json:"endTime,omitempty"`
-	TotalDuration string `json:"totalDuration,omitempty"`
+	Query         *QueryStatistics   `json:"query,omitempty"`
+	Load          *LoadStatistics    `json:"load,omitempty"`
+	Extract       *ExtractStatistics `json:"extract,omitempty"`
+	StartTime     string             `json:"startTime,omitempty"`
+	EndTime       string             `json:"endTime,omitempty"`
+	TotalDuration string             `json:"totalDuration,omitempty"`
 }
 
 // QueryStatistics represents query job statistics
 type QueryStatistics struct {
-	TotalBytesProcessed     string `json:"totalBytesProcessed"`
-	TotalBytesBilled        string `json:"totalBytesBilled"`
-	CacheHit                bool   `json:"cacheHit"`
-	NumDmlAffectedRows      int64  `json:"numDmlAffectedRows,omitempty"`
-	DmlStats                *DmlStatistics `json:"dmlStats,omitempty"`
+	TotalBytesProcessed string         `json:"totalBytesProcessed"`
+	TotalBytesBilled    string         `json:"totalBytesBilled"`
+	CacheHit            bool           `json:"cacheHit"`
+	NumDmlAffectedRows  int64          `json:"numDmlAffectedRows,omitempty"`
+	DmlStats            *DmlStatistics `json:"dmlStats,omitempty"`
 }
 
 // LoadStatistics represents load job statistics
 type LoadStatistics struct {
-	InputFileBytes    int64 `json:"inputFileBytes"`
-	InputFileCount    int64 `json:"inputFileCount"`
-	OutputBytes       int64 `json:"outputBytes"`
-	OutputRowCount    int64 `json:"outputRowCount"`
-	BadRecords        int64 `json:"badRecords,omitempty"`
+	InputFileBytes int64 `json:"inputFileBytes"`
+	InputFileCount int64 `json:"inputFileCount"`
+	OutputBytes    int64 `json:"outputBytes"`
+	OutputRowCount int64 `json:"outputRowCount"`
+	BadRecords     int64 `json:"badRecords,omitempty"`
 }
 
 // ExtractStatistics represents extract job statistics
 type ExtractStatistics struct {
-	InputFileBytes    int64 `json:"inputFileBytes"`
-	RowsExtracted     int64 `json:"rowsExtracted,omitempty"`
+	InputFileBytes int64 `json:"inputFileBytes"`
+	RowsExtracted  int64 `json:"rowsExtracted,omitempty"`
 }
 
 // StartJob starts a new job
@@ -554,8 +554,8 @@ func (c *BigQueryRESTClient) ListTables(ctx context.Context, datasetID string) (
 	}
 
 	var result struct {
-		Tables  []*Table `json:"tables"`
-		NextPageToken string `json:"nextPageToken,omitempty"`
+		Tables        []*Table `json:"tables"`
+		NextPageToken string   `json:"nextPageToken,omitempty"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -568,8 +568,8 @@ func (c *BigQueryRESTClient) ListTables(ctx context.Context, datasetID string) (
 // Table represents a BigQuery table
 type Table struct {
 	TableReference *TableReference `json:"tableReference"`
-	Schema         *TableSchema `json:"schema,omitempty"`
-	Type           string `json:"type,omitempty"`
+	Schema         *TableSchema    `json:"schema,omitempty"`
+	Type           string          `json:"type,omitempty"`
 }
 
 // ==============================================================================
@@ -643,7 +643,7 @@ func (c *BigQueryRESTClient) ListDatasets(ctx context.Context) ([]*Dataset, erro
 // Dataset represents a BigQuery dataset
 type Dataset struct {
 	DatasetReference *DatasetReference `json:"datasetReference"`
-	FriendlyName     string `json:"friendlyName,omitempty"`
+	FriendlyName     string            `json:"friendlyName,omitempty"`
 }
 
 // ==============================================================================
