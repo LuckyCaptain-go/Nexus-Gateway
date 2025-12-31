@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/snowflakedb/gosnowflake"
 	"nexus-gateway/internal/model"
+
+	"github.com/snowflakedb/gosnowflake"
 )
 
 // SnowflakeConfig holds Snowflake connection configuration
@@ -21,11 +22,11 @@ type SnowflakeConfig struct {
 	Warehouse string // Warehouse name (optional)
 
 	// Optional fields
-	Role       string // Role name (optional)
-	Region     string // Region (optional, parsed from account if not provided)
-	Host       string // Host (optional, defaults to <account>.snowflakecomputing.com)
-	Port       int    // Port (optional, defaults to 443)
-	Protocol   string // Protocol (optional, defaults to "https")
+	Role     string // Role name (optional)
+	Region   string // Region (optional, parsed from account if not provided)
+	Host     string // Host (optional, defaults to <account>.snowflakecomputing.com)
+	Port     int    // Port (optional, defaults to 443)
+	Protocol string // Protocol (optional, defaults to "https")
 
 	// Connection settings
 	LoginTimeout    time.Duration // Login timeout
@@ -39,12 +40,12 @@ type SnowflakeConfig struct {
 // DefaultSnowflakeConfig returns default configuration
 func DefaultSnowflakeConfig() *SnowflakeConfig {
 	return &SnowflakeConfig{
-		Schema:          "public",
-		Port:            443,
-		Protocol:        "https",
-		LoginTimeout:    30 * time.Second,
-		RequestTimeout:  30 * time.Second,
-		MaxRetryBackoff: 30 * time.Second,
+		Schema:                 "public",
+		Port:                   443,
+		Protocol:               "https",
+		LoginTimeout:           30 * time.Second,
+		RequestTimeout:         30 * time.Second,
+		MaxRetryBackoff:        30 * time.Second,
 		ClientSessionKeepAlive: true,
 	}
 }
@@ -78,19 +79,19 @@ func (c *SnowflakeConfig) BuildDSN() (string, error) {
 	// Build DSN using gosnowflake format
 	// Format: user:password@account/database/schema?warehouse=warehouse&role=role
 	dsn := &gosnowflake.Config{
-		Account:     c.Account,
-		User:        c.User,
-		Password:    c.Password,
-		Database:    c.Database,
-		Schema:      c.Schema,
-		Warehouse:   c.Warehouse,
-		Role:        c.Role,
-		Host:        host,
-		Port:        c.Port,
-		Protocol:    c.Protocol,
-		LoginTimeout: c.LoginTimeout,
-		RequestTimeout: c.RequestTimeout,
-		MaxRetryBackoff: c.MaxRetryBackoff,
+		Account:                c.Account,
+		User:                   c.User,
+		Password:               c.Password,
+		Database:               c.Database,
+		Schema:                 c.Schema,
+		Warehouse:              c.Warehouse,
+		Role:                   c.Role,
+		Host:                   host,
+		Port:                   c.Port,
+		Protocol:               c.Protocol,
+		LoginTimeout:           c.LoginTimeout,
+		RequestTimeout:         c.RequestTimeout,
+		MaxRetryBackoff:        c.MaxRetryBackoff,
 		ClientSessionKeepAlive: c.ClientSessionKeepAlive,
 	}
 
@@ -272,17 +273,11 @@ func GetRecommendedWarehouseSize(workload string) string {
 
 // ValidateWarehouseSize validates Snowflake warehouse size
 func ValidateWarehouseSize(size string) bool {
-	validSizes := []string{
-		"XSMALL", "SMALL", "MEDIUM", "LARGE", "XLARGE", "XXLARGE", "XXXLARGE", "XXXXLARGE",
+	validSizes := map[string]bool{
+		"XSMALL": true, "SMALL": true, "MEDIUM": true, "LARGE": true,
+		"XLARGE": true, "XXLARGE": true, "XXXLARGE": true, "XXXXLARGE": true,
 	}
-
-	for _, validSize := range validSizes {
-		if size == validSize {
-			return true
-		}
-	}
-
-	return false
+	return validSizes[strings.ToUpper(size)]
 }
 
 // EstimateQueryCost estimates cost for a query (simplified)
@@ -291,7 +286,7 @@ func EstimateQueryCost(warehouseSize, duration time.Duration) float64 {
 	// Actual costs depend on Snowflake pricing and credits
 
 	creditsPerHour := map[string]float64{
-		"XSMALL":   1.0,
+		"XSMALL":    1.0,
 		"SMALL":     2.0,
 		"MEDIUM":    4.0,
 		"LARGE":     8.0,
@@ -313,8 +308,8 @@ func EstimateQueryCost(warehouseSize, duration time.Duration) float64 {
 // GetSessionParameters returns recommended session parameters
 func (c *SnowflakeConfig) GetSessionParameters() map[string]string {
 	params := map[string]string{
-		"CLIENT_SESSION_KEEP_ALIVE": "true",
-		"CLIENT_RESULT_PREFETCH_THREADS": "4",
+		"CLIENT_SESSION_KEEP_ALIVE":             "true",
+		"CLIENT_RESULT_PREFETCH_THREADS":        "4",
 		"CLIENT_RESULT_COLUMN_CASE_INSENSITIVE": "true",
 	}
 

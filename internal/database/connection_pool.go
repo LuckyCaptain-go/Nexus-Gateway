@@ -11,6 +11,19 @@ import (
 	"nexus-gateway/internal/security"
 )
 
+var (
+	globalDriverRegistry *DriverRegistry
+	registryOnce         sync.Once
+)
+
+// GetDriverRegistry returns the global driver registry instance
+func GetDriverRegistry() *DriverRegistry {
+	registryOnce.Do(func() {
+		globalDriverRegistry = NewDriverRegistry()
+	})
+	return globalDriverRegistry
+}
+
 // ConnectionPool manages database connections for different data sources
 type ConnectionPool struct {
 	pools        map[string]*sql.DB
