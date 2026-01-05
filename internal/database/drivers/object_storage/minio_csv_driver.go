@@ -9,6 +9,7 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"strconv"
 	"strings"
+	"time"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -23,12 +24,12 @@ type MinIOCSVDriver struct {
 
 // MinIOCSVDriverConfig holds MinIO CSV driver configuration
 type MinIOCSVDriverConfig struct {
-	MinIOConfig      *MinIOConfig
-	Delimiter        rune
-	HasHeader        bool
-	QuoteChar        rune
-	SkipHeaderRows   int
-	NullValues       []string
+	MinIOConfig    *MinIOConfig
+	Delimiter      rune
+	HasHeader      bool
+	QuoteChar      rune
+	SkipHeaderRows int
+	NullValues     []string
 }
 
 // NewMinIOCSVDriver creates a new MinIO CSV driver
@@ -228,9 +229,9 @@ func (d *MinIOCSVDriver) Query(ctx context.Context, query *MinIOCSVQuery) (*MinI
 	}
 
 	return &MinIOCSVResult{
-		Rows:     rows,
-		Columns:  headerRow,
-		NumRows:  int64(len(rows)),
+		Rows:      rows,
+		Columns:   headerRow,
+		NumRows:   int64(len(rows)),
 		BytesRead: int64(len(data)),
 	}, nil
 }
@@ -378,13 +379,13 @@ func (d *MinIOCSVDriver) GetFileMetadata(ctx context.Context, key string) (*CSVF
 	}
 
 	return &CSVFileMetadataMinIO{
-		Key:         key,
-		Size:        objMetadata.ContentLength,
+		Key:          key,
+		Size:         objMetadata.ContentLength,
 		LastModified: objMetadata.LastModified,
-		ColumnCount: len(schema.Columns),
-		Delimiter:   schema.Delimiter,
-		HasHeader:   schema.HasHeader,
-		Columns:     schema.Columns,
+		ColumnCount:  len(schema.Columns),
+		Delimiter:    schema.Delimiter,
+		HasHeader:    schema.HasHeader,
+		Columns:      schema.Columns,
 	}, nil
 }
 
@@ -489,5 +490,3 @@ func RegisterMinIOCSVDriver(ctx context.Context, config *MinIOCSVDriverConfig) e
 	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeMinIOCSV, driver)
 	return nil
 }
-
-import "time"

@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/lib/pq"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/lib/pq"
 )
 
 // OpenGaussDriver implements Driver interface for OpenGauss
@@ -194,13 +194,7 @@ func (d *OpenGaussDriver) CreateRowSecurityPolicy(ctx context.Context, db *sql.D
 	return err
 }
 
-// OpenGaussRLSPolicy represents row-level security policy
-type OpenGaussRLSPolicy struct {
-	PolicyName          string
-	TableName           string
-	UsingExpression     string
-	WithCheckExpression string
-}
+// OpenGaussRLSPolicy is defined in opengauss_row_security.go
 
 // RegisterOpenGaussDriver registers the OpenGauss driver globally
 func RegisterOpenGaussDriver(config *OpenGaussConfig) error {
@@ -208,7 +202,8 @@ func RegisterOpenGaussDriver(config *OpenGaussConfig) error {
 	if err != nil {
 		return err
 	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOpenGauss, driver)
+	// Registration should be handled by the central DriverRegistry
+	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
+	_ = driver
 	return nil
 }

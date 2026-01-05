@@ -114,14 +114,7 @@ func (d *HDFSDeltaDriver) GetTableMetadata(ctx context.Context, tablePath string
 	}, nil
 }
 
-// DeltaMetadata represents Delta Lake table metadata
-type DeltaMetadata struct {
-	TableLocation string
-	Format        string
-	Version       int64
-	PartitionCols []string
-}
-
+// DeltaMetadata and DeltaQueryResult are defined in common_types.go
 // QueryTable queries a Delta Lake table at a specific version
 func (d *HDFSDeltaDriver) QueryTable(ctx context.Context, tablePath string, version int64) (*DeltaQueryResult, error) {
 	// Query Delta Lake table (placeholder)
@@ -130,13 +123,6 @@ func (d *HDFSDeltaDriver) QueryTable(ctx context.Context, tablePath string, vers
 		NumRows: 0,
 		Version: version,
 	}, nil
-}
-
-// DeltaQueryResult represents query result
-type DeltaQueryResult struct {
-	Rows    []map[string]interface{}
-	NumRows int64
-	Version int64
 }
 
 // RegisterHDFSDeltaDriver registers the HDFS Delta Lake driver globally

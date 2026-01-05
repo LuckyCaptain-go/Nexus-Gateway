@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/lib/pq"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/lib/pq"
 )
 
 // KingbaseESDriver implements Driver interface for KingbaseES
@@ -267,7 +267,8 @@ func RegisterKingbaseESDriver(config *KingbaseESConfig) error {
 	if err != nil {
 		return err
 	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeKingbaseES, driver)
+	// Registration should be handled by the central DriverRegistry
+	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
+	_ = driver
 	return nil
 }

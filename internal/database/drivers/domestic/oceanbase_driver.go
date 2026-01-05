@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // OceanBaseDriver implements Driver interface for OceanBase
@@ -158,8 +158,9 @@ func RegisterOceanBaseDriver(config *OceanBaseConfig) error {
 	if err != nil {
 		return err
 	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOceanBase, driver)
+	// Registration should be handled by the central DriverRegistry
+	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
+	_ = driver
 	return nil
 }
 

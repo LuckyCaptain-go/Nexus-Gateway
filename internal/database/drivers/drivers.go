@@ -296,38 +296,6 @@ type Driver interface {
 	ConfigureAuth(authConfig interface{}) error
 }
 
-//type Driver interface {
-//	// Open opens a database connection
-//	Open(dsn string) (*sql.DB, error)
-//
-//	// ValidateDSN validates the connection string
-//	ValidateDSN(dsn string) error
-//
-//	// GetDefaultPort returns the default port for the database
-//	GetDefaultPort() int
-//
-//	// BuildDSN builds a connection string from configuration
-//	BuildDSN(config interface{}) string
-//
-//	// GetDatabaseTypeName returns the database type name
-//	GetDatabaseTypeName() string
-//
-//	// TestConnection tests if the connection is working
-//	TestConnection(db *sql.DB) error
-//
-//	// GetDriverName returns the underlying SQL driver name
-//	GetDriverName() string
-//
-//	// GetCategory returns the driver category
-//	GetCategory() DriverCategory
-//
-//	// GetCapabilities returns the driver capabilities
-//	GetCapabilities() DriverCapabilities
-//
-//	// ConfigureAuth configures authentication
-//	ConfigureAuth(authConfig interface{}) error
-//}
-
 // DriverFactory creates database drivers for different database types
 type DriverFactory struct{}
 

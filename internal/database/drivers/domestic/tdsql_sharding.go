@@ -86,11 +86,11 @@ func (m *TDSQLShardingManager) ExecuteRoutedQuery(ctx context.Context, db *sql.D
 	}
 
 	return &TDSQLQueryResult{
-		Rows:       results,
-		Columns:    columns,
-		Count:      len(results),
-		IsRouted:   true,
-		ShardValue: fmt.Sprintf("%v", shardValue),
+		Rows:     results,
+		Columns:  columns,
+		Count:    len(results),
+		ShardKey: fmt.Sprintf("%v", shardValue),
+		IsRouted: true,
 	}, nil
 }
 
@@ -170,11 +170,10 @@ func (m *TDSQLShardingManager) BroadcastQuery(ctx context.Context, db *sql.DB, s
 	}
 
 	return &TDSQLQueryResult{
-		Rows:        results,
-		Columns:     columns,
-		Count:       len(results),
-		IsRouted:    false,
-		IsBroadcast: true,
+		Rows:     results,
+		Columns:  columns,
+		Count:    len(results),
+		IsRouted: false,
 	}, nil
 }
 

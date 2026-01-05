@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/lib/pq"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/lib/pq"
 )
 
 // OscarDriver implements Driver interface for Oscar (ShenTong)
@@ -194,20 +194,7 @@ func (d *OscarDriver) GetClusterStatus(ctx context.Context, db *sql.DB) (*OscarC
 	return status, nil
 }
 
-// OscarClusterStatus represents cluster status
-type OscarClusterStatus struct {
-	Nodes      []OscarNode
-	TotalNodes int
-}
-
-// OscarNode represents a cluster node
-type OscarNode struct {
-	NodeID      string
-	NodeName    string
-	NodeRole    string // coordinator, worker
-	Status      string
-	CurrentLoad float64
-}
+// OscarClusterStatus and OscarNode are defined in oscar_cluster.go
 
 // ExecuteDistributedQuery executes a distributed query
 func (d *OscarDriver) ExecuteDistributedQuery(ctx context.Context, db *sql.DB, sql string) (*OscarDistributedResult, error) {
@@ -286,14 +273,7 @@ func (d *OscarDriver) GetTablePartitionInfo(ctx context.Context, db *sql.DB, tab
 	return info, nil
 }
 
-// OscarPartitionInfo represents partition information
-type OscarPartitionInfo struct {
-	TableName         string
-	PartitionName     string
-	PartitionPosition int
-	PartitionKey      string
-	PartitionCount    int
-}
+// OscarPartitionInfo is defined in oscar_partition.go
 
 // RegisterOscarDriver registers the Oscar driver globally
 func RegisterOscarDriver(config *OscarConfig) error {
@@ -301,7 +281,8 @@ func RegisterOscarDriver(config *OscarConfig) error {
 	if err != nil {
 		return err
 	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOscar, driver)
+	// Registration should be handled by the central DriverRegistry
+	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
+	_ = driver
 	return nil
 }

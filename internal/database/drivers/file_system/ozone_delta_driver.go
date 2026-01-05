@@ -115,15 +115,6 @@ func (d *OzoneDeltaDriver) GetTableMetadata(ctx context.Context, tablePath strin
 	}, nil
 }
 
-// DeltaMetadata represents Delta Lake table metadata
-type DeltaMetadata struct {
-	TableLocation string
-	Format        string
-	Version       int64
-	PartitionCols []string
-}
-
-// QueryTable queries a Delta Lake table at a specific version
 func (d *OzoneDeltaDriver) QueryTable(ctx context.Context, tablePath string, version int64) (*DeltaQueryResult, error) {
 	// Query Delta Lake table (placeholder)
 	return &DeltaQueryResult{
@@ -133,12 +124,7 @@ func (d *OzoneDeltaDriver) QueryTable(ctx context.Context, tablePath string, ver
 	}, nil
 }
 
-// DeltaQueryResult represents query result
-type DeltaQueryResult struct {
-	Rows    []map[string]interface{}
-	NumRows int64
-	Version int64
-}
+// DeltaMetadata and DeltaQueryResult moved to common_types.go
 
 // RegisterOzoneDeltaDriver registers the Ozone Delta Lake driver globally
 func RegisterOzoneDeltaDriver(ctx context.Context, config *OzoneConfig) error {

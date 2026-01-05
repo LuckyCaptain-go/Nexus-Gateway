@@ -52,99 +52,21 @@ func (dr *DriverRegistry) registerDrivers() {
 			Inner: &domestic.DaMengDriver{},
 		}
 	})
-	dr.register(model.DatabaseTypeKingbaseES, func() drivers.Driver {
-		return &domestic.DaMengDBAdapter{
-			Inner: &domestic.DaMengDriver{},
-		}
-	})
 
-	//// Domestic databases - using generic domestic driver for now
-	//domesticDBs := []model.DatabaseType{
-	//	model.DatabaseTypeDaMeng,
-	//	model.DatabaseTypeKingbaseES,
-	//	// Note: Using placeholder names for types not defined in model
-	//	"gbase_8s", "gbase_8t", "oscar", "opengauss",
-	//}
-	//for _, dbType := range domesticDBs {
-	//	dr.register(dbType, func() Driver {
-	//		return NewDomesticDriver(dbType)
-	//	})
-	//}
-	//
-	//// Table formats
-	//tableFormatDBs := []model.DatabaseType{
-	//	model.DatabaseTypeApacheIceberg,
-	//	model.DatabaseTypeDeltaLake,
-	//	model.DatabaseTypeApacheHudi,
-	//}
-	//for _, dbType := range tableFormatDBs {
-	//	dr.register(dbType, func() Driver {
-	//		return NewTableFormatDriver(dbType)
-	//	})
-	//}
-	//
-	//// Cloud warehouses
-	//warehouseDBs := []model.DatabaseType{
-	//	model.DatabaseTypeSnowflake,
-	//	model.DatabaseTypeDatabricks,
-	//	model.DatabaseTypeRedshift,
-	//	model.DatabaseTypeBigQuery,
-	//}
-	//for _, dbType := range warehouseDBs {
-	//	dr.register(dbType, func() Driver {
-	//		return NewWarehouseDriver(dbType)
-	//	})
-	//}
-	//
-	//// Object storage - mapping specific types to generic object storage
-	//objectStorageTypes := []model.DatabaseType{
-	//	model.DatabaseTypeS3Parquet,
-	//	model.DatabaseTypeS3ORC,
-	//	model.DatabaseTypeS3Avro,
-	//	model.DatabaseTypeS3CSV,
-	//	model.DatabaseTypeS3JSON,
-	//	model.DatabaseTypeMinIOParquet,
-	//	model.DatabaseTypeMinIOCSV,
-	//	model.DatabaseTypeAlibabaOSSParquet,
-	//	model.DatabaseTypeTencentCOSParquet,
-	//	model.DatabaseTypeAzureBlobParquet,
-	//}
-	//for _, dbType := range objectStorageTypes {
-	//	dr.register(dbType, func() Driver {
-	//		return NewObjectStorageDriver(dbType)
-	//	})
-	//}
-	//
-	//// OLAP
-	//olapDBs := []model.DatabaseType{
-	//	model.DatabaseTypeClickHouse,
-	//	model.DatabaseTypeApacheDoris,
-	//	model.DatabaseTypeStarRocks,
-	//	model.DatabaseTypeApacheDruid,
-	//}
-	//for _, dbType := range olapDBs {
-	//	dr.register(dbType, func() Driver {
-	//		return NewOLAPDriver(dbType)
-	//	})
-	//}
-	//
-	//// File systems
-	//fileSystemDBs := []model.DatabaseType{
-	//	model.DatabaseTypeHDFSAvro,
-	//	model.DatabaseTypeHDFSParquet,
-	//	model.DatabaseTypeHDFSCSV,
-	//	model.DatabaseTypeOzoneParquet,
-	//}
-	//for _, dbType := range fileSystemDBs {
-	//	dr.register(dbType, func() Driver {
-	//		return NewFileSystemDriver(dbType)
-	//	})
-	//}
 }
 
 // register registers a driver factory function
 func (dr *DriverRegistry) register(dbType model.DatabaseType, factory func() drivers.Driver) {
 	dr.drivers[dbType] = factory
+}
+
+// RegisterDriver registers a concrete driver instance for a database type.
+// This mirrors older code that allowed drivers to self-register and keeps
+// backward compatibility with driver packages that call this method.
+func (dr *DriverRegistry) RegisterDriver(dbType model.DatabaseType, driver drivers.Driver) {
+	dr.mutex.Lock()
+	defer dr.mutex.Unlock()
+	dr.drivers[dbType] = func() drivers.Driver { return driver }
 }
 
 // GetDriver creates or retrieves a driver for the specified database type

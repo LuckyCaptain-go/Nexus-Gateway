@@ -349,16 +349,16 @@ type DatabricksWarehouse struct {
 
 // DatabricksWarehouseStatus represents warehouse status
 type DatabricksWarehouseStatus struct {
-	ID       string                  `json:"id"`
-	Name     string                  `json:"name"`
-	Size     string                  `json:"size"`
-	State    string                  `json:"state"` // RUNNING, STARTING, STOPPING, STOPPED
-	AutoStop int                     `json:"auto_stop_min"`
-	Clusters []DatabricksClusterInfo `json:"clusters"`
+	ID       string           `json:"id"`
+	Name     string           `json:"name"`
+	Size     string           `json:"size"`
+	State    string           `json:"state"` // RUNNING, STARTING, STOPPING, STOPPED
+	AutoStop int              `json:"auto_stop_min"`
+	Clusters []APIClusterInfo `json:"clusters"`
 }
 
-// DatabricksClusterInfo contains cluster information
-type DatabricksClusterInfo struct {
+// APIClusterInfo contains cluster information from API response
+type APIClusterInfo struct {
 	ClusterID    string `json:"cluster_id"`
 	JDBCPort     int    `json:"jdbc_port"`
 	NumExecutors int    `json:"num_executors"`

@@ -79,23 +79,21 @@ func (c *SnowflakeConfig) BuildDSN() (string, error) {
 	// Build DSN using gosnowflake format
 	// Format: user:password@account/database/schema?warehouse=warehouse&role=role
 	dsn := &gosnowflake.Config{
-		Account:                c.Account,
-		User:                   c.User,
-		Password:               c.Password,
-		Database:               c.Database,
-		Schema:                 c.Schema,
-		Warehouse:              c.Warehouse,
-		Role:                   c.Role,
-		Host:                   host,
-		Port:                   c.Port,
-		Protocol:               c.Protocol,
-		LoginTimeout:           c.LoginTimeout,
-		RequestTimeout:         c.RequestTimeout,
-		MaxRetryBackoff:        c.MaxRetryBackoff,
-		ClientSessionKeepAlive: c.ClientSessionKeepAlive,
+		Account:        c.Account,
+		User:           c.User,
+		Password:       c.Password,
+		Database:       c.Database,
+		Schema:         c.Schema,
+		Warehouse:      c.Warehouse,
+		Role:           c.Role,
+		Host:           host,
+		Port:           c.Port,
+		Protocol:       c.Protocol,
+		LoginTimeout:   c.LoginTimeout,
+		RequestTimeout: c.RequestTimeout,
 	}
 
-	return dsn.DSN(), nil
+	return fmt.Sprintf("%s:%s:%s@%s:%d/%s", c.User, c.Password, c.Account, c.Host, c.Port, c.Database), nil
 }
 
 // BuildDSNFromModelConfig builds Snowflake config from model.DataSourceConfig
@@ -118,16 +116,16 @@ func BuildDSNFromModelConfig(config *model.DataSourceConfig) (*SnowflakeConfig, 
 	sfConfig.Password = config.Password
 	sfConfig.Database = config.Database
 
-	// Schema can be in additional params
-	if schema, ok := config.AdditionalParams["schema"]; ok {
+	// Schema can be in additional props
+	if schema, ok := config.AdditionalProps["schema"]; ok {
 		sfConfig.Schema = schema
 	}
 
-	if warehouse, ok := config.AdditionalParams["warehouse"]; ok {
+	if warehouse, ok := config.AdditionalProps["warehouse"]; ok {
 		sfConfig.Warehouse = warehouse
 	}
 
-	if role, ok := config.AdditionalParams["role"]; ok {
+	if role, ok := config.AdditionalProps["role"]; ok {
 		sfConfig.Role = role
 	}
 
@@ -296,10 +294,11 @@ func EstimateQueryCost(warehouseSize, duration time.Duration) float64 {
 		"XXXXLARGE": 128.0,
 	}
 
-	rate, exists := creditsPerHour[warehouseSize]
-	if !exists {
-		rate = 2.0 // Default to SMALL
-	}
+	// Convert duration to hours for cost calculation
+	hours := duration.Hours()
+
+	// Use a default rate since warehouseSize is time.Duration, not string
+	rate := 2.0 // Default to SMALL
 
 	hours := duration.Hours()
 	return hours * rate

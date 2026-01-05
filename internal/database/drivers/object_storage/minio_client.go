@@ -1,8 +1,10 @@
 package object_storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -11,24 +13,24 @@ import (
 
 // MinIOClient wraps MinIO Go client
 type MinIOClient struct {
-	client     *minio.Client
-	endpoint   string
-	accessKey  string
-	secretKey  string
-	region     string
-	bucket     string
-	secure     bool // Use HTTPS
+	client    *minio.Client
+	endpoint  string
+	accessKey string
+	secretKey string
+	region    string
+	bucket    string
+	secure    bool // Use HTTPS
 }
 
 // MinIOConfig holds MinIO configuration
 type MinIOConfig struct {
-	Endpoint     string // MinIO server endpoint (e.g., localhost:9000)
-	AccessKey    string // Access key (username)
-	SecretKey    string // Secret key (password)
-	Bucket       string // Default bucket
-	Region       string // Region (default: us-east-1)
-	Secure       bool   // Use HTTPS (default: false for local)
-	Token        string // Session token for temporary credentials
+	Endpoint  string // MinIO server endpoint (e.g., localhost:9000)
+	AccessKey string // Access key (username)
+	SecretKey string // Secret key (password)
+	Bucket    string // Default bucket
+	Region    string // Region (default: us-east-1)
+	Secure    bool   // Use HTTPS (default: false for local)
+	Token     string // Session token for temporary credentials
 }
 
 // NewMinIOClient creates a new MinIO client
@@ -470,8 +472,3 @@ func (c *MinIOClient) GetObjectReader(ctx context.Context, key string) (io.ReadC
 	}
 	return obj, nil
 }
-
-import (
-	"bytes"
-	"io"
-)
