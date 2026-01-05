@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -102,13 +103,13 @@ func (d *OpenGaussDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *OpenGaussDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *OpenGaussDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
 // GetCapabilities returns driver capabilities
-func (d *OpenGaussDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OpenGaussDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

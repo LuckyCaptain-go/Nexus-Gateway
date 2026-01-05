@@ -4,9 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
-
 	"nexus-gateway/internal/database"
+	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
 )
 
@@ -77,13 +76,13 @@ func (d *HDFSParquetDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *HDFSParquetDriver) GetCategory() database.DriverCategory {
-	return database.CategoryFileSystem
+func (d *HDFSParquetDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryFileSystem
 }
 
 // GetCapabilities returns driver capabilities
-func (d *HDFSParquetDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *HDFSParquetDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

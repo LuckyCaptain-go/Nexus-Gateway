@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -76,13 +77,13 @@ func (d *HDFSParquetCompressionDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *HDFSParquetCompressionDriver) GetCategory() database.DriverCategory {
-	return database.CategoryFileSystem
+func (d *HDFSParquetCompressionDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryFileSystem
 }
 
 // GetCapabilities returns driver capabilities
-func (d *HDFSParquetCompressionDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *HDFSParquetCompressionDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

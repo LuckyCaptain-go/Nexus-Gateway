@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"nexus-gateway/internal/model"
@@ -237,10 +238,10 @@ func (hc *HealthChecker) ValidateDataSourceConfiguration(config *model.DataSourc
 
 	// Validate based on category
 	switch category {
-	case CategoryObjectStorage:
+	case drivers.CategoryObjectStorage:
 		// Object storage (S3, etc.) requires bucket and region
 		return hc.validateObjectStorageConfig(config, dbType)
-	case CategoryFileSystem:
+	case drivers.CategoryFileSystem:
 		// File systems (HDFS) require namenode and path
 		return hc.validateFileSystemConfig(config, dbType)
 	default:
@@ -250,7 +251,7 @@ func (hc *HealthChecker) ValidateDataSourceConfiguration(config *model.DataSourc
 }
 
 // validateDatabaseConfig validates standard database configurations
-func (hc *HealthChecker) validateDatabaseConfig(config *model.DataSourceConfig, driver Driver) error {
+func (hc *HealthChecker) validateDatabaseConfig(config *model.DataSourceConfig, driver drivers.Driver) error {
 	// Check required fields
 	if config.Host == "" {
 		return fmt.Errorf("host is required")

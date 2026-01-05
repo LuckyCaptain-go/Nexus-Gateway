@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/sas"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -86,13 +84,13 @@ func (d *AzureBlobParquetDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *AzureBlobParquetDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *AzureBlobParquetDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *AzureBlobParquetDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *AzureBlobParquetDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

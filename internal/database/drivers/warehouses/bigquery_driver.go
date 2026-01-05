@@ -1,13 +1,12 @@
 package warehouses
 
 import (
+	"cloud.google.com/go/bigquery"
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
-
-	"cloud.google.com/go/bigquery"
 	"nexus-gateway/internal/database"
+	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
 )
 
@@ -84,13 +83,13 @@ func (d *BigQueryDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *BigQueryDriver) GetCategory() database.DriverCategory {
-	return database.CategoryWarehouse
+func (d *BigQueryDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryWarehouse
 }
 
 // GetCapabilities returns driver capabilities
-func (d *BigQueryDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *BigQueryDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     false, // BigQuery doesn't support traditional transactions
 		SupportsSchemaDiscovery: true,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"nexus-gateway/internal/database"
@@ -97,13 +98,13 @@ func (d *DatabricksDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *DatabricksDriver) GetCategory() database.DriverCategory {
-	return database.CategoryWarehouse
+func (d *DatabricksDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryWarehouse
 }
 
 // GetCapabilities returns driver capabilities
-func (d *DatabricksDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *DatabricksDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true, // ACID support via Delta Lake
 		SupportsSchemaDiscovery: true,

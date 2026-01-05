@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -107,13 +108,13 @@ func (d *KingbaseESDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *KingbaseESDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *KingbaseESDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
 // GetCapabilities returns driver capabilities
-func (d *KingbaseESDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *KingbaseESDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

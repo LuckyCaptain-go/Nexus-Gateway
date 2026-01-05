@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
@@ -90,13 +91,13 @@ func (d *RedshiftDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *RedshiftDriver) GetCategory() database.DriverCategory {
-	return database.CategoryWarehouse
+func (d *RedshiftDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryWarehouse
 }
 
 // GetCapabilities returns driver capabilities
-func (d *RedshiftDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *RedshiftDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

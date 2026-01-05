@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"nexus-gateway/internal/database"
@@ -94,13 +95,13 @@ func (d *DruidDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *DruidDriver) GetCategory() database.DriverCategory {
-	return database.CategoryOLAP
+func (d *DruidDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryOLAP
 }
 
 // GetCapabilities returns driver capabilities
-func (d *DruidDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *DruidDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

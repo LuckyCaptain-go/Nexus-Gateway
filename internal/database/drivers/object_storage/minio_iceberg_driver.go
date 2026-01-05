@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -76,13 +77,13 @@ func (d *MinIOIcebergDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *MinIOIcebergDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *MinIOIcebergDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *MinIOIcebergDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *MinIOIcebergDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

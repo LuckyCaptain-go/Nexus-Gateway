@@ -3,8 +3,8 @@ package traditional
 import (
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -71,12 +71,12 @@ func (d *PostgreSQLDriver) GetDriverName() string {
 	return "postgres"
 }
 
-func (d *PostgreSQLDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *PostgreSQLDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
-func (d *PostgreSQLDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *PostgreSQLDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,
