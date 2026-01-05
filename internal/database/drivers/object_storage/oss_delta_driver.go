@@ -49,7 +49,7 @@ func (d *OSSDeltaDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *OSSDeltaDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("oss://%s", config.BucketName)
+	return fmt.Sprintf("oss://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name

@@ -115,16 +115,7 @@ func (d *HDFSHudiDriver) GetTableMetadata(ctx context.Context, tablePath string)
 	}, nil
 }
 
-// HudiMetadata represents Hudi table metadata
-type HudiMetadata struct {
-	TableLocation string
-	Format        string
-	TableType     string // COPY_ON_WRITE or MERGE_ON_READ
-	RecordKey     string
-	PartitionPath string
-}
-
-// QueryTable queries a Hudi table at a specific instant
+// HudiMetadata and HudiQueryResult are defined in common_types.go
 func (d *HDFSHudiDriver) QueryTable(ctx context.Context, tablePath string, instantTime string) (*HudiQueryResult, error) {
 	// Query Hudi table (placeholder)
 	return &HudiQueryResult{
@@ -132,13 +123,6 @@ func (d *HDFSHudiDriver) QueryTable(ctx context.Context, tablePath string, insta
 		NumRows:     0,
 		InstantTime: instantTime,
 	}, nil
-}
-
-// HudiQueryResult represents query result
-type HudiQueryResult struct {
-	Rows        []map[string]interface{}
-	NumRows     int64
-	InstantTime string
 }
 
 // RegisterHDFSHudiDriver registers the HDFS Hudi driver globally

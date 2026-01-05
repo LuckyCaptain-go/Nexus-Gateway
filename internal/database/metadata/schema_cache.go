@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"nexus-gateway/internal/model"
 )
 
 // SchemaCache caches database schema metadata to avoid repeated expensive queries

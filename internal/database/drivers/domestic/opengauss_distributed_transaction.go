@@ -19,7 +19,7 @@ func NewOpenGaussDistributedTransaction(driver *OpenGaussDriver) *OpenGaussDistr
 }
 
 // BeginDistributedTransaction begins a distributed transaction
-func (t *OpenGaussDistributedTransaction) BeginDistributedTransaction(ctx context.Context, db *sql.DB) (sql.Tx, error) {
+func (t *OpenGaussDistributedTransaction) BeginDistributedTransaction(ctx context.Context, db *sql.DB) (*sql.Tx, error) {
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 		ReadOnly:  false,

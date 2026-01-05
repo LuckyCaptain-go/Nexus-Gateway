@@ -114,15 +114,7 @@ func (d *OzoneIcebergDriver) GetTableMetadata(ctx context.Context, tablePath str
 	}, nil
 }
 
-// IcebergMetadata represents Iceberg table metadata
-type IcebergMetadata struct {
-	TableLocation string
-	Format        string
-	PartitionSpec []string
-	SnapshotID    int64
-}
-
-// QueryTable queries an Iceberg table at a specific snapshot
+// IcebergMetadata and IcebergQueryResult are defined in common_types.go
 func (d *OzoneIcebergDriver) QueryTable(ctx context.Context, tablePath string, snapshotID int64) (*IcebergQueryResult, error) {
 	// Query Iceberg table (placeholder)
 	return &IcebergQueryResult{
@@ -130,13 +122,6 @@ func (d *OzoneIcebergDriver) QueryTable(ctx context.Context, tablePath string, s
 		NumRows:    0,
 		SnapshotID: snapshotID,
 	}, nil
-}
-
-// IcebergQueryResult represents query result
-type IcebergQueryResult struct {
-	Rows       []map[string]interface{}
-	NumRows    int64
-	SnapshotID int64
 }
 
 // RegisterOzoneIcebergDriver registers the Ozone Iceberg driver globally

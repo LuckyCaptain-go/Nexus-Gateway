@@ -7,9 +7,10 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	"github.com/ClickHouse/clickhouse-go/v2"
 )
 
 // ClickHouseDriver implements Driver interface for ClickHouse
@@ -18,8 +19,8 @@ type ClickHouseDriver struct {
 	config     *ClickHouseConfig
 }
 
-// ClickHouseConfig holds ClickHouse configuration
-type ClickHouseConfig struct {
+// DriverClickHouseConfig holds ClickHouse driver configuration
+type DriverClickHouseConfig struct {
 	Host        string
 	Port        int
 	Database    string
@@ -44,7 +45,7 @@ func NewClickHouseDriver(config *ClickHouseConfig) (*ClickHouseDriver, error) {
 	)
 
 	// Create ClickHouse connection options
-	options := make(clickhouse.Options, 0)
+	options := make([]clickhouse.Option, 0)
 	if config.DialTimeout > 0 {
 		options = append(options, clickhouse.WithDialTimeout(func(ctx context.Context, addr string) (context.Context, error) {
 			ctx, cancel := context.WithTimeout(ctx, config.DialTimeout)

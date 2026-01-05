@@ -14,6 +14,7 @@ import (
 	"nexus-gateway/internal/service"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {

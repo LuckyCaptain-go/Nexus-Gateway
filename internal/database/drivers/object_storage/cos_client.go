@@ -6,9 +6,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/tencentyun/cos-go-sdk-v5"
+	"bytes"
 	"net/http"
-	"net/url"
+
+	"github.com/tencentyun/cos-go-sdk-v5"
 )
 
 // COSClient wraps Tencent Cloud COS client
@@ -201,13 +202,13 @@ type COSObject struct {
 
 // COSObjectMetadata represents COS object metadata
 type COSObjectMetadata struct {
-	Key           string
-	ContentLength int64
-	ContentType   string
+	Key             string
+	ContentLength   int64
+	ContentType     string
 	ContentEncoding string
-	LastModified  time.Time
-	ETag          string
-	CacheControl  string
+	LastModified    time.Time
+	ETag            string
+	CacheControl    string
 }
 
 // ListFilesByExtension lists files with a specific extension
@@ -235,9 +236,9 @@ func (c *COSClient) GetBucketInfo(ctx context.Context) *COSBucketInfo {
 	}
 
 	return &COSBucketInfo{
-		Name:     c.bucket,
-		Region:   c.config.Region,
-		URL:      fmt.Sprintf("%s://%s.cos.ap-%s.myqcloud.com", protocol, c.bucket, c.config.Region),
+		Name:   c.bucket,
+		Region: c.config.Region,
+		URL:    fmt.Sprintf("%s://%s.cos.ap-%s.myqcloud.com", protocol, c.bucket, c.config.Region),
 	}
 }
 
@@ -247,7 +248,3 @@ type COSBucketInfo struct {
 	Region string
 	URL    string
 }
-
-import (
-	"bytes"
-)

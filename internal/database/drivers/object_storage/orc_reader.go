@@ -3,9 +3,7 @@ package object_storage
 import (
 	"context"
 	"fmt"
-	"io"
 
-	"github.com/apache/arrow/go/v14/parquet"
 	"github.com/apache/arrow/go/v14/parquet/file"
 )
 
@@ -47,7 +45,7 @@ type ORCFileReader struct {
 // Read reads ORC file from S3
 func (r *ORCReader) Read(ctx context.Context, key string) (*ORCFileReader, error) {
 	// Download file or use S3 seekable reader
-	s3File, err := NewS3File(r.s3Client, key)
+	_, err := NewS3File(r.s3Client, key)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create S3 file: %w", err)
 	}
@@ -203,7 +201,7 @@ func (r *ORCReader) FilterORCFile(ctx context.Context, key string, predicates []
 	}
 
 	// Apply predicate pushdown
-	stripesToRead, err := r.ApplyPredicatePushdown(ctx, key, predicates)
+	_, err := r.ApplyPredicatePushdown(ctx, key, predicates)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +226,7 @@ func (r *ORCReader) GetMetadata(ctx context.Context, key string) (*ORCFileMetada
 	defer fileReader.Close()
 
 	metadata := &ORCFileMetadata{
-		NumberOfRows: fileReader.GetNumRows(),
+		NumberOfRows: int64(fileReader.GetNumRows()),
 	}
 
 	return metadata, nil

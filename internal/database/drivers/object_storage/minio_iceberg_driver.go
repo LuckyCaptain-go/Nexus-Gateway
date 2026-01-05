@@ -49,7 +49,7 @@ func (d *MinIOIcebergDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *MinIOIcebergDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("s3://%s", config.Bucket)
+	return fmt.Sprintf("s3://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name

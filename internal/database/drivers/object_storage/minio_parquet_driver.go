@@ -439,8 +439,8 @@ func (f *MemoryFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Close implements io.Closer
-func (f *MemoryFile) Close() error {
 	return nil
+		    "time"
 }
 
 // GetSize returns the file size

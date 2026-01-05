@@ -8,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"nexus-gateway/internal/model"
 )
 
 // IcebergRESTClient implements a REST client for Apache Iceberg
@@ -357,8 +355,8 @@ type IcebergView struct {
 	Properties map[string]string `json:"properties,omitempty"`
 }
 
-// IcebergQueryResult represents query results
-type IcebergQueryResult struct {
+// APIIcebergQueryResult represents query results from API response
+type APIIcebergQueryResult struct {
 	Columns []string        `json:"columns"`
 	Rows    [][]interface{} `json:"rows"`
 }

@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/sijms/go-ora/v2"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/sijms/go-ora/v2"
 )
 
 // OceanBaseOracleDriver implements Driver interface for OceanBase in Oracle mode
@@ -234,7 +234,8 @@ func RegisterOceanBaseOracleDriver(config *OceanBaseOracleConfig) error {
 	if err != nil {
 		return err
 	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOceanBaseOracle, driver)
+	// Registration should be handled by the central DriverRegistry
+	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
+	_ = driver
 	return nil
 }

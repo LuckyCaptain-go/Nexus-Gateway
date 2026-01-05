@@ -8,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"nexus-gateway/internal/model"
 )
 
 // HudiRESTClient implements a REST client for Apache Hudi
