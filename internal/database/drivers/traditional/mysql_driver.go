@@ -3,8 +3,8 @@ package traditional
 import (
 	"database/sql"
 	"fmt"
-
-	"nexus-gateway/internal/database"
+	_ "github.com/go-sql-driver/mysql"
+	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
 )
 
@@ -12,6 +12,7 @@ import (
 type MySQLDriver struct{}
 
 func (d *MySQLDriver) Open(dsn string) (*sql.DB, error) {
+	fmt.Printf("Opening MySQL connection with DSN: %s\n", dsn)
 	return sql.Open("mysql", dsn)
 }
 
@@ -71,12 +72,12 @@ func (d *MySQLDriver) GetDriverName() string {
 	return "mysql"
 }
 
-func (d *MySQLDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *MySQLDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
-func (d *MySQLDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *MySQLDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

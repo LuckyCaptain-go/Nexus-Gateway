@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	_ "github.com/sijms/go-ora/v2"
@@ -113,13 +114,13 @@ func (d *OceanBaseOracleDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *OceanBaseOracleDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *OceanBaseOracleDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
 // GetCapabilities returns driver capabilities
-func (d *OceanBaseOracleDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OceanBaseOracleDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

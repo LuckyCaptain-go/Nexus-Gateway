@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -98,13 +99,13 @@ func (d *S3ORCDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *S3ORCDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *S3ORCDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *S3ORCDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *S3ORCDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

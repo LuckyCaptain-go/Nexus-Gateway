@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -77,13 +78,13 @@ func (d *OzoneAvroDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *OzoneAvroDriver) GetCategory() database.DriverCategory {
-	return database.CategoryFileSystem
+func (d *OzoneAvroDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryFileSystem
 }
 
 // GetCapabilities returns driver capabilities
-func (d *OzoneAvroDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OzoneAvroDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

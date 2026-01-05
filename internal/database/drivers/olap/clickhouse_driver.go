@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
@@ -127,13 +128,13 @@ func (d *ClickHouseDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *ClickHouseDriver) GetCategory() database.DriverCategory {
-	return database.CategoryOLAP
+func (d *ClickHouseDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryOLAP
 }
 
 // GetCapabilities returns driver capabilities
-func (d *ClickHouseDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *ClickHouseDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     false, // ClickHouse doesn't support traditional transactions
 		SupportsSchemaDiscovery: true,

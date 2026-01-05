@@ -3,8 +3,8 @@ package traditional
 import (
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -49,12 +49,12 @@ func (d *OracleDriver) GetDriverName() string {
 	return "oracle"
 }
 
-func (d *OracleDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *OracleDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
-func (d *OracleDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OracleDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

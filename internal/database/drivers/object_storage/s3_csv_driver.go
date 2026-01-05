@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/database/drivers"
 	"strconv"
 
 	"nexus-gateway/internal/database"
@@ -113,13 +114,13 @@ func (d *S3CSVDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *S3CSVDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *S3CSVDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *S3CSVDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *S3CSVDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false, // Uses S3 Select SQL dialect
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

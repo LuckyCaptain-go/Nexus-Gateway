@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -77,13 +78,13 @@ func (d *OzoneDeltaDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *OzoneDeltaDriver) GetCategory() database.DriverCategory {
-	return database.CategoryFileSystem
+func (d *OzoneDeltaDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryFileSystem
 }
 
 // GetCapabilities returns driver capabilities
-func (d *OzoneDeltaDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OzoneDeltaDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/database/drivers"
 	"strconv"
 	"strings"
 
@@ -109,13 +110,13 @@ func (d *MinIOCSVDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *MinIOCSVDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *MinIOCSVDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *MinIOCSVDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *MinIOCSVDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

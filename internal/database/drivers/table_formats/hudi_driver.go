@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	"nexus-gateway/internal/database"
@@ -78,13 +79,13 @@ func (d *HudiDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *HudiDriver) GetCategory() database.DriverCategory {
-	return database.CategoryTableFormat
+func (d *HudiDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryTableFormat
 }
 
 // GetCapabilities returns driver capabilities
-func (d *HudiDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *HudiDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true, // Via compute engine
 		SupportsTransaction:     true, // ACID support
 		SupportsSchemaDiscovery: true,

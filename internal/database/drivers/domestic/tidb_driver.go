@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -115,13 +116,13 @@ func (d *TiDBDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *TiDBDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *TiDBDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
 // GetCapabilities returns driver capabilities
-func (d *TiDBDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *TiDBDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -106,13 +107,13 @@ func (d *S3ParquetDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *S3ParquetDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *S3ParquetDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *S3ParquetDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *S3ParquetDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false, // Uses S3 Select SQL dialect
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"sync"
 	"time"
 
@@ -32,7 +33,7 @@ type ConnectionPool struct {
 	healthMu     sync.RWMutex
 	tokenManager *security.TokenManager
 	vault        *security.CredentialVault
-	driverCaps   map[string]DriverCapabilities // Cached driver capabilities
+	driverCaps   map[string]drivers.DriverCapabilities // Cached driver capabilities
 }
 
 // NewConnectionPool creates a new ConnectionPool instance
@@ -42,7 +43,7 @@ func NewConnectionPool(tokenManager *security.TokenManager, vault *security.Cred
 		health:       make(map[string]bool),
 		tokenManager: tokenManager,
 		vault:        vault,
-		driverCaps:   make(map[string]DriverCapabilities),
+		driverCaps:   make(map[string]drivers.DriverCapabilities),
 	}
 }
 
@@ -87,6 +88,7 @@ func (cp *ConnectionPool) createConnection(ctx context.Context, dataSource *mode
 	}
 
 	// Open database connection
+	fmt.Printf("dbType: %s, dsn: %s\n", dataSource.Type, dsn)
 	db, err := cp.openDatabase(dataSource.Type, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
@@ -117,7 +119,7 @@ func (cp *ConnectionPool) openDatabase(dbType model.DatabaseType, dsn string) (*
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("dbType: %s, dsn: %s, driver: %T\n", dbType, dsn, driver)
 	return driver.Open(dsn)
 }
 
@@ -367,7 +369,7 @@ func (cp *ConnectionPool) RemoveTokenRotation(dataSourceID string) {
 }
 
 // GetDataSourceCapabilities returns cached driver capabilities for a data source
-func (cp *ConnectionPool) GetDataSourceCapabilities(dataSourceID string) (DriverCapabilities, bool) {
+func (cp *ConnectionPool) GetDataSourceCapabilities(dataSourceID string) (drivers.DriverCapabilities, bool) {
 	cp.mutex.RLock()
 	defer cp.mutex.RUnlock()
 

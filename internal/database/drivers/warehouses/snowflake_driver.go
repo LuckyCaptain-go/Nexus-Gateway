@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"github.com/snowflakedb/gosnowflake"
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/database/metadata"
 	"nexus-gateway/internal/model"
@@ -107,13 +107,13 @@ func (d *SnowflakeDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *SnowflakeDriver) GetCategory() database.DriverCategory {
-	return database.CategoryWarehouse
+func (d *SnowflakeDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryWarehouse
 }
 
 // GetCapabilities returns driver capabilities
-func (d *SnowflakeDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *SnowflakeDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

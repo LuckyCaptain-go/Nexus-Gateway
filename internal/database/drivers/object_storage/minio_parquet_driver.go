@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -110,13 +111,13 @@ func (d *MinIOParquetDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *MinIOParquetDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *MinIOParquetDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *MinIOParquetDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *MinIOParquetDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

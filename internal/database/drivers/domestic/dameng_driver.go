@@ -4,21 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
-
-// DaMengConfig holds DaMeng configuration
-type DaMengConfig struct {
-	Host     string
-	Port     int
-	Database string
-	Username string
-	Password string
-	Charset  string // UTF8, GB18030
-}
 
 // DaMengConfig holds DaMeng configuration
 type DaMengConfig struct {
@@ -209,23 +199,23 @@ type DaMengDatabaseInfo struct {
 }
 
 // adapter to implement database.Driver
-type daMengDBAdapter struct {
-	inner *DaMengDriver
+type DaMengDBAdapter struct {
+	Inner *DaMengDriver
 }
 
-func (a *daMengDBAdapter) Open(dsn string) (*sql.DB, error)            { return a.inner.Open(dsn) }
-func (a *daMengDBAdapter) ValidateDSN(dsn string) error                { return a.inner.ValidateDSN(dsn) }
-func (a *daMengDBAdapter) GetDefaultPort() int                         { return a.inner.GetDefaultPort() }
-func (a *daMengDBAdapter) BuildDSN(cfg *model.DataSourceConfig) string { return a.inner.BuildDSN(cfg) }
-func (a *daMengDBAdapter) GetDatabaseTypeName() string                 { return a.inner.GetDatabaseTypeName() }
-func (a *daMengDBAdapter) TestConnection(db *sql.DB) error             { return a.inner.TestConnection(db) }
-func (a *daMengDBAdapter) GetDriverName() string                       { return a.inner.GetDriverName() }
-func (a *daMengDBAdapter) GetCategory() database.DriverCategory {
-	return database.CategoryDomesticDatabase
+func (a *DaMengDBAdapter) Open(dsn string) (*sql.DB, error)            { return a.Inner.Open(dsn) }
+func (a *DaMengDBAdapter) ValidateDSN(dsn string) error                { return a.Inner.ValidateDSN(dsn) }
+func (a *DaMengDBAdapter) GetDefaultPort() int                         { return a.Inner.GetDefaultPort() }
+func (a *DaMengDBAdapter) BuildDSN(cfg *model.DataSourceConfig) string { return a.Inner.BuildDSN(cfg) }
+func (a *DaMengDBAdapter) GetDatabaseTypeName() string                 { return a.Inner.GetDatabaseTypeName() }
+func (a *DaMengDBAdapter) TestConnection(db *sql.DB) error             { return a.Inner.TestConnection(db) }
+func (a *DaMengDBAdapter) GetDriverName() string                       { return a.Inner.GetDriverName() }
+func (a *DaMengDBAdapter) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryDomesticDatabase
 }
-func (a *daMengDBAdapter) GetCapabilities() database.DriverCapabilities {
-	caps := a.inner.GetCapabilities()
-	return database.DriverCapabilities{
+func (a *DaMengDBAdapter) GetCapabilities() drivers.DriverCapabilities {
+	caps := a.Inner.GetCapabilities()
+	return drivers.DriverCapabilities{
 		SupportsSQL:             caps["SupportsSQL"],
 		SupportsTransaction:     caps["SupportsTransaction"],
 		SupportsSchemaDiscovery: caps["SupportsSchemaDiscovery"],
@@ -234,14 +224,14 @@ func (a *daMengDBAdapter) GetCapabilities() database.DriverCapabilities {
 		SupportsStreaming:       caps["SupportsStreaming"],
 	}
 }
-func (a *daMengDBAdapter) ConfigureAuth(authConfig interface{}) error {
-	return a.inner.ConfigureAuth(authConfig)
+func (a *DaMengDBAdapter) ConfigureAuth(authConfig interface{}) error {
+	return a.Inner.ConfigureAuth(authConfig)
 }
 
-func init() {
-	// Attempt to register the concrete DaMeng driver with the global registry.
-	cfg := NewDaMengConfig()
-	if drv, err := NewDaMengDriver(cfg); err == nil {
-		database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, &daMengDBAdapter{inner: drv})
-	}
-}
+//func init() {
+//	// Attempt to register the concrete DaMeng driver with the global registry.
+//	cfg := NewDaMengConfig()
+//	if drv, err := NewDaMengDriver(cfg); err == nil {
+//		database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, &DaMengDBAdapter{inner: drv})
+//	}
+//}

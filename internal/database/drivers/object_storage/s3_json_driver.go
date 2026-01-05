@@ -1,11 +1,11 @@
 package object_storage
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/database/drivers"
 	"strings"
 
 	"nexus-gateway/internal/database"
@@ -106,13 +106,13 @@ func (d *S3JSONDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *S3JSONDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *S3JSONDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *S3JSONDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *S3JSONDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     false,
 		SupportsSchemaDiscovery: true,

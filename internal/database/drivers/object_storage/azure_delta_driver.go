@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -76,13 +77,13 @@ func (d *AzureDeltaDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *AzureDeltaDriver) GetCategory() database.DriverCategory {
-	return database.CategoryObjectStorage
+func (d *AzureDeltaDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryObjectStorage
 }
 
 // GetCapabilities returns driver capabilities
-func (d *AzureDeltaDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *AzureDeltaDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

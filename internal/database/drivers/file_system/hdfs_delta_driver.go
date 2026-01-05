@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
@@ -76,13 +77,13 @@ func (d *HDFSDeltaDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *HDFSDeltaDriver) GetCategory() database.DriverCategory {
-	return database.CategoryFileSystem
+func (d *HDFSDeltaDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryFileSystem
 }
 
 // GetCapabilities returns driver capabilities
-func (d *HDFSDeltaDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *HDFSDeltaDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             false,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,

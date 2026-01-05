@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"nexus-gateway/internal/database/drivers"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -108,13 +109,13 @@ func (d *OscarDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *OscarDriver) GetCategory() database.DriverCategory {
-	return database.CategoryRelational
+func (d *OscarDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryRelational
 }
 
 // GetCapabilities returns driver capabilities
-func (d *OscarDriver) GetCapabilities() database.DriverCapabilities {
-	return database.DriverCapabilities{
+func (d *OscarDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
 		SupportsSQL:             true,
 		SupportsTransaction:     true,
 		SupportsSchemaDiscovery: true,
