@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -138,13 +137,3 @@ type IcebergQueryResult struct {
 	SnapshotID int64
 }
 
-// RegisterS3IcebergDriver registers the S3 Iceberg driver globally
-func RegisterS3IcebergDriver(ctx context.Context, config *S3Config) error {
-	driver, err := NewS3IcebergDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3Iceberg, driver)
-	return nil
-}

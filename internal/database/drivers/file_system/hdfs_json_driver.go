@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -143,13 +142,3 @@ type HDFSJSONResult struct {
 	FilePath  string
 }
 
-// RegisterHDFSJSONDriver registers the HDFS JSON driver globally
-func RegisterHDFSJSONDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSJSONDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSJSON, driver)
-	return nil
-}

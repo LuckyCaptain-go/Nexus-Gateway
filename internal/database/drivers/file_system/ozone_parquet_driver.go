@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -133,13 +132,4 @@ func (d *OzoneParquetDriver) GetCapacity(ctx context.Context) (*OzoneCapacity, e
 	return d.client.GetCapacity(ctx)
 }
 
-// RegisterOzoneParquetDriver registers the Ozone Parquet driver globally
-func RegisterOzoneParquetDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneParquet, driver)
-	return nil
-}

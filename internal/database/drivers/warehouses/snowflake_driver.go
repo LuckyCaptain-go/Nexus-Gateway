@@ -7,7 +7,6 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/database/metadata"
 	"nexus-gateway/internal/model"
 )
@@ -354,17 +353,6 @@ type SnowflakeQueryHistory struct {
 	ElapsedTime   int64
 	WarehouseSize string
 	WarehouseType string
-}
-
-// RegisterSnowflakeDriver registers the Snowflake driver globally
-func RegisterSnowflakeDriver(config *SnowflakeConfig) error {
-	driver, err := NewSnowflakeDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeSnowflake, driver)
-	return nil
 }
 
 // GetTableStorageInfo retrieves storage information for tables

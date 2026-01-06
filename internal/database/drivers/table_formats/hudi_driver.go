@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"nexus-gateway/internal/database/drivers/common"
 	"time"
 
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/database/metadata"
 	"nexus-gateway/internal/model"
 )
+
+// Using common schema types from drivers/common package
 
 // HudiDriver implements the Driver interface for Apache Hudi tables
 type HudiDriver struct {
@@ -115,18 +116,23 @@ func (d *HudiDriver) GetTableMetadata(ctx context.Context, basePath string) (*Hu
 }
 
 // GetTableSchema retrieves table schema in standard format
-func (d *HudiDriver) GetTableSchema(ctx context.Context, basePath, tableName string) (*metadata.TableSchema, error) {
+func (d *HudiDriver) GetTableSchema(ctx context.Context, basePath, tableName string) (*common.TableSchema, error) {
 	metadata, err := d.restClient.GetTableMetadata(ctx, basePath)
 	if err != nil {
 		return nil, err
 	}
 
-	parsedSchema, err := d.parser.ParseTableMetadata(metadata, tableName)
+	databaseSchema, err := d.parser.ParseTableMetadata(metadata, tableName)
 	if err != nil {
 		return nil, err
 	}
 
-	return parsedSchema.Tables[tableName], nil
+	tableSchema, exists := databaseSchema.Tables[tableName]
+	if !exists {
+		return nil, fmt.Errorf("table not found in schema: %s", tableName)
+	}
+
+	return tableSchema, nil
 }
 
 // QueryTable executes a SQL query
@@ -164,17 +170,6 @@ func (d *HudiDriver) GetStatistics(ctx context.Context, basePath string) (*HudiT
 		PartitionStats: partitionStats,
 		CommitCount:    len(commits),
 	}, nil
-}
-
-// RegisterHudiDriver registers the Hudi driver globally
-func RegisterHudiDriver(config *HudiConfig) error {
-	driver, err := NewHudiDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeApacheHudi, driver)
-	return nil
 }
 
 // HudiTableStatistics contains table-level statistics

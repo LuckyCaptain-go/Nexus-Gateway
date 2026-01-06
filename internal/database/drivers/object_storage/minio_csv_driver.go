@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -478,15 +477,4 @@ func (d *MinIOCSVDriver) ConvertToStandardSchema(csvSchema *DetectedSchema) mode
 	}
 
 	return stdSchema
-}
-
-// RegisterMinIOCSVDriver registers the MinIO CSV driver globally
-func RegisterMinIOCSVDriver(ctx context.Context, config *MinIOCSVDriverConfig) error {
-	driver, err := NewMinIOCSVDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeMinIOCSV, driver)
-	return nil
 }

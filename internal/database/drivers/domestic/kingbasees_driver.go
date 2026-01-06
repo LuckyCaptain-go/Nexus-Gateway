@@ -261,14 +261,4 @@ type KingbaseESQueryResult struct {
 	CompatMode string
 }
 
-// RegisterKingbaseESDriver registers the KingbaseES driver globally
-func RegisterKingbaseESDriver(config *KingbaseESConfig) error {
-	driver, err := NewKingbaseESDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}
+

@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
 )
 
 // RedshiftDriver implements Driver interface for Amazon Redshift
@@ -140,16 +140,6 @@ func (d *RedshiftDriver) GetSchema(ctx context.Context, db *sql.DB, schemaName s
 	return schema, nil
 }
 
-// RegisterRedshiftDriver registers the Redshift driver globally
-func RegisterRedshiftDriver(region, clusterID string) error {
-	driver, err := NewRedshiftDriver(region, clusterID)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeRedshift, driver)
-	return nil
-}
 
 // GetClusterStatus retrieves cluster status
 func (d *RedshiftDriver) GetClusterStatus(ctx context.Context) (*RedshiftClusterStatus, error) {

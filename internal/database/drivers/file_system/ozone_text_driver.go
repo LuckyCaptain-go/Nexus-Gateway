@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -129,12 +128,3 @@ type OzoneTextResult struct {
 }
 
 // RegisterOzoneTextDriver registers the Ozone text driver globally
-func RegisterOzoneTextDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneTextDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneText, driver)
-	return nil
-}

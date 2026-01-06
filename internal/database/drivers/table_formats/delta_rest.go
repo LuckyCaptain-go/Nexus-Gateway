@@ -8,8 +8,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"nexus-gateway/internal/model"
 )
 
 // DeltaRESTClient implements a REST client for Delta Lake

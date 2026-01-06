@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -98,13 +97,3 @@ func (d *MinIODeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
-// RegisterMinIODeltaDriver registers the MinIO Delta Lake driver globally
-func RegisterMinIODeltaDriver(ctx context.Context, config *MinIOConfig) error {
-	driver, err := NewMinIODeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeMinIODelta, driver)
-	return nil
-}

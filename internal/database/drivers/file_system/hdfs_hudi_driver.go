@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -125,13 +124,3 @@ func (d *HDFSHudiDriver) QueryTable(ctx context.Context, tablePath string, insta
 	}, nil
 }
 
-// RegisterHDFSHudiDriver registers the HDFS Hudi driver globally
-func RegisterHDFSHudiDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSHudiDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSHudi, driver)
-	return nil
-}

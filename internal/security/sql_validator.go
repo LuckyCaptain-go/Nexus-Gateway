@@ -63,9 +63,9 @@ func (sv *SQLValidator) ValidateStatement(sql string) error {
 	}
 
 	// Check for potential SQL injection patterns (use normalized SQL)
-	//if err := sv.checkSQLInjection(normalizedSQL); err != nil {
-	//	return err
-	//}
+	if err := sv.checkSQLInjection(normalizedSQL); err != nil {
+		return err
+	}
 
 	return nil
 }

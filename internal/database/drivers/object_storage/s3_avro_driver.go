@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -159,13 +158,3 @@ func (d *S3AvroDriver) ListAvroFiles(ctx context.Context, prefix string) ([]S3Ob
 	return d.s3Client.ListFilesByExtension(ctx, prefix, ".avro")
 }
 
-// RegisterS3AvroDriver registers the S3 Avro driver globally
-func RegisterS3AvroDriver(ctx context.Context, config *S3AvroDriverConfig) error {
-	driver, err := NewS3AvroDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3Avro, driver)
-	return nil
-}

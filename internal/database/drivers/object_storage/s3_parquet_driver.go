@@ -7,7 +7,6 @@ import (
 	"io"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -469,17 +468,7 @@ type FileStatistics struct {
 	Columns   int
 }
 
-// RegisterS3ParquetDriver registers the S3 Parquet driver globally
-func RegisterS3ParquetDriver(ctx context.Context, config *S3ParquetDriverConfig) error {
-	driver, err := NewS3ParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3Parquet, driver)
-	return nil
-}
-
+/
 // ConvertToStandardSchema converts Parquet schema to standard schema
 func (d *S3ParquetDriver) ConvertToStandardSchema(parquetSchema *ParquetSchema) model.TableSchema {
 	stdSchema := model.TableSchema{

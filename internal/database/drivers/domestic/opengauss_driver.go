@@ -194,16 +194,3 @@ func (d *OpenGaussDriver) CreateRowSecurityPolicy(ctx context.Context, db *sql.D
 	return err
 }
 
-// OpenGaussRLSPolicy is defined in opengauss_row_security.go
-
-// RegisterOpenGaussDriver registers the OpenGauss driver globally
-func RegisterOpenGaussDriver(config *OpenGaussConfig) error {
-	driver, err := NewOpenGaussDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}

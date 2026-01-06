@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -98,13 +97,4 @@ func (d *AzureDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
-// RegisterAzureDeltaDriver registers the Azure Delta Lake driver globally
-func RegisterAzureDeltaDriver(ctx context.Context, config *AzureBlobConfig) error {
-	driver, err := NewAzureDeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeAzureDelta, driver)
-	return nil
-}

@@ -232,6 +232,6 @@ func (a *DaMengDBAdapter) ConfigureAuth(authConfig interface{}) error {
 //	// Attempt to register the concrete DaMeng driver with the global registry.
 //	cfg := NewDaMengConfig()
 //	if drv, err := NewDaMengDriver(cfg); err == nil {
-//		database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, &DaMengDBAdapter{inner: drv})
+//		//  database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDaMeng, &DaMengDBAdapter{inner: drv})
 //	}
 //}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -129,15 +128,4 @@ func (d *HDFSORCCompressionDriver) QueryCompressedORCFile(ctx context.Context, p
 		BytesRead: int64(len(data)),
 		FilePath:  path,
 	}, nil
-}
-
-// RegisterHDFSORCCompressionDriver registers the HDFS compressed ORC driver globally
-func RegisterHDFSORCCompressionDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSORCCompressionDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSORCCompressed, driver)
-	return nil
 }

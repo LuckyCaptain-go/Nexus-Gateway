@@ -7,7 +7,6 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -156,12 +155,3 @@ type AzureFileMetadata struct {
 }
 
 // RegisterAzureBlobParquetDriver registers the Azure Blob Parquet driver globally
-func RegisterAzureBlobParquetDriver(ctx context.Context, config *AzureBlobParquetDriverConfig) error {
-	driver, err := NewAzureBlobParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeAzureParquet, driver)
-	return nil
-}

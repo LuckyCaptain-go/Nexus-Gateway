@@ -273,16 +273,4 @@ func (d *OscarDriver) GetTablePartitionInfo(ctx context.Context, db *sql.DB, tab
 	return info, nil
 }
 
-// OscarPartitionInfo is defined in oscar_partition.go
 
-// RegisterOscarDriver registers the Oscar driver globally
-func RegisterOscarDriver(config *OscarConfig) error {
-	driver, err := NewOscarDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}

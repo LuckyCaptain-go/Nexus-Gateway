@@ -248,14 +248,4 @@ func (d *GaussDBDriver) SwitchToStandby(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-// RegisterGaussDBDriver registers the GaussDB driver globally
-func RegisterGaussDBDriver(config *GaussDBConfig) error {
-	driver, err := NewGaussDBDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}
+

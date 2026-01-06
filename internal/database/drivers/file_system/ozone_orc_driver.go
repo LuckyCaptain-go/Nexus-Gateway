@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -128,13 +127,3 @@ type OzoneORCResult struct {
 	Key       string
 }
 
-// RegisterOzoneORCDriver registers the Ozone ORC driver globally
-func RegisterOzoneORCDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneORCDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneORC, driver)
-	return nil
-}

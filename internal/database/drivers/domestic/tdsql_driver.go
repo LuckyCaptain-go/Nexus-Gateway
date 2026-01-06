@@ -250,14 +250,3 @@ type TDSQLProxyStatus struct {
 	ActiveNodes []string
 }
 
-// RegisterTDSQLDriver registers the TDSQL driver globally
-func RegisterTDSQLDriver(config *TDSQLConfig) error {
-	driver, err := NewTDSQLDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}

@@ -228,14 +228,3 @@ type GBaseFragmentInfo struct {
 	Strategy     string
 }
 
-// RegisterGBaseDriver registers the GBase driver globally
-func RegisterGBaseDriver(config *GBaseConfig) error {
-	driver, err := NewGBaseDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}

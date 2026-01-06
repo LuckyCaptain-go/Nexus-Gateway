@@ -637,15 +637,4 @@ func mapCSVTypeToStandard(csvType string) model.StandardizedType {
 	}
 }
 
-// RegisterS3CSVDriver registers the S3 CSV driver globally
-func RegisterS3CSVDriver(ctx context.Context, config *S3CSVDriverConfig) error {
-	driver, err := NewS3CSVDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3CSV, driver)
-	return nil
-}
-
-import "strings"

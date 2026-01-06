@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -98,13 +97,3 @@ func (d *COSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
-// RegisterCOSDeltaDriver registers the COS Delta Lake driver globally
-func RegisterCOSDeltaDriver(ctx context.Context, config *COSConfig) error {
-	driver, err := NewCOSDeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeCOSDelta, driver)
-	return nil
-}

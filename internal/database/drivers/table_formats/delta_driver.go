@@ -5,12 +5,44 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"nexus-gateway/internal/database/drivers/common"
 	"time"
 
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/database/metadata"
 	"nexus-gateway/internal/model"
 )
+
+// Local schema types to avoid circular import
+type TableSchema struct {
+	Name        string                 `json:"name"`
+	Schema      string                 `json:"schema,omitempty"`
+	Type        string                 `json:"type,omitempty"`
+	Columns     []ColumnSchema         `json:"columns"`
+	PrimaryKey  []string               `json:"primaryKey,omitempty"`
+	Indexes     []IndexSchema          `json:"indexes,omitempty"`
+	ForeignKeys []ForeignKeySchema     `json:"foreignKeys,omitempty"`
+	Properties  map[string]interface{} `json:"properties,omitempty"`
+}
+
+type ColumnSchema struct {
+	Name         string      `json:"name"`
+	Type         string      `json:"type"`
+	Nullable     bool        `json:"nullable"`
+	DefaultValue interface{} `json:"defaultValue,omitempty"`
+	Comment      string      `json:"comment,omitempty"`
+}
+
+type IndexSchema struct {
+	Name    string   `json:"name"`
+	Columns []string `json:"columns"`
+	Unique  bool     `json:"unique"`
+}
+
+type ForeignKeySchema struct {
+	Name         string   `json:"name"`
+	Columns      []string `json:"columns"`
+	ReferTable   string   `json:"referTable"`
+	ReferColumns []string `json:"referColumns"`
+}
 
 // DeltaDriver implements the Driver interface for Delta Lake tables
 type DeltaDriver struct {
@@ -115,7 +147,7 @@ func (d *DeltaDriver) GetTableDetails(ctx context.Context, catalog, schema, tabl
 }
 
 // GetTableSchema retrieves table schema in standard format
-func (d *DeltaDriver) GetTableSchema(ctx context.Context, catalog, schema, table string) (*metadata.TableSchema, error) {
+func (d *DeltaDriver) GetTableSchema(ctx context.Context, catalog, schema, table string) (*common.TableSchema, error) {
 	details, err := d.restClient.GetTableDetails(ctx, catalog, schema, table)
 	if err != nil {
 		return nil, err
@@ -127,6 +159,7 @@ func (d *DeltaDriver) GetTableSchema(ctx context.Context, catalog, schema, table
 		return nil, err
 	}
 
+	// Return the schema using the common package type
 	return parsedSchema.Tables[fullName], nil
 }
 
@@ -162,17 +195,6 @@ func (d *DeltaDriver) GetStatistics(ctx context.Context, catalog, schema, table 
 	return stats, nil
 }
 
-// RegisterDeltaDriver registers the Delta Lake driver globally
-func RegisterDeltaDriver(config *DeltaConfig) error {
-	driver, err := NewDeltaDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDeltaLake, driver)
-	return nil
-}
-
 // DeltaTableStatistics contains table-level statistics
 type DeltaTableStatistics struct {
 	CreatedAt       time.Time
@@ -191,8 +213,20 @@ func (d *DeltaDriver) GetPartitioningStrategy(ctx context.Context, catalog, sche
 	}
 
 	// Delta partition info would be in table properties
-	// For now, return empty slice
-	return []string{}, nil
+	// Look for partition information in properties
+	partitionCols := make([]string, 0)
+	
+	// Check if there are partition-related properties
+	if partitionBy, exists := details.Properties["partitionBy"]; exists {
+		// If partitionBy exists in properties, parse it
+		// This is a simplified approach - in practice, you might need to parse the value differently
+		partitionCols = append(partitionCols, partitionBy)
+	} else {
+		// If no specific partition info, return empty slice
+		// For a complete implementation, you might need to parse the schema or query system tables
+	}
+
+	return partitionCols, nil
 }
 
 // GetHistory retrieves table commit history
@@ -283,3 +317,7 @@ func (d *DeltaDriver) GetLatestVersion(ctx context.Context, tablePath string) (i
 
 	return d.parser.GetLatestVersion(commits)
 }
+
+
+
+

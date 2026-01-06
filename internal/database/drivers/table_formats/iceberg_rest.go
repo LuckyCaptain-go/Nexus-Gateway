@@ -147,6 +147,13 @@ func (c *IcebergRESTClient) LoadTable(ctx context.Context, namespace, table stri
 	return &metadata, nil
 }
 
+// IcebergQueryResult represents query results from Iceberg
+type IcebergQueryResult struct {
+	Columns []string
+	Rows    [][]interface{}
+	Schema  *IcebergSchema
+}
+
 // QueryTable executes a query on the table (via REST API)
 func (c *IcebergRESTClient) QueryTable(ctx context.Context, namespace, table, sql string) (*IcebergQueryResult, error) {
 	// Iceberg REST API v1 doesn't support direct SQL queries

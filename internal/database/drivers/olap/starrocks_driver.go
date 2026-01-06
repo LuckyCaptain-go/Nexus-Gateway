@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // StarRocksDriver implements Driver interface for StarRocks
@@ -199,13 +199,3 @@ type StarRocksTableDistribution struct {
 	ReplicationNum int
 }
 
-// RegisterStarRocksDriver registers the StarRocks driver globally
-func RegisterStarRocksDriver(config *StarRocksConfig) error {
-	driver, err := NewStarRocksDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeStarRocks, driver)
-	return nil
-}

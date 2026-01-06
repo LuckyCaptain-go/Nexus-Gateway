@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -141,13 +140,3 @@ type HDFSTextResult struct {
 	FilePath  string
 }
 
-// RegisterHDFSTextDriver registers the HDFS text driver globally
-func RegisterHDFSTextDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSTextDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSText, driver)
-	return nil
-}

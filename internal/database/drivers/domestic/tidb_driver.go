@@ -243,14 +243,3 @@ type TiDBQueryResult struct {
 	IsDistributed bool
 }
 
-// RegisterTiDBDriver registers the TiDB driver globally
-func RegisterTiDBDriver(config *TiDBConfig) error {
-	driver, err := NewTiDBDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}

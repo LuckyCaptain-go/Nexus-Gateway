@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -173,13 +173,3 @@ type OSSFileMetadata struct {
 	ETag      string
 }
 
-// RegisterOSSParquetDriver registers the OSS Parquet driver globally
-func RegisterOSSParquetDriver(ctx context.Context, config *OSSParquetDriverConfig) error {
-	driver, err := NewOSSParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOSSParquet, driver)
-	return nil
-}

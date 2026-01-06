@@ -345,16 +345,6 @@ func (d *MinIOParquetDriver) ValidateFile(ctx context.Context, key string) error
 	return err
 }
 
-// RegisterMinIOParquetDriver registers the MinIO Parquet driver globally
-func RegisterMinIOParquetDriver(ctx context.Context, config *MinIOParquetDriverConfig) error {
-	driver, err := NewMinIOParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeMinIOParquet, driver)
-	return nil
-}
 
 // ConvertToStandardSchema converts Parquet schema to standard schema
 func (d *MinIOParquetDriver) ConvertToStandardSchema(parquetSchema *ParquetSchema) model.TableSchema {

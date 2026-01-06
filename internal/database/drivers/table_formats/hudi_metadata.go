@@ -2,10 +2,24 @@ package table_formats
 
 import (
 	"fmt"
+	"nexus-gateway/internal/database/drivers/common"
 	"time"
-
-	"nexus-gateway/internal/database/metadata"
 )
+
+// Hudi-specific types
+type TableType string
+
+const (
+	CopyOnWriteTableType TableType = "COPY_ON_WRITE"
+	MergeOnReadTableType TableType = "MERGE_ON_READ"
+)
+
+// Hudi-specific partition field definition
+type HudiPartitionField struct {
+	Name      string
+	Type      string
+	FieldName string
+}
 
 // HudiMetadataParser handles Hudi metadata parsing
 type HudiMetadataParser struct{}
@@ -16,21 +30,21 @@ func NewHudiMetadataParser() *HudiMetadataParser {
 }
 
 // ParseTableMetadata parses Hudi table metadata into standard schema
-func (p *HudiMetadataParser) ParseTableMetadata(hudiMeta *HudiTableMetadata, tableName string) (*metadata.DataSourceSchema, error) {
-	schema := &metadata.DataSourceSchema{
-		Tables: make(map[string]*metadata.TableSchema),
+func (p *HudiMetadataParser) ParseTableMetadata(hudiMeta *HudiTableMetadata, tableName string) (*common.DataSourceSchema, error) {
+	schema := &common.DataSourceSchema{
+		Tables: make(map[string]*common.TableSchema),
 	}
 
-	tableSchema := &metadata.TableSchema{
+	tableSchema := &common.TableSchema{
 		Name:       tableName,
 		Type:       "TABLE",
-		Columns:    make([]metadata.ColumnSchema, 0),
+		Columns:    make([]common.ColumnSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
 	// Parse fields
 	for _, field := range hudiMeta.RecordFields {
-		column := metadata.ColumnSchema{
+		column := common.ColumnSchema{
 			Name:     field.Name,
 			Type:     ConvertHudiTypeToStandardType(field.Type),
 			Nullable: field.Nullable,
@@ -286,7 +300,7 @@ func (p *HudiMetadataParser) GetCommitTimeline(commits []HudiCommit) []CommitTim
 		timestamp, _ := p.ParseInstantTime(commit.CommitTime)
 		timeline[i] = CommitTimelineEntry{
 			Timestamp: timestamp,
-			Version:   commit.CommitTime,
+			Version:   commit.TimestampMs, // Using TimestampMs which is int64 as required by Version field
 			Operation: commit.Operation,
 		}
 	}
@@ -305,7 +319,8 @@ func (p *HudiMetadataParser) GetSavepointAtTime(savepoints []HudiSavepoint, time
 			continue
 		}
 		if spTime.UnixMilli() <= targetMs {
-			if bestSavepoint == nil || spTime.After(time.UnixMilli(bestSavepoint.TimestampMs)) {
+			// Fixed: HudiSavepoint doesn't have TimestampMs field, using spTime directly
+			if bestSavepoint == nil || spTime.After(getSavepointTime(bestSavepoint)) {
 				bestSavepoint = sp
 			}
 		}
@@ -316,4 +331,19 @@ func (p *HudiMetadataParser) GetSavepointAtTime(savepoints []HudiSavepoint, time
 	}
 
 	return bestSavepoint, nil
+}
+
+// Helper function to extract time from HudiSavepoint
+func getSavepointTime(sp *HudiSavepoint) time.Time {
+	if sp == nil {
+		return time.Time{}
+	}
+	// Placeholder implementation - this function needs to parse the time from the savepoint
+	// For now, return zero time as this is just a helper for comparison
+	p := &HudiMetadataParser{}
+	parsedTime, err := p.ParseInstantTime(sp.SavepointTime)
+	if err != nil {
+		return time.Time{}
+	}
+	return parsedTime
 }

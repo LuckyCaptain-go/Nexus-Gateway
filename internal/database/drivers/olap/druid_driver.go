@@ -7,7 +7,6 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -165,13 +164,4 @@ type DruidClusterInfo struct {
 	OverlordURL    string
 }
 
-// RegisterDruidDriver registers the Druid driver globally
-func RegisterDruidDriver(config *DruidConfig) error {
-	driver, err := NewDruidDriver(config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDruid, driver)
-	return nil
-}
