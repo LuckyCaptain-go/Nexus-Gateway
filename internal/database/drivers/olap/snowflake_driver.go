@@ -45,3 +45,14 @@ func (d *SnowflakeDriver) GetDriverName() string {
 func (d *SnowflakeDriver) GetCategory() drivers.DriverCategory {
 	return drivers.CategoryCloudDataWarehouse
 }
+
+func (d *SnowflakeDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
+		SupportsSQL:             true,
+		SupportsTransaction:     true,
+		SupportsSchemaDiscovery: true,
+		SupportsTimeTravel:      true,
+		RequiresTokenRotation:   false,
+		SupportsStreaming:       true,
+	}
+}
