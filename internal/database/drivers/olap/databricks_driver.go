@@ -41,3 +41,19 @@ func (d *DatabricksDriver) GetDriverName() string {
 func (d *DatabricksDriver) GetCategory() drivers.DriverCategory {
 	return drivers.CategoryCloudDataWarehouse
 }
+
+func (d *DatabricksDriver) GetCapabilities() drivers.DriverCapabilities {
+	return drivers.DriverCapabilities{
+		SupportsSQL:             true,
+		SupportsTransaction:     false,
+		SupportsSchemaDiscovery: true,
+		SupportsTimeTravel:      false,
+		RequiresTokenRotation:   false,
+		SupportsStreaming:       false,
+	}
+}
+
+func (d *DatabricksDriver) ConfigureAuth(authConfig interface{}) error {
+	// Databricks authentication configuration
+	return nil
+}
