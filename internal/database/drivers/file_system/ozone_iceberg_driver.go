@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -124,13 +123,3 @@ func (d *OzoneIcebergDriver) QueryTable(ctx context.Context, tablePath string, s
 	}, nil
 }
 
-// RegisterOzoneIcebergDriver registers the Ozone Iceberg driver globally
-func RegisterOzoneIcebergDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneIcebergDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneIceberg, driver)
-	return nil
-}

@@ -287,25 +287,3 @@ func BuildIAMDSNFromConfig(config map[string]string) (string, error) {
 	return auth.GetDSNWithIAMToken(context.Background())
 }
 
-// RegisterRedshiftIAMDriver registers Redshift driver with IAM authentication
-func RegisterRedshiftIAMDriver(region, clusterID, clusterEndpoint, dbUser, database string, port int) error {
-	auth, err := NewRedshiftIAMAuthenticator(region, clusterID, clusterEndpoint, dbUser, database, port)
-	if err != nil {
-		return err
-	}
-
-	if err := auth.LoadAWSCredentials(context.Background()); err != nil {
-		return err
-	}
-
-	driver, err := NewRedshiftDriver(region, clusterID)
-	if err != nil {
-		return err
-	}
-
-	// Store authenticator in driver (would need to add field to RedshiftDriver)
-	// For now, return the authenticator for external management
-	_ = auth
-
-	return nil
-}

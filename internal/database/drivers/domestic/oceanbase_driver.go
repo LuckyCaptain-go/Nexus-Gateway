@@ -152,17 +152,6 @@ func (d *OceanBaseDriver) DetectCompatMode(ctx context.Context, db *sql.DB) (str
 	return "MYSQL", nil
 }
 
-// RegisterOceanBaseDriver registers the OceanBase driver globally
-func RegisterOceanBaseDriver(config *OceanBaseConfig) error {
-	driver, err := NewOceanBaseDriver(config)
-	if err != nil {
-		return err
-	}
-	// Registration should be handled by the central DriverRegistry
-	// (e.g. in internal/database/driver_registry.go) to avoid import cycles.
-	_ = driver
-	return nil
-}
 
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && s[:len(substr)] == substr

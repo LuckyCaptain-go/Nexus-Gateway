@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -129,12 +128,4 @@ type OzoneAvroResult struct {
 }
 
 // RegisterOzoneAvroDriver registers the Ozone Avro driver globally
-func RegisterOzoneAvroDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneAvroDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneAvro, driver)
-	return nil
-}

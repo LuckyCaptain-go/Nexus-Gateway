@@ -1,13 +1,13 @@
 package warehouses
 
 import (
-	"cloud.google.com/go/bigquery"
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
+
+	"cloud.google.com/go/bigquery"
 )
 
 // BigQueryDriver implements Driver interface for Google BigQuery
@@ -232,17 +232,6 @@ func (d *BigQueryDriver) QueryWithPagination(ctx context.Context, sql string, pa
 	}
 
 	return it, nil
-}
-
-// RegisterBigQueryDriver registers the BigQuery driver globally
-func RegisterBigQueryDriver(ctx context.Context, projectID, location string) error {
-	driver, err := NewBigQueryDriver(ctx, projectID, location)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeBigQuery, driver)
-	return nil
 }
 
 // GetJobInfo retrieves information about a job

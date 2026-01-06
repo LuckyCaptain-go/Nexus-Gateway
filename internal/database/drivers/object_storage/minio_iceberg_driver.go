@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -98,13 +97,3 @@ func (d *MinIOIcebergDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
-// RegisterMinIOIcebergDriver registers the MinIO Iceberg driver globally
-func RegisterMinIOIcebergDriver(ctx context.Context, config *MinIOConfig) error {
-	driver, err := NewMinIOIcebergDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeMinIOIceberg, driver)
-	return nil
-}

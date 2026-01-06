@@ -3,9 +3,8 @@ package table_formats
 import (
 	"encoding/json"
 	"fmt"
+	"nexus-gateway/internal/database/drivers/common"
 	"time"
-
-	"nexus-gateway/internal/database/metadata"
 )
 
 // DeltaLogParser handles Delta Lake log (JSON) parsing
@@ -26,22 +25,22 @@ func (p *DeltaLogParser) ParseDeltaLog(logData []byte) (*DeltaLogEntry, error) {
 }
 
 // ParseTableMetadata parses Delta table metadata into standard schema
-func (p *DeltaLogParser) ParseTableMetadata(deltaMeta *DeltaTableDetails, tableName string) (*metadata.DataSourceSchema, error) {
-	schema := &metadata.DataSourceSchema{
-		Tables: make(map[string]*metadata.TableSchema),
+func (p *DeltaLogParser) ParseTableMetadata(deltaMeta *DeltaTableDetails, tableName string) (*common.DataSourceSchema, error) {
+	schema := &common.DataSourceSchema{
+		Tables: make(map[string]*common.TableSchema),
 	}
 
-	tableSchema := &metadata.TableSchema{
+	tableSchema := &common.TableSchema{
 		Name:       tableName,
 		Type:       "TABLE",
 		Schema:     deltaMeta.SchemaName,
-		Columns:    make([]metadata.ColumnSchema, 0),
+		Columns:    make([]common.ColumnSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
 	// Parse columns
 	for _, col := range deltaMeta.Columns {
-		column := metadata.ColumnSchema{
+		column := common.ColumnSchema{
 			Name:     col.Name,
 			Type:     ConvertDeltaTypeToStandardType(col.TypeText),
 			Nullable: col.Nullable,
@@ -225,10 +224,10 @@ type DeltaSchemaChange struct {
 }
 
 // ParsePartitionSpec parses partition columns into a spec
-func (p *DeltaLogParser) ParsePartitionSpec(partitionCols []string) []PartitionField {
-	fields := make([]PartitionField, len(partitionCols))
+func (p *DeltaLogParser) ParsePartitionSpec(partitionCols []string) []DeltaPartitionField {
+	fields := make([]DeltaPartitionField, len(partitionCols))
 	for i, col := range partitionCols {
-		fields[i] = PartitionField{
+		fields[i] = DeltaPartitionField{
 			SourceID:  i,
 			Name:      col,
 			Transform: "value", // Delta uses partition by value
@@ -237,8 +236,8 @@ func (p *DeltaLogParser) ParsePartitionSpec(partitionCols []string) []PartitionF
 	return fields
 }
 
-// PartitionField represents a partition field (compatible with Iceberg)
-type PartitionField struct {
+// Delta-specific partition field definition
+type DeltaPartitionField struct {
 	SourceID  int
 	Name      string
 	Transform string

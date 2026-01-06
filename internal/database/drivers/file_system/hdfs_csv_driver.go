@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -137,15 +136,4 @@ type HDFSCSVResult struct {
 	NumRows   int64
 	BytesRead int64
 	FilePath  string
-}
-
-// RegisterHDFSCSVDriver registers the HDFS CSV driver globally
-func RegisterHDFSCSVDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSCSVDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSCSV, driver)
-	return nil
 }

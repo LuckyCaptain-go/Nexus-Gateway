@@ -7,26 +7,12 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
-
-	"github.com/ClickHouse/clickhouse-go/v2"
 )
 
 // ClickHouseDriver implements Driver interface for ClickHouse
 type ClickHouseDriver struct {
-	connection *clickhouse.Conn
-	config     *ClickHouseConfig
-}
-
-// DriverClickHouseConfig holds ClickHouse driver configuration
-type DriverClickHouseConfig struct {
-	Host        string
-	Port        int
-	Database    string
-	Username    string
-	Password    string
-	DialTimeout time.Duration
+	config *ClickHouseConfig
 }
 
 // NewClickHouseDriver creates a new ClickHouse driver
@@ -35,59 +21,18 @@ func NewClickHouseDriver(config *ClickHouseConfig) (*ClickHouseDriver, error) {
 		return nil, fmt.Errorf("host is required")
 	}
 
-	// Build ClickHouse DSN
-	dsn := fmt.Sprintf("clickhouse://%s:%s@%s:%d/%s",
-		config.Username,
-		config.Password,
-		config.Host,
-		config.Port,
-		config.Database,
-	)
-
-	// Create ClickHouse connection options
-	options := make([]clickhouse.Option, 0)
-	if config.DialTimeout > 0 {
-		options = append(options, clickhouse.WithDialTimeout(func(ctx context.Context, addr string) (context.Context, error) {
-			ctx, cancel := context.WithTimeout(ctx, config.DialTimeout)
-			return ctx, cancel
-		}))
-	}
-
-	conn, err := clickhouse.Open(&clickhouse.Options{
-		Addr: []string{fmt.Sprintf("%s:%d", config.Host, config.Port)},
-		Auth: clickhouse.Auth{
-			Database: config.Database,
-			Username: config.Username,
-			Password: config.Password,
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to ClickHouse: %w", err)
-	}
-
 	return &ClickHouseDriver{
-		connection: conn,
-		config:     config,
+		config: config,
 	}, nil
 }
 
 // Open opens a connection to ClickHouse
 func (d *ClickHouseDriver) Open(dsn string) (*sql.DB, error) {
-	// Use ClickHouse native driver
-	conn, err := clickhouse.Open(&clickhouse.Options{
-		Addr: []string{fmt.Sprintf("%s:%d", d.config.Host, d.config.Port)},
-		Auth: clickhouse.Auth{
-			Database: d.config.Database,
-			Username: d.config.Username,
-			Password: d.config.Password,
-		},
-	})
+	// Use sql.Open with clickhouse driver
+	db, err := sql.Open("clickhouse", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open ClickHouse connection: %w", err)
 	}
-
-	// Wrap in sql.DB
-	db := sql.OpenDB("clickhouse", conn)
 	return db, nil
 }
 
@@ -151,26 +96,47 @@ func (d *ClickHouseDriver) ConfigureAuth(authConfig interface{}) error {
 }
 
 // ExecuteQuery executes a ClickHouse query
-func (d *ClickHouseDriver) ExecuteQuery(ctx context.Context, sql string) (*ClickHouseQueryResult, error) {
-	err := d.connection.Ping(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to ping ClickHouse: %w", err)
-	}
+func (d *ClickHouseDriver) ExecuteQuery(ctx context.Context, query string) (*ClickHouseQueryResult, error) {
+	// Build DSN
+	dsn := fmt.Sprintf("clickhouse://%s:%s@%s:%d/%s?database=%s",
+		d.config.Username, d.config.Password, d.config.Host, d.config.Port, d.config.Database, d.config.Database)
 
-	// Execute query
-	rows, err := d.connection.Query(ctx, sql)
+	db, err := sql.Open("clickhouse", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open ClickHouse connection: %w", err)
+	}
+	defer db.Close()
+
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 	defer rows.Close()
 
+	// Get column information
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get columns: %w", err)
+	}
+
 	// Read results
 	var results []map[string]interface{}
 	for rows.Next() {
-		row := make(map[string]interface{})
-		if err := rows.ScanStruct(&row); err == nil {
-			results = append(results, row)
+		values := make([]interface{}, len(columns))
+		pointers := make([]interface{}, len(columns))
+		for i := range values {
+			pointers[i] = &values[i]
 		}
+
+		if err := rows.Scan(pointers...); err != nil {
+			continue
+		}
+
+		row := make(map[string]interface{})
+		for i, col := range columns {
+			row[col] = values[i]
+		}
+		results = append(results, row)
 	}
 
 	return &ClickHouseQueryResult{
@@ -187,8 +153,8 @@ type ClickHouseQueryResult struct {
 
 // GetTableSchema retrieves table schema from ClickHouse
 func (d *ClickHouseDriver) GetTableSchema(ctx context.Context, tableName string) (*ClickHouseTableSchema, error) {
-	sql := fmt.Sprintf("DESCRIBE TABLE %s", tableName)
-	result, err := d.ExecuteQuery(ctx, sql)
+	query := fmt.Sprintf("DESCRIBE TABLE %s", tableName)
+	result, err := d.ExecuteQuery(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -224,13 +190,3 @@ type ClickHouseColumn struct {
 	Default  interface{}
 }
 
-// RegisterClickHouseDriver registers the ClickHouse driver globally
-func RegisterClickHouseDriver(config *ClickHouseConfig) error {
-	driver, err := NewClickHouseDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeClickHouse, driver)
-	return nil
-}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -128,13 +127,3 @@ type OzoneJSONResult struct {
 	Key       string
 }
 
-// RegisterOzoneJSONDriver registers the Ozone JSON driver globally
-func RegisterOzoneJSONDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneJSONDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneJSON, driver)
-	return nil
-}

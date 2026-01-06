@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -142,12 +141,4 @@ type HDFSXMLResult struct {
 }
 
 // RegisterHDFSXMLDriver registers the HDFS XML driver globally
-func RegisterHDFSXMLDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSXMLDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSXML, driver)
-	return nil
-}

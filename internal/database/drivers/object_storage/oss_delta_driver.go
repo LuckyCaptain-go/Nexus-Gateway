@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -98,13 +97,3 @@ func (d *OSSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
-// RegisterOSSDeltaDriver registers the OSS Delta Lake driver globally
-func RegisterOSSDeltaDriver(ctx context.Context, config *OSSConfig) error {
-	driver, err := NewOSSDeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOSSDelta, driver)
-	return nil
-}

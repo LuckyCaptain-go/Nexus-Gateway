@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -127,12 +126,4 @@ func (d *OzoneDeltaDriver) QueryTable(ctx context.Context, tablePath string, ver
 // DeltaMetadata and DeltaQueryResult moved to common_types.go
 
 // RegisterOzoneDeltaDriver registers the Ozone Delta Lake driver globally
-func RegisterOzoneDeltaDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneDeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneDelta, driver)
-	return nil
-}

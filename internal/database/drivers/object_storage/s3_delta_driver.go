@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
 )
@@ -138,13 +137,3 @@ type DeltaQueryResult struct {
 	Version int64
 }
 
-// RegisterS3DeltaDriver registers the S3 Delta Lake driver globally
-func RegisterS3DeltaDriver(ctx context.Context, config *S3Config) error {
-	driver, err := NewS3DeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3Delta, driver)
-	return nil
-}

@@ -7,7 +7,6 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -231,16 +230,7 @@ func (d *DatabricksDriver) QueryDeltaTimeTravel(ctx context.Context, table, vers
 	return d.ExecuteQuery(ctx, sql)
 }
 
-// RegisterDatabricksDriver registers the Databricks driver globally
-func RegisterDatabricksDriver(config *DatabricksConfig) error {
-	driver, err := NewDatabricksDriver(config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDatabricks, driver)
-	return nil
-}
 
 // GetClusterInfo retrieves cluster information
 func (d *DatabricksDriver) GetClusterInfo(ctx context.Context, clusterID string) (*DatabricksClusterInfo, error) {

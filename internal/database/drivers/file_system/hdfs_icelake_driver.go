@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -123,13 +122,4 @@ func (d *HDFSIcebergDriver) QueryTable(ctx context.Context, tablePath string, sn
 	}, nil
 }
 
-// RegisterHDFSIcebergDriver registers the HDFS Iceberg driver globally
-func RegisterHDFSIcebergDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSIcebergDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSIceberg, driver)
-	return nil
-}

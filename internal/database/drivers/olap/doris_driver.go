@@ -7,9 +7,9 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // DorisDriver implements Driver interface for Apache Doris
@@ -130,7 +130,7 @@ func (d *DorisDriver) GetTableSchema(ctx context.Context, db *sql.DB, tableName 
 	}
 
 	for rows.Next() {
-		var field, typeStr, null, key, defaultVal, extra sql.NullString
+		var field, typeStr, null, key, defaultVal, extra *string
 		err := rows.Scan(&field, &typeStr, &null, &key, &defaultVal, &extra)
 		if err != nil {
 			return nil, err
@@ -139,7 +139,7 @@ func (d *DorisDriver) GetTableSchema(ctx context.Context, db *sql.DB, tableName 
 		schema.Columns = append(schema.Columns, DorisColumn{
 			Name:     field,
 			Type:     typeStr,
-			Nullable: null.String == "YES",
+			Nullable: null != nil && *null == "YES",
 		})
 	}
 
@@ -154,20 +154,9 @@ type DorisTableSchema struct {
 
 // DorisColumn represents a Doris column
 type DorisColumn struct {
-	Name     string
-	Type     string
+	Name     *string
+	Type     *string
 	Nullable bool
-	Key      string
-	Default  string
-}
-
-// RegisterDorisDriver registers the Doris driver globally
-func RegisterDorisDriver(config *DorisConfig) error {
-	driver, err := NewDorisDriver(config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeDoris, driver)
-	return nil
+	Key      *string
+	Default  *string
 }

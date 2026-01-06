@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -126,12 +125,4 @@ func (d *HDFSDeltaDriver) QueryTable(ctx context.Context, tablePath string, vers
 }
 
 // RegisterHDFSDeltaDriver registers the HDFS Delta Lake driver globally
-func RegisterHDFSDeltaDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSDeltaDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSDelta, driver)
-	return nil
-}

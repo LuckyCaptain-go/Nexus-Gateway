@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -141,13 +140,4 @@ type HudiQueryResult struct {
 	InstantTime string
 }
 
-// RegisterS3HudiDriver registers the S3 Hudi driver globally
-func RegisterS3HudiDriver(ctx context.Context, config *S3Config) error {
-	driver, err := NewS3HudiDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3Hudi, driver)
-	return nil
-}

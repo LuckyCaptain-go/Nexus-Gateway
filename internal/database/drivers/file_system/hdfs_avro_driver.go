@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -139,13 +138,4 @@ type HDFSAvroResult struct {
 	FilePath  string
 }
 
-// RegisterHDFSAvroDriver registers the HDFS Avro driver globally
-func RegisterHDFSAvroDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSAvroDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSAvro, driver)
-	return nil
-}

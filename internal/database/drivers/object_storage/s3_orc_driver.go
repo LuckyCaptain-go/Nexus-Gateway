@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -130,13 +129,4 @@ func (d *S3ORCDriver) GetSchema(ctx context.Context, key string) (*ORCSchema, er
 	return d.orcReader.GetSchemaFromKey(ctx, key)
 }
 
-// RegisterS3ORCDriver registers the S3 ORC driver globally
-func RegisterS3ORCDriver(ctx context.Context, config *S3ORCDriverConfig) error {
-	driver, err := NewS3ORCDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3ORC, driver)
-	return nil
-}

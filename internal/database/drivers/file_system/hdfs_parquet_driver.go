@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/database/drivers"
 	"nexus-gateway/internal/model"
 )
@@ -149,12 +148,4 @@ func (d *HDFSParquetDriver) GetCapacity(ctx context.Context) (*HDFSCapacity, err
 }
 
 // RegisterHDFSParquetDriver registers the HDFS Parquet driver globally
-func RegisterHDFSParquetDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSParquet, driver)
-	return nil
-}

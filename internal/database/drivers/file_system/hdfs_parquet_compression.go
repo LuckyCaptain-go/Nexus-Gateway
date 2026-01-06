@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -132,12 +131,4 @@ func (d *HDFSParquetCompressionDriver) QueryCompressedParquetFile(ctx context.Co
 }
 
 // RegisterHDFSParquetCompressionDriver registers the HDFS compressed Parquet driver globally
-func RegisterHDFSParquetCompressionDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSParquetCompressionDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSParquetCompressed, driver)
-	return nil
-}

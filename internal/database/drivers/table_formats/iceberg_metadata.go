@@ -1,12 +1,10 @@
 package table_formats
 
 import (
-	"encoding/json"
 	"fmt"
+	"nexus-gateway/internal/database/drivers/common"
+	"nexus-gateway/internal/model"
 	"time"
-
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/database/metadata"
 )
 
 // IcebergMetadataParser handles Iceberg metadata parsing
@@ -18,22 +16,22 @@ func NewIcebergMetadataParser() *IcebergMetadataParser {
 }
 
 // ParseTableMetadata parses Iceberg table metadata into standard schema
-func (p *IcebergMetadataParser) ParseTableMetadata(icebergMeta *IcebergTableMetadata, tableName string) (*metadata.DataSourceSchema, error) {
-	schema := &metadata.DataSourceSchema{
-		Tables: make(map[string]*metadata.TableSchema),
+func (p *IcebergMetadataParser) ParseTableMetadata(icebergMeta *IcebergTableMetadata, tableName string) (*common.DataSourceSchema, error) {
+	schema := &common.DataSourceSchema{
+		Tables: make(map[string]*common.TableSchema),
 	}
 
-	tableSchema := &metadata.TableSchema{
+	tableSchema := &common.TableSchema{
 		Name:       tableName,
 		Type:       "TABLE",
-		Columns:    make([]metadata.ColumnSchema, 0),
-		Indexes:    make([]metadata.IndexSchema, 0),
+		Columns:    make([]common.ColumnSchema, 0),
+		Indexes:    make([]common.IndexSchema, 0),
 		Properties: make(map[string]interface{}),
 	}
 
 	// Parse schema fields
 	for _, field := range icebergMeta.Schema.Fields {
-		column := metadata.ColumnSchema{
+		column := common.ColumnSchema{
 			Name:     field.Name,
 			Type:     ConvertIcebergToStandardType(field.Type),
 			Nullable: !field.Required,
@@ -249,7 +247,7 @@ type SchemaChange struct {
 }
 
 // ConvertToGinModel converts Iceberg schema to internal model format
-func (p *IcebergMetadataParser) ConvertToGinModel(schema *metadata.DataSourceSchema, dbType model.DatabaseType) interface{} {
+func (p *IcebergMetadataParser) ConvertToGinModel(schema *common.DataSourceSchema, dbType model.DatabaseType) interface{} {
 	// This can be used to convert to the gateway's internal data source model
 	// TODO: Implement conversion logic
 	return nil

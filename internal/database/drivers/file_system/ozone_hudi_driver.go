@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -126,13 +125,4 @@ func (d *OzoneHudiDriver) QueryTable(ctx context.Context, tablePath string, inst
 	}, nil
 }
 
-// RegisterOzoneHudiDriver registers the Ozone Hudi driver globally
-func RegisterOzoneHudiDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneHudiDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneHudi, driver)
-	return nil
-}

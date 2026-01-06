@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -140,12 +139,4 @@ type HDFSORCResult struct {
 }
 
 // RegisterHDFSORCDriver registers the HDFS ORC driver globally
-func RegisterHDFSORCDriver(ctx context.Context, config *HDFSConfig) error {
-	driver, err := NewHDFSORCDriver(ctx, config)
-	if err != nil {
-		return err
-	}
 
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeHDFSORC, driver)
-	return nil
-}

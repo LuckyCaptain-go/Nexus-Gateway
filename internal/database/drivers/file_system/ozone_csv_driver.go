@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -129,12 +128,3 @@ type OzoneCSVResult struct {
 }
 
 // RegisterOzoneCSVDriver registers the Ozone CSV driver globally
-func RegisterOzoneCSVDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneCSVDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneCSV, driver)
-	return nil
-}

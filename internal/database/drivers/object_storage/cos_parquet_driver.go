@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"time"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -152,15 +152,4 @@ type COSFileMetadata struct {
 	Size      int64
 	UpdatedAt time.Time
 	ETag      string
-}
-
-// RegisterCOSParquetDriver registers the COS Parquet driver globally
-func RegisterCOSParquetDriver(ctx context.Context, config *COSParquetDriverConfig) error {
-	driver, err := NewCOSParquetDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeCOSParquet, driver)
-	return nil
 }

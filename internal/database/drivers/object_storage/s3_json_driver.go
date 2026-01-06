@@ -519,16 +519,6 @@ func mapJSONTypeToStandard(jsonType string) model.StandardizedType {
 	}
 }
 
-// RegisterS3JSONDriver registers the S3 JSON driver globally
-func RegisterS3JSONDriver(ctx context.Context, config *S3JSONDriverConfig) error {
-	driver, err := NewS3JSONDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeS3JSON, driver)
-	return nil
-}
 
 // buildWhereClause builds SQL WHERE clause from filters
 func buildWhereClause(filters map[string]interface{}) string {

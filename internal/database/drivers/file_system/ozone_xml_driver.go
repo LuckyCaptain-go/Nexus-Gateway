@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
 
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
 )
 
@@ -130,13 +129,3 @@ type OzoneXMLResult struct {
 	XPath     string
 }
 
-// RegisterOzoneXMLDriver registers the Ozone XML driver globally
-func RegisterOzoneXMLDriver(ctx context.Context, config *OzoneConfig) error {
-	driver, err := NewOzoneXMLDriver(ctx, config)
-	if err != nil {
-		return err
-	}
-
-	database.GetDriverRegistry().RegisterDriver(model.DatabaseTypeOzoneXML, driver)
-	return nil
-}
