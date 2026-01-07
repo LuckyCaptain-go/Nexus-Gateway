@@ -12,6 +12,7 @@ import (
 	"nexus-gateway/internal/repository"
 	"nexus-gateway/internal/security"
 	"nexus-gateway/internal/service"
+	"nexus-gateway/internal/unified_service"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -70,7 +71,16 @@ func main() {
 
 	// Initialize services
 	datasourceService := service.NewDataSourceService(datasourceRepo)
-	queryService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)
+
+	// Initialize streaming service
+	streamingService := service.NewStreamingService(connPool)
+
+	// Initialize pagination service (original query service) with streaming support
+	paginationService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)
+
+	// Initialize unified query service that chooses between pagination and streaming based on config
+	unifiedQueryService := unifiedservice.NewUnifiedQueryService(paginationService, streamingService, cfg)
+	queryService := (service.QueryService)(unifiedQueryService)
 
 	// Initialize controllers
 	datasourceController := controller.NewDataSourceController(datasourceService)

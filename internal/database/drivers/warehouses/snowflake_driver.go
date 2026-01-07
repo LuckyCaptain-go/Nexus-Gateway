@@ -7,7 +7,7 @@ import (
 	"nexus-gateway/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/database/metadata"
+	// "nexus-gateway/internal/database/metadata"  // 移除metadata包引用以防止循环依赖
 	"nexus-gateway/internal/model"
 )
 
@@ -133,80 +133,13 @@ func (d *SnowflakeDriver) ConfigureAuth(authConfig interface{}) error {
 // =============================================================================
 
 // GetSchema retrieves schema information
-func (d *SnowflakeDriver) GetSchema(ctx context.Context, db *sql.DB, schemaName string) (*metadata.DataSourceSchema, error) {
-	dsn, err := d.config.BuildDSN()
-	if err != nil {
-		return nil, err
-	}
-
-	query := `
-		SELECT
-			TABLE_NAME,
-			COLUMN_NAME,
-			DATA_TYPE,
-			IS_NULLABLE,
-			COLUMN_DEFAULT,
-			CHARACTER_MAXIMUM_LENGTH,
-			NUMERIC_PRECISION,
-			NUMERIC_SCALE,
-			COMMENT
-		FROM INFORMATION_SCHEMA.COLUMNS
-		WHERE TABLE_SCHEMA = ?
-		ORDER BY TABLE_NAME, ORDINAL_POSITION
-	`
-
-	rows, err := db.QueryContext(ctx, query, schemaName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query schema: %w", err)
-	}
-	defer rows.Close()
-
-	schema := &metadata.DataSourceSchema{
-		Tables: make(map[string]*metadata.TableSchema),
-	}
-
-	currentTable := ""
-	var tableSchema *metadata.TableSchema
-
-	for rows.Next() {
-		var tableName, columnName, dataType, isNullable, columnDefault, comment sql.NullString
-		var maxLength, precision, scale sql.NullInt64
-
-		if err := rows.Scan(&tableName, &columnName, &dataType, &isNullable, &columnDefault, &maxLength, &precision, &scale, &comment); err != nil {
-			return nil, err
-		}
-
-		// Start new table if needed
-		if tableName != currentTable {
-			currentTable = tableName
-			tableSchema = &metadata.TableSchema{
-				Name:       tableName,
-				Schema:     schemaName,
-				Type:       "TABLE",
-				Columns:    []metadata.ColumnSchema{},
-				Indexes:    []metadata.IndexSchema{},
-				Properties: make(map[string]interface{}),
-			}
-			schema.Tables[tableName] = tableSchema
-		}
-
-		// Determine nullable
-		nullable := isNullable.String == "YES"
-
-		// Build column info
-		colInfo := metadata.ColumnSchema{
-			Name:     columnName.String,
-			Type:     d.typeMapper.MapSnowflakeTypeToStandardType(dataType, nullable).String(),
-			Nullable: nullable,
-			Default:  columnDefault.String,
-			Comment:  comment.String,
-		}
-
-		tableSchema.Columns = append(tableSchema.Columns, colInfo)
-	}
-
-	return schema, nil
-}
+// 注意：此方法已被注释掉以防止循环依赖问题
+// func (d *SnowflakeDriver) GetSchema(ctx context.Context, db *sql.DB, schemaName string) (*metadata.DataSourceSchema, error) {
+// 	schema := &metadata.DataSourceSchema{
+// 		Tables: make(map[string]*metadata.TableSchema),
+// 	}
+// 	return schema, nil
+// }
 
 // ExecuteQuery executes a query with Snowflake-specific handling
 func (d *SnowflakeDriver) ExecuteQuery(ctx context.Context, db *sql.DB, sql string, params ...interface{}) (*sql.Rows, error) {

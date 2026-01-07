@@ -8,7 +8,6 @@ import (
 	"nexus-gateway/internal/database/drivers/table_formats"
 	"nexus-gateway/internal/database/drivers/traditional"
 
-	// "nexus-gateway/internal/database/drivers/warehouses"  // 注释掉以防止循环导入
 	"sync"
 
 	"nexus-gateway/internal/model"
@@ -102,20 +101,20 @@ func (dr *DriverRegistry) registerDrivers() {
 		return &table_formats.HudiDriver{}
 	})
 
-	// Cloud Data Warehouses
-	dr.register(model.DatabaseTypeSnowflake, func() drivers.Driver {
-		return &olap.SnowflakeDriver{} // 使用 olap 包中的 SnowflakeDriver 而不是 warehouses 包中的
-	})
-	dr.register(model.DatabaseTypeDatabricks, func() drivers.Driver {
-		return &olap.DatabricksDriver{}
-	})
-	// 注释掉 warehouses 包中的驱动，因为这些实现可能导致循环导入
-	// dr.register(model.DatabaseTypeRedshift, func() drivers.Driver {
-	// 	return &warehouses.RedshiftDriver{}
-	// })
-	// dr.register(model.DatabaseTypeBigQuery, func() drivers.Driver {
-	// 	return &warehouses.BigQueryDriver{}
-	// })
+	//// Cloud Data Warehouses
+	//dr.register(model.DatabaseTypeSnowflake, func() drivers.Driver {
+	//	return &warehouses.SnowflakeDriver{} // 使用 olap 包中的 SnowflakeDriver 而不是 warehouses 包中的
+	//})
+	//dr.register(model.DatabaseTypeDatabricks, func() drivers.Driver {
+	//	return &olap.DatabricksDriver{}
+	//})
+	//// Cloud Data Warehouses
+	//dr.register(model.DatabaseTypeRedshift, func() drivers.Driver {
+	//	return &warehouses.RedshiftDriver{}
+	//})
+	//dr.register(model.DatabaseTypeBigQuery, func() drivers.Driver {
+	//	return &warehouses.BigQueryDriver{}
+	//})
 
 	// // Object Storage
 	// dr.register(model.DatabaseTypeS3Parquet, func() drivers.Driver {
