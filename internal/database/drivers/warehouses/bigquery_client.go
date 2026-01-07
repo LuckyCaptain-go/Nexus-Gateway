@@ -656,10 +656,8 @@ func (c *BigQueryRESTClient) setAuthHeader(req *http.Request) {
 }
 
 // ToStandardSchema converts BigQuery schema to standard schema
-func (c *BigQueryRESTClient) ToStandardSchema(bqSchema *TableSchema) model.TableSchema {
-	stdSchema := model.TableSchema{
-		Columns: make([]model.ColumnInfo, 0, len(bqSchema.Fields)),
-	}
+func (c *BigQueryRESTClient) ToStandardSchema(bqSchema *TableSchema) []model.ColumnInfo {
+	columns := make([]model.ColumnInfo, 0, len(bqSchema.Fields))
 
 	for _, field := range bqSchema.Fields {
 		col := model.ColumnInfo{
@@ -668,14 +666,10 @@ func (c *BigQueryRESTClient) ToStandardSchema(bqSchema *TableSchema) model.Table
 			Nullable: field.Mode != "REQUIRED",
 		}
 
-		if field.Type == "RECORD" && len(field.Fields) > 0 {
-			col.NestedFields = c.convertNestedFields(field.Fields)
-		}
-
-		stdSchema.Columns = append(stdSchema.Columns, col)
+		columns = append(columns, col)
 	}
 
-	return stdSchema
+	return columns
 }
 
 // mapBigQueryTypeToStandard maps BigQuery type to standard type
@@ -711,25 +705,7 @@ func mapBigQueryTypeToStandard(bqType string) model.StandardizedType {
 }
 
 // convertNestedFields converts nested fields for RECORD types
-func (c *BigQueryRESTClient) convertNestedFields(fields []TableFieldSchema) []model.ColumnInfo {
-	cols := make([]model.ColumnInfo, 0, len(fields))
-
-	for _, field := range fields {
-		col := model.ColumnInfo{
-			Name:     field.Name,
-			Type:     mapBigQueryTypeToStandard(field.Type),
-			Nullable: field.Mode != "REQUIRED",
-		}
-
-		if field.Type == "RECORD" && len(field.Fields) > 0 {
-			col.NestedFields = c.convertNestedFields(field.Fields)
-		}
-
-		cols = append(cols, col)
-	}
-
-	return cols
-}
+// Removed due to unsupported nested fields in model.ColumnInfo
 
 // UpdateAccessToken updates the access token
 func (c *BigQueryRESTClient) UpdateAccessToken(token string) {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/service"
+	unifiedservice "nexus-gateway/internal/unified_service"
 	"nexus-gateway/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +16,11 @@ import (
 )
 
 type QueryController struct {
-	queryService service.QueryService
+	queryService unifiedservice.QueryService  // Changed to use unified service
 	validator    *validator.Validate
 }
 
-func NewQueryController(queryService service.QueryService) *QueryController {
+func NewQueryController(queryService unifiedservice.QueryService) *QueryController {  // Changed parameter type
 	return &QueryController{
 		queryService: queryService,
 		validator:    validator.New(),
@@ -84,7 +84,7 @@ func (qc *QueryController) ExecuteQuery(c *gin.Context) {
 		defer cancel()
 	}
 
-	// Execute query
+	// Execute query using unified service
 	result, err := qc.queryService.ExecuteQuery(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
@@ -162,7 +162,7 @@ func (qc *QueryController) FetchQuery(c *gin.Context) {
 		defer cancel()
 	}
 
-	// Execute fetch query
+	// Execute fetch query using unified service
 	result, err := qc.queryService.FetchQuery(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
@@ -225,7 +225,7 @@ func (qc *QueryController) FetchNextBatch(c *gin.Context) {
 	// Create context
 	ctx := c.Request.Context()
 
-	// Fetch next batch
+	// Fetch next batch using unified service
 	result, err := qc.queryService.FetchNextBatch(ctx, queryID, slug, token, batchSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
@@ -302,7 +302,7 @@ func (qc *QueryController) InternalFetchQuery(c *gin.Context) {
 		defer cancel()
 	}
 
-	// Execute fetch query
+	// Execute fetch query using unified service
 	result, err := qc.queryService.FetchQuery(ctx, &req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
@@ -368,7 +368,7 @@ func (qc *QueryController) InternalFetchNextBatch(c *gin.Context) {
 	// Create context
 	ctx := c.Request.Context()
 
-	// Fetch next batch
+	// Fetch next batch using unified service
 	result, err := qc.queryService.FetchNextBatch(ctx, queryID, slug, token, batchSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
@@ -422,7 +422,7 @@ func (qc *QueryController) ValidateQuery(c *gin.Context) {
 		return
 	}
 
-	// Validate query
+	// Validate query using unified service
 	err := qc.queryService.ValidateQuery(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{

@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/snowflakedb/gosnowflake"
 	"nexus-gateway/internal/model"
@@ -350,5 +351,4 @@ type SnowflakeTypeInfo struct {
 	Affinity         TypeAffinity
 }
 
-// Import time package
-import "time"
+

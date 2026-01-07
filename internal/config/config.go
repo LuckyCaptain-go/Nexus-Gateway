@@ -101,9 +101,11 @@ func setDefaults() {
 
 	// Query defaults
 	viper.SetDefault("query.prefer_streaming", true)
+	viper.SetDefault("query.execution_mode", "auto") // auto, streaming, pagination
 }
 
 // QueryConfig holds settings related to query execution
 type QueryConfig struct {
-	PreferStreaming bool `mapstructure:"prefer_streaming"`
+	PreferStreaming bool   `mapstructure:"prefer_streaming"`
+	ExecutionMode   string `mapstructure:"execution_mode"`
 }
