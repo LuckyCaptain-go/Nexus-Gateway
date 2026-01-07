@@ -39,7 +39,7 @@ type QuerySession struct {
 	TotalRows    int64
 	FetchedRows  int64
 	Columns      []model.ColumnInfo
-	Entries      [][]string
+	Entries      []*[]interface{}
 	CreatedAt    time.Time
 	ExpiresAt    time.Time
 	mutex        sync.RWMutex
@@ -459,10 +459,13 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 		QueryID:    session.QueryID,
 		Slug:       session.Slug,
 		Token:      session.Token,
-		NextURI:    qs.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize),
 		Columns:    columns,
 		Entries:    entries,
 		TotalCount: int(totalCount),
+	}
+
+	if req.Type == 2 && int(session.FetchedRows) >= req.BatchSize {
+		response.NextURI = qs.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
 	}
 
 	return response, nil
@@ -488,7 +491,7 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 			Slug:       session.Slug,
 			Token:      session.Token,
 			Columns:    session.Columns,
-			Entries:    [][]string{},
+			Entries:    []*[]interface{}{},
 			TotalCount: int(session.TotalRows),
 		}, nil
 	}
@@ -605,7 +608,7 @@ func (qs *queryService) buildNextURI(queryID, slug, token string, batchSize int)
 }
 
 // executeBatchQuery executes a query and returns results in batch format
-func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{}, query string, batchSize, offset int64) ([]model.ColumnInfo, [][]string, int64, error) {
+func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{}, query string, batchSize, offset int64) ([]model.ColumnInfo, []*[]interface{}, int64, error) {
 	// Convert conn to *sql.DB
 	db, ok := conn.(*sql.DB)
 	if !ok {
@@ -632,13 +635,13 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	columns := qs.buildBatchColumnInfo(columnTypes)
 
 	// Process rows
-	var entries [][]string
+	var entries []*[]interface{}
 	for rows.Next() {
 		rowValues, err := qs.scanBatchRow(rows, len(columnTypes))
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("failed to scan row: %w", err)
 		}
-		entries = append(entries, rowValues)
+		entries = append(entries, &rowValues)
 	}
 
 	// Check for errors from rows iteration
@@ -805,7 +808,7 @@ func (qs *queryService) mapColumnTypeToStandard(dbTypeName string) string {
 }
 
 // scanBatchRow scans a single row and returns string values
-func (qs *queryService) scanBatchRow(rows *sql.Rows, columnCount int) ([]string, error) {
+func (qs *queryService) scanBatchRow(rows *sql.Rows, columnCount int) ([]interface{}, error) {
 	// Create slice of interface{} pointers for scanning
 	scanArgs := make([]interface{}, columnCount)
 	values := make([]interface{}, columnCount)
@@ -819,12 +822,14 @@ func (qs *queryService) scanBatchRow(rows *sql.Rows, columnCount int) ([]string,
 	}
 
 	// Convert values to strings
-	result := make([]string, columnCount)
+	result := make([]interface{}, columnCount)
 	for i, value := range values {
 		if value == nil {
 			result[i] = "NULL"
+		} else if b, ok := value.([]byte); ok {
+			result[i] = string(b)
 		} else {
-			result[i] = fmt.Sprintf("%v", value)
+			result[i] = value
 		}
 	}
 

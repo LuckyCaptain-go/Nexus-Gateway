@@ -28,7 +28,7 @@ func (d *OracleDriver) GetDefaultPort() int {
 
 func (d *OracleDriver) BuildDSN(config *model.DataSourceConfig) string {
 	// Oracle DSN format: user/password@host:port/database
-	return fmt.Sprintf("%s/%s@%s:%d/%s",
+	return fmt.Sprintf("oracle://%s:%s@%s:%d/%s",
 		config.Username,
 		config.Password,
 		config.Host,

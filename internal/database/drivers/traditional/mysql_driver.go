@@ -12,7 +12,6 @@ import (
 type MySQLDriver struct{}
 
 func (d *MySQLDriver) Open(dsn string) (*sql.DB, error) {
-	fmt.Printf("Opening MySQL connection with DSN: %s\n", dsn)
 	return sql.Open("mysql", dsn)
 }
 

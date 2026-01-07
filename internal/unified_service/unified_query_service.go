@@ -35,7 +35,7 @@ type StreamingSession struct {
 	TotalRows    int64
 	FetchedRows  int64
 	Columns      []model.ColumnInfo
-	Entries      [][]string
+	Entries      []*[]interface{}
 	CreatedAt    time.Time
 	ExpiresAt    time.Time
 	mutex        sync.RWMutex
@@ -328,17 +328,19 @@ func (uqs *UnifiedQueryService) fetchWithStreaming(ctx context.Context, req *mod
 	}
 
 	// Convert chunk data to the expected format
-	entries := make([][]string, 0, len(chunk.Rows))
+	entries := make([]*[]interface{}, 0, len(chunk.Rows))
 	for _, row := range chunk.Rows {
-		entry := make([]string, len(row))
+		entry := make([]interface{}, len(row))
 		for j, val := range row {
 			if val == nil {
 				entry[j] = "NULL"
+			} else if b, ok := val.([]byte); ok {
+				entry[j] = string(b)
 			} else {
-				entry[j] = fmt.Sprintf("%v", val)
+				entry[j] = val
 			}
 		}
-		entries = append(entries, entry)
+		entries = append(entries, &entry)
 	}
 
 	// Convert columns to the expected format
@@ -405,17 +407,19 @@ func (uqs *UnifiedQueryService) fetchNextBatchWithStreaming(ctx context.Context,
 	}
 
 	// Convert chunk data to the expected format
-	entries := make([][]string, 0, len(chunk.Rows))
+	entries := make([]*[]interface{}, 0, len(chunk.Rows))
 	for _, row := range chunk.Rows {
-		entry := make([]string, len(row))
+		entry := make([]interface{}, len(row))
 		for j, val := range row {
 			if val == nil {
 				entry[j] = "NULL"
+			} else if b, ok := val.([]byte); ok {
+				entry[j] = string(b)
 			} else {
-				entry[j] = fmt.Sprintf("%v", val)
+				entry[j] = val
 			}
 		}
-		entries = append(entries, entry)
+		entries = append(entries, &entry)
 	}
 
 	// Convert columns to the expected format (use the first chunk's columns if available)
