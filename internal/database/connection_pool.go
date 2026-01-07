@@ -82,13 +82,12 @@ func (cp *ConnectionPool) createConnection(ctx context.Context, dataSource *mode
 	}
 
 	// Get connection string
-	dsn := dataSource.Config.GetConnectionURL(dataSource.Type)
-	if dsn == "" {
-		return nil, fmt.Errorf("unsupported database type: %s", dataSource.Type)
+	dsn, err := cp.getConnectUrl(dataSource.Type, &dataSource.Config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get connection URL: %w", err)
 	}
 
 	// Open database connection
-	fmt.Printf("dbType: %s, dsn: %s\n", dataSource.Type, dsn)
 	db, err := cp.openDatabase(dataSource.Type, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database connection: %w", err)
@@ -119,8 +118,16 @@ func (cp *ConnectionPool) openDatabase(dbType model.DatabaseType, dsn string) (*
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("dbType: %s, dsn: %s, driver: %T\n", dbType, dsn, driver)
 	return driver.Open(dsn)
+}
+
+// getConnectUrl builds the connection string for the specified database type and configuration
+func (cp *ConnectionPool) getConnectUrl(dbType model.DatabaseType, config *model.DataSourceConfig) (string, error) {
+	driver, err := globalDriverRegistry.GetDriver(dbType)
+	if err != nil {
+		return "", err
+	}
+	return driver.BuildDSN(config), nil
 }
 
 // configureConnectionPool configures the connection pool settings

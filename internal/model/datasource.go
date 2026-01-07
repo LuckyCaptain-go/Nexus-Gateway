@@ -3,7 +3,6 @@ package model
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -150,45 +149,6 @@ func (ds *DataSource) BeforeCreate(tx *gorm.DB) error {
 		ds.ID = uuid.New().String()
 	}
 	return nil
-}
-
-// GetConnectionURL returns the database connection URL for the specific database type
-func (dsc *DataSourceConfig) GetConnectionURL(dbType DatabaseType) string {
-	switch dbType {
-	case DatabaseTypeMySQL, DatabaseTypeMariaDB:
-		dsn := dsc.Username + ":" + dsc.Password + "@tcp(" + dsc.Host + ":" + strconv.Itoa(dsc.Port) + ")/" + dsc.Database
-		if dsc.SSL {
-			dsn += "?tls=true"
-		}
-		if dsc.Timezone != "" {
-			if dsc.SSL {
-				dsn += "&loc=" + dsc.Timezone
-			} else {
-				dsn += "?loc=" + dsc.Timezone
-			}
-		}
-		return dsn
-
-	case DatabaseTypePostgreSQL:
-		dsn := "postgres://" + dsc.Username + ":" + dsc.Password + "@" + dsc.Host + ":" + strconv.Itoa(dsc.Port) + "/" + dsc.Database
-		if dsc.SSL {
-			dsn += "?sslmode=require"
-		} else {
-			dsn += "?sslmode=disable"
-		}
-		if dsc.Timezone != "" {
-			dsn += "&TimeZone=" + dsc.Timezone
-		}
-		return dsn
-
-	case DatabaseTypeOracle:
-		return dsc.Username + "/" + dsc.Password + "@" + dsc.Host + ":" + strconv.Itoa(dsc.Port) + "/" + dsc.Database
-
-	default:
-		// Phase 1 data sources will use their own driver implementations
-		// Return empty string, drivers will handle connection logic
-		return ""
-	}
 }
 
 // IsValidDatabaseType checks if a database type is valid
