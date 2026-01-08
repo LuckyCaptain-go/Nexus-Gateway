@@ -16,88 +16,15 @@ import (
 )
 
 type QueryController struct {
-	queryService unifiedservice.QueryService  // Changed to use unified service
+	queryService unifiedservice.QueryService // Changed to use unified service
 	validator    *validator.Validate
 }
 
-func NewQueryController(queryService unifiedservice.QueryService) *QueryController {  // Changed parameter type
+func NewQueryController(queryService unifiedservice.QueryService) *QueryController { // Changed parameter type
 	return &QueryController{
 		queryService: queryService,
 		validator:    validator.New(),
 	}
-}
-
-// ExecuteQuery godoc
-// @Summary Execute a SQL query
-// @Description Executes a read-only SQL query against the specified data source.
-// Supports two modes:
-//   - Inline (default): returns rows up to `limit` in the response.
-//   - Streaming: when supported by the backend, the service will open a server-side cursor
-//     and return the first batch of rows plus a `nextUri` which can be used to fetch
-//     subsequent batches from the `/fetch` endpoint. Clients should follow `nextUri`
-//     to continue streaming results without re-running the query.
-//
-// @Tags queries
-// @Accept json
-// @Produce json
-// @Param request body model.QueryRequest true "Query execution request"
-// @Success 200 {object} response.StandardResponse{data=model.QueryResponse}
-// @Failure 400 {object} response.StandardResponse
-// @Failure 404 {object} response.StandardResponse
-// @Failure 422 {object} response.StandardResponse
-// @Failure 500 {object} response.StandardResponse
-// @Router /api/v1/query [post]
-func (qc *QueryController) ExecuteQuery(c *gin.Context) {
-	// Get correlation ID
-	correlationID := qc.getCorrelationID(c)
-
-	var req model.QueryRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response.ErrorResponse(
-			"INVALID_REQUEST",
-			"Invalid request body: "+err.Error(),
-			"",
-			correlationID,
-		))
-		return
-	}
-
-	// Apply defaults to request
-	req.ApplyDefaults()
-
-	// Validate request
-	if err := qc.validator.Struct(&req); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, response.ErrorResponse(
-			"VALIDATION_ERROR",
-			err.Error(),
-			"",
-			correlationID,
-		))
-		return
-	}
-
-	// Create context with timeout
-	ctx := c.Request.Context()
-	if req.Timeout > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
-		defer cancel()
-	}
-
-	// Execute query using unified service
-	result, err := qc.queryService.ExecuteQuery(ctx, &req)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
-			"QUERY_EXECUTION_ERROR",
-			"Failed to execute query: "+err.Error(),
-			"",
-			correlationID,
-		))
-		return
-	}
-
-	// Return response
-	c.JSON(http.StatusOK, response.SuccessResponse(result, correlationID))
 }
 
 // FetchQuery godoc

@@ -11,16 +11,118 @@ import (
 
 	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+
+	"github.com/google/uuid"
 )
+
+type StreamingQueryService interface {
+	//ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error)
+	//ValidateQuery(ctx context.Context, req *model.QueryRequest) error
+	//GetQueryStats(ctx context.Context) (*model.QueryStats, error)
+	FetchWithStreaming(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error)
+	FetchNextBatchWithStreaming(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error)
+}
+
+// StreamingSession represents a streaming query session for batch fetching
+type StreamingSession struct {
+	QueryID      string
+	Slug         string
+	Token        string
+	DataSourceID string
+	SQL          string
+	Type         int
+	BatchSize    int
+	Cursor       interface{} // Cursor for pagination
+	TotalRows    int64
+	FetchedRows  int64
+	Columns      []model.ColumnInfo
+	Entries      []*[]interface{}
+	CreatedAt    time.Time
+	ExpiresAt    time.Time
+	mutex        sync.RWMutex
+	StreamID     string // Associated stream ID
+}
+
+// StreamingSessionManager manages streaming query sessions
+type StreamingSessionManager struct {
+	sessions map[string]*StreamingSession
+	mutex    sync.RWMutex
+	ttl      time.Duration
+}
+
+// NewStreamingSessionManager creates a new streaming session manager
+func NewStreamingSessionManager() *StreamingSessionManager {
+	sm := &StreamingSessionManager{
+		sessions: make(map[string]*StreamingSession),
+		ttl:      30 * time.Minute, // Session TTL: 30 minutes
+	}
+
+	// Start cleanup goroutine
+	go sm.cleanupSessions()
+
+	return sm
+}
+
+// Store stores a streaming session
+func (sm *StreamingSessionManager) Store(session *StreamingSession) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+
+	sm.sessions[session.QueryID] = session
+}
+
+// Get retrieves a streaming session
+func (sm *StreamingSessionManager) Get(queryID string) (*StreamingSession, error) {
+	sm.mutex.RLock()
+	defer sm.mutex.RUnlock()
+
+	session, exists := sm.sessions[queryID]
+	if !exists {
+		return nil, fmt.Errorf("session not found")
+	}
+
+	// Check if session is expired
+	if time.Now().After(session.ExpiresAt) {
+		return nil, fmt.Errorf("session expired")
+	}
+
+	return session, nil
+}
+
+// Delete removes a streaming session
+func (sm *StreamingSessionManager) Delete(queryID string) {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+
+	delete(sm.sessions, queryID)
+}
+
+// cleanupSessions periodically removes expired sessions
+func (sm *StreamingSessionManager) cleanupSessions() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		sm.mutex.Lock()
+		now := time.Now()
+		for id, session := range sm.sessions {
+			if now.After(session.ExpiresAt) {
+				delete(sm.sessions, id)
+			}
+		}
+		sm.mutex.Unlock()
+	}
+}
 
 // StreamingService handles streaming query results for large datasets
 type StreamingService struct {
-	connPool      *database.ConnectionPool
-	activeStreams map[string]*ActiveStream
-	streamsMutex  sync.RWMutex
-	maxStreams    int
-	streamTimeout time.Duration
-	chunkSize     int
+	connPool                *database.ConnectionPool
+	activeStreams           map[string]*ActiveStream
+	streamsMutex            sync.RWMutex
+	maxStreams              int
+	streamTimeout           time.Duration
+	chunkSize               int
+	streamingSessionManager *StreamingSessionManager
 }
 
 // ActiveStream represents an active streaming query
@@ -430,4 +532,195 @@ func (ss *StreamingService) writeCSVRows(writer io.Writer, rows [][]interface{})
 		}
 	}
 	return nil
+}
+
+// fetchWithStreaming executes a fetch query using the streaming approach
+func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
+	// Create a new streaming session
+	session := &StreamingSession{
+		QueryID:      uqs.generateSessionID(),
+		Slug:         uqs.generateSlug(),
+		Token:        uqs.generateToken(),
+		DataSourceID: req.DataSourceID,
+		SQL:          req.SQL,
+		Type:         req.Type,
+		BatchSize:    req.BatchSize,
+		CreatedAt:    time.Now(),
+		ExpiresAt:    time.Now().Add(30 * time.Minute),
+	}
+
+	// Execute streaming query to get the stream ID
+	streamReq := &model.QueryRequest{
+		DataSourceID: req.DataSourceID,
+		SQL:          req.SQL,
+		Limit:        req.BatchSize,
+		Offset:       0,
+		Timeout:      req.Timeout,
+	}
+	streamID, err := uqs.ExecuteStreamQuery(ctx, streamReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start streaming query: %w", err)
+	}
+
+	session.StreamID = streamID
+
+	// Fetch the first batch of data
+	chunk, err := uqs.FetchStreamChunk(ctx, streamID)
+	if err != nil {
+		// Try to close the stream even if there was an error
+		uqs.CloseStream(streamID)
+		return nil, fmt.Errorf("failed to fetch stream chunk: %w", err)
+	}
+
+	// Convert chunk data to the expected format
+	entries := make([]*[]interface{}, 0, len(chunk.Rows))
+	for _, row := range chunk.Rows {
+		entry := make([]interface{}, len(row))
+		for j, val := range row {
+			if val == nil {
+				entry[j] = "NULL"
+			} else if b, ok := val.([]byte); ok {
+				entry[j] = string(b)
+			} else {
+				entry[j] = val
+			}
+		}
+		entries = append(entries, &entry)
+	}
+
+	// Convert columns to the expected format
+	columns := make([]model.ColumnInfo, len(chunk.Columns))
+	for i, col := range chunk.Columns {
+		columns[i] = model.ColumnInfo{
+			Name:     col.Name,
+			Type:     col.Type,
+			Nullable: col.Nullable,
+		}
+	}
+
+	// Update session data
+	session.Columns = columns
+	session.Entries = entries
+	session.TotalRows = int64(len(entries)) // This is an approximation, we'll improve this
+	session.FetchedRows = int64(len(entries))
+
+	// Store the session
+	uqs.streamingSessionManager.Store(session)
+
+	// Create a response similar to pagination service
+	response := &model.FetchQueryResponse{
+		QueryID:    session.QueryID,
+		Slug:       session.Slug,
+		Token:      session.Token,
+		NextURI:    "", // We'll set this if there are more results
+		Columns:    columns,
+		Entries:    entries,
+		TotalCount: int(session.TotalRows),
+	}
+
+	// Add NextURI if there are more results
+	if chunk.HasMore {
+		response.NextURI = uqs.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
+	}
+
+	return response, nil
+}
+
+// fetchNextBatchWithStreaming fetches the next batch using the streaming approach
+func (uqs *StreamingService) FetchNextBatchWithStreaming(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
+	// Get the streaming session
+	session, err := uqs.streamingSessionManager.Get(queryID)
+	if err != nil {
+		return nil, fmt.Errorf("session not found or expired: %w", err)
+	}
+
+	// Verify slug and token
+	if session.Slug != slug || session.Token != token {
+		return nil, fmt.Errorf("invalid session credentials")
+	}
+
+	// Check if stream exists and is valid
+	_, err = uqs.GetStreamStatus(session.StreamID)
+	if err != nil {
+		return nil, fmt.Errorf("stream not found or expired: %w", err)
+	}
+
+	// Fetch the next chunk of data
+	chunk, err := uqs.FetchStreamChunk(ctx, session.StreamID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stream chunk: %w", err)
+	}
+
+	// Convert chunk data to the expected format
+	entries := make([]*[]interface{}, 0, len(chunk.Rows))
+	for _, row := range chunk.Rows {
+		entry := make([]interface{}, len(row))
+		for j, val := range row {
+			if val == nil {
+				entry[j] = "NULL"
+			} else if b, ok := val.([]byte); ok {
+				entry[j] = string(b)
+			} else {
+				entry[j] = val
+			}
+		}
+		entries = append(entries, &entry)
+	}
+
+	// Convert columns to the expected format (use the first chunk's columns if available)
+	var columns []model.ColumnInfo
+	if len(chunk.Columns) > 0 {
+		// Use columns from the current chunk
+		columns = make([]model.ColumnInfo, len(chunk.Columns))
+		for i, col := range chunk.Columns {
+			columns[i] = model.ColumnInfo{
+				Name:     col.Name,
+				Type:     col.Type,
+				Nullable: col.Nullable,
+			}
+		}
+	} else {
+		// Use columns from the session
+		columns = session.Columns
+	}
+
+	// Update session data
+	session.Entries = entries
+	session.FetchedRows += int64(len(entries))
+
+	// Create a response similar to pagination service
+	response := &model.FetchQueryResponse{
+		QueryID:    session.QueryID,
+		Slug:       session.Slug,
+		Token:      session.Token,
+		Columns:    columns,
+		Entries:    entries,
+		TotalCount: int(session.TotalRows), // This is an approximation
+	}
+
+	// Add NextURI if there are more results
+	if chunk.HasMore {
+		response.NextURI = uqs.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
+	}
+
+	return response, nil
+}
+
+// buildNextURI builds the next URI for fetching more data
+func (uqs *StreamingService) buildNextURI(queryID, slug, token string, batchSize int) string {
+	return fmt.Sprintf("/api/v1/fetch/%s/%s/%s?batch_size=%d", queryID, slug, token, batchSize)
+}
+
+// Helper functions
+
+func (uqs *StreamingService) generateSessionID() string {
+	return uuid.New().String()
+}
+
+func (uqs *StreamingService) generateSlug() string {
+	return uuid.New().String()[:8]
+}
+
+func (uqs *StreamingService) generateToken() string {
+	return uuid.New().String()
 }

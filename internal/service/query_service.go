@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -19,7 +18,7 @@ import (
 )
 
 type QueryService interface {
-	ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error)
+	//ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error)
 	ValidateQuery(ctx context.Context, req *model.QueryRequest) error
 	GetQueryStats(ctx context.Context) (*model.QueryStats, error)
 	FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error)
@@ -102,52 +101,6 @@ func newQueryStats() *queryStats {
 	return &queryStats{
 		queriesByType: make(map[string]int64),
 	}
-}
-
-func (qs *queryService) ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error) {
-	startTime := time.Now()
-
-	// Validate request
-	//if err := qs.ValidateQuery(ctx, req); err != nil {
-	//	qs.recordQueryStats(req.DataSourceID, false, time.Since(startTime))
-	//	return qs.createErrorResponse(err, req.SQL), nil
-	//}
-
-	// Get data source
-	dataSource, err := qs.datasourceRepo.GetByID(ctx, req.DataSourceID)
-	if err != nil {
-		qs.recordQueryStats(req.DataSourceID, false, time.Since(startTime))
-		return qs.createErrorResponse(err, req.SQL), nil
-	}
-
-	// Check if data source is active
-	if dataSource.Status != model.DataSourceStatusActive {
-		qs.recordQueryStats(req.DataSourceID, false, time.Since(startTime))
-		return qs.createErrorResponse(fmt.Errorf("data source is %s", dataSource.Status), req.SQL), nil
-	}
-
-	// Get database connection
-	db, err := qs.connPool.GetConnection(ctx, dataSource)
-	if err != nil {
-		qs.recordQueryStats(req.DataSourceID, false, time.Since(startTime))
-		return qs.createErrorResponse(err, req.SQL), nil
-	}
-
-	// Execute query with timeout
-	queryCtx, cancel := context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
-	defer cancel()
-
-	response, err := qs.executeQueryWithConnection(queryCtx, db, req, dataSource.Type)
-	if err != nil {
-		qs.recordQueryStats(req.DataSourceID, false, time.Since(startTime))
-		// Mark data source as error if connection failed
-		qs.datasourceRepo.SetError(ctx, req.DataSourceID)
-		return qs.createErrorResponse(err, req.SQL), nil
-	}
-
-	// Record successful query stats
-	qs.recordQueryStats(req.DataSourceID, true, time.Since(startTime))
-	return response, nil
 }
 
 func (qs *queryService) ValidateQuery(ctx context.Context, req *model.QueryRequest) error {
@@ -428,9 +381,9 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 
 	// Create query session
 	session := &QuerySession{
-		QueryID:      generateSessionID(),
-		Slug:         generateSlug(),
-		Token:        generateToken(),
+		QueryID:      qs.generateSessionID(),
+		Slug:         qs.generateSlug(),
+		Token:        qs.generateToken(),
 		DataSourceID: req.DataSourceID,
 		SQL:          req.SQL,
 		Type:         req.Type,
@@ -587,20 +540,6 @@ func (sm *SessionManager) cleanupSessions() {
 		}
 		sm.mutex.Unlock()
 	}
-}
-
-// Helper functions
-
-func generateSessionID() string {
-	return uuid.New().String()
-}
-
-func generateSlug() string {
-	return uuid.New().String()[:8]
-}
-
-func generateToken() string {
-	return uuid.New().String()
 }
 
 func (qs *queryService) buildNextURI(queryID, slug, token string, batchSize int) string {
@@ -839,23 +778,104 @@ func (qs *queryService) scanBatchRow(rows *sql.Rows, columnCount int) ([]interfa
 // getRowCount gets the total row count for the query
 func (qs *queryService) getRowCount(ctx context.Context, db *sql.DB, sql string) (int64, error) {
 	// Remove ORDER BY clauses for count query as they don't affect the count
-	countSQL := strings.ToUpper(sql)
-	countSQL = regexp.MustCompile(`ORDER BY.*`).ReplaceAllString(countSQL, "")
+	// Use case-insensitive regex to preserve original case of identifiers
+	countSQL := removeOrderByClause(sql)
 
-	// Replace SELECT ... with SELECT COUNT(*)
-	countSQL = regexp.MustCompile(`SELECT\s+(.*?)\s+FROM`).ReplaceAllString(countSQL, "SELECT COUNT(*) FROM")
+	// For complex queries with GROUP BY or DISTINCT, use subquery approach
+	upperSQL := strings.ToUpper(strings.TrimSpace(countSQL))
+	if strings.Contains(upperSQL, "GROUP BY") || strings.Contains(upperSQL, "DISTINCT") {
+		// Try standard ANSI SQL approach first (works for most databases)
+		countSQL = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS t", countSQL)
 
-	// Add database-specific limit for complex queries
-	if strings.Contains(countSQL, "GROUP BY") || strings.Contains(countSQL, "DISTINCT") {
-		// For now, use a general limit, but this could be database-specific
-		countSQL += " LIMIT 1000000"
+		// Execute the count query
+		var count int64
+		err := db.QueryRowContext(ctx, countSQL).Scan(&count)
+		if err != nil {
+			// If the standard approach fails, try Oracle-style approach without alias
+			countSQL = fmt.Sprintf("SELECT COUNT(*) FROM (%s)", removeOrderByClause(sql))
+			err = db.QueryRowContext(ctx, countSQL).Scan(&count)
+			if err != nil {
+				return 0, fmt.Errorf("failed to count rows: %w", err)
+			}
+		}
+		return count, nil
+	} else {
+		// For simpler queries, replace SELECT clause with COUNT(*)
+		countSQL = replaceSelectWithCount(countSQL)
+
+		var count int64
+		err := db.QueryRowContext(ctx, countSQL).Scan(&count)
+		if err != nil {
+			return 0, fmt.Errorf("failed to count rows: %w", err)
+		}
+
+		return count, nil
 	}
+}
 
-	var count int64
-	err := db.QueryRowContext(ctx, countSQL).Scan(&count)
-	if err != nil {
-		return 0, fmt.Errorf("failed to count rows: %w", err)
+// removeOrderByClause removes ORDER BY clause from SQL
+func removeOrderByClause(sql string) string {
+	// 使用正则表达式移除ORDER BY子句，但避免在括号内匹配
+	// 首先计算括号层级，然后只在最外层匹配ORDER BY
+	var parenLevel int
+	for i := 0; i < len(sql); i++ {
+		switch sql[i] {
+		case '(':
+			parenLevel++
+		case ')':
+			parenLevel--
+		default:
+			// 检查是否在最外层遇到ORDER BY
+			if parenLevel == 0 && i+8 <= len(sql) {
+				if upper := sql[i : i+8]; strings.ToUpper(upper) == "ORDER BY" {
+					// 找到ORDER BY，移除从这里开始的所有内容
+					return strings.TrimSpace(sql[:i])
+				}
+			}
+		}
 	}
+	return sql
+}
 
-	return count, nil
+// replaceSelectWithCount replaces the SELECT clause with COUNT(*)
+func replaceSelectWithCount(sql string) string {
+	// Find the first occurrence of 'FROM' that is not within parentheses
+	var parenLevel int
+	for i := 0; i < len(sql); i++ {
+		switch sql[i] {
+		case '(':
+			parenLevel++
+		case ')':
+			parenLevel--
+		default:
+			// 检查是否在最外层遇到FROM
+			if parenLevel == 0 && i+4 <= len(sql) {
+				if upper := sql[i : i+4]; strings.ToUpper(upper) == "FROM" {
+					// 找到FROM，从这里开始构建新的查询
+					// 找到SELECT的起始位置
+					for j := 0; j <= i; j++ {
+						if j+6 <= len(sql) {
+							if upperSelect := sql[j : j+6]; strings.ToUpper(upperSelect) == "SELECT" {
+								// 替换SELECT部分为COUNT(*)
+								return "SELECT COUNT(*) " + sql[i:]
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return sql
+}
+
+func (qs *queryService) generateSessionID() string {
+	return uuid.New().String()
+}
+
+func (qs *queryService) generateToken() string {
+	return uuid.New().String()
+}
+
+func (qs *queryService) generateSlug() string {
+	return uuid.New().String()[:8]
 }
