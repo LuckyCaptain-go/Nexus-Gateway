@@ -464,18 +464,17 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 	offset := session.FetchedRows
 
 	// Execute query for next batch
-	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, session.SQL, int64(batchSize), offset)
+	columns, entries, _, err := qs.executeBatchQuery(ctx, conn, session.SQL, int64(batchSize), offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
-
 	// Update session
 	session.Entries = entries
 	session.FetchedRows += int64(len(entries))
 
 	// Check if this is the last batch
 	var nextURI string
-	if session.FetchedRows < totalCount {
+	if session.FetchedRows < session.TotalRows {
 		nextURI = qs.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
 	}
 
@@ -487,7 +486,7 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 		NextURI:    nextURI,
 		Columns:    columns,
 		Entries:    entries,
-		TotalCount: int(totalCount),
+		TotalCount: int(session.TotalRows),
 	}
 
 	return response, nil
@@ -589,10 +588,12 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	}
 
 	// For total count, we need to run a separate COUNT query
-	totalCount, err := qs.getRowCount(ctx, db, query)
-	if err != nil {
-		// If count query fails, use the current row count as an estimate
-		totalCount = offset + int64(len(entries))
+	var totalCount int64
+	if offset == 0 {
+		totalCount, err = qs.getRowCount(ctx, db, query)
+		if err != nil {
+			return nil, nil, 0, fmt.Errorf("failed to get row count: %w", err)
+		}
 	}
 
 	return columns, entries, totalCount, nil
