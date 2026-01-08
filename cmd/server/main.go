@@ -135,15 +135,6 @@ func main() {
 			datasources.POST("/:id/deactivate", datasourceController.DeactivateDataSource)
 		}
 
-		// Query endpoints
-		queries := auth.Group("/query")
-		{
-			queries.POST("", queryController.ExecuteQuery)
-			queries.POST("/validate", queryController.ValidateQuery)
-			queries.GET("/stats", queryController.GetQueryStats)
-			queries.GET("/history", queryController.GetQueryHistory)
-		}
-
 		// Fetch endpoints (batch data retrieval)
 		fetch := api.Group("/fetch")
 		{
