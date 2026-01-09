@@ -397,15 +397,6 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
 
-	// Store session
-	qs.sessionManager.Store(session)
-
-	// Update session data
-	session.Columns = columns
-	session.Entries = entries
-	session.TotalRows = totalCount
-	session.FetchedRows = int64(len(entries))
-
 	// Prepare response
 	response := &model.FetchQueryResponse{
 		QueryID:    session.QueryID,
@@ -416,8 +407,17 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 		TotalCount: int(totalCount),
 	}
 
-	if req.Type == 2 && int(session.FetchedRows) >= req.BatchSize {
+	if req.Type == 2 && len(entries) < int(totalCount) {
 		response.NextURI = qs.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
+
+		// Update session data
+		session.Columns = columns
+		session.Entries = entries
+		session.TotalRows = totalCount
+		session.FetchedRows = int64(len(entries))
+
+		// Store session
+		qs.sessionManager.Store(session)
 	}
 
 	return response, nil
@@ -472,21 +472,22 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 	session.FetchedRows += int64(len(entries))
 	session.Token = qs.generateToken()
 
-	// Check if this is the last batch
-	var nextURI string
-	if session.FetchedRows < session.TotalRows {
-		nextURI = qs.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
-	}
-
 	// Prepare response
 	response := &model.FetchQueryResponse{
 		QueryID:    session.QueryID,
 		Slug:       session.Slug,
 		Token:      session.Token,
-		NextURI:    nextURI,
+		NextURI:    "",
 		Columns:    columns,
 		Entries:    entries,
 		TotalCount: int(session.TotalRows),
+	}
+
+	// Check if this is the last batch
+	if session.FetchedRows < session.TotalRows {
+		response.NextURI = qs.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
+	} else {
+		qs.sessionManager.Delete(session.QueryID)
 	}
 
 	return response, nil
