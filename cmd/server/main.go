@@ -73,7 +73,7 @@ func main() {
 	datasourceService := service.NewDataSourceService(datasourceRepo)
 
 	// Initialize streaming service
-	streamingService := service.NewStreamingService(connPool)
+	streamingService := service.NewStreamingService(datasourceRepo, connPool)
 
 	// Initialize pagination service (original query service) with streaming support
 	paginationService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)

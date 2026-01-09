@@ -18,7 +18,6 @@ import (
 )
 
 type QueryService interface {
-	//ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error)
 	ValidateQuery(ctx context.Context, req *model.QueryRequest) error
 	GetQueryStats(ctx context.Context) (*model.QueryStats, error)
 	FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error)
@@ -471,6 +470,7 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 	// Update session
 	session.Entries = entries
 	session.FetchedRows += int64(len(entries))
+	session.Token = qs.generateToken()
 
 	// Check if this is the last batch
 	var nextURI string

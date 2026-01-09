@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
+	"nexus-gateway/internal/repository"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type StreamingQueryService interface {
+type StreamingService interface {
 	//ExecuteQuery(ctx context.Context, req *model.QueryRequest) (*model.QueryResponse, error)
 	//ValidateQuery(ctx context.Context, req *model.QueryRequest) error
 	//GetQueryStats(ctx context.Context) (*model.QueryStats, error)
@@ -114,14 +115,13 @@ func (sm *StreamingSessionManager) cleanupSessions() {
 	}
 }
 
-// StreamingService handles streaming query results for large datasets
-type StreamingService struct {
+type streamingService struct {
+	datasourceRepo          repository.DataSourceRepository
 	connPool                *database.ConnectionPool
 	activeStreams           map[string]*ActiveStream
 	streamsMutex            sync.RWMutex
 	maxStreams              int
 	streamTimeout           time.Duration
-	chunkSize               int
 	streamingSessionManager *StreamingSessionManager
 }
 
@@ -158,44 +158,46 @@ type StreamMetadata struct {
 }
 
 // NewStreamingService creates a new streaming service
-func NewStreamingService(connPool *database.ConnectionPool) *StreamingService {
-	return &StreamingService{
-		connPool:      connPool,
-		activeStreams: make(map[string]*ActiveStream),
-		maxStreams:    100, // Max concurrent streams
-		streamTimeout: 5 * time.Minute,
-		chunkSize:     1000, // Rows per chunk
+func NewStreamingService(datasourceRepo repository.DataSourceRepository, connPool *database.ConnectionPool) StreamingService {
+	return &streamingService{
+		datasourceRepo:          datasourceRepo,
+		connPool:                connPool,
+		activeStreams:           make(map[string]*ActiveStream),
+		maxStreams:              100, // Max concurrent streams
+		streamTimeout:           5 * time.Minute,
+		streamingSessionManager: NewStreamingSessionManager(),
 	}
 }
 
 // ExecuteStreamQuery executes a query and returns a stream ID
-func (ss *StreamingService) ExecuteStreamQuery(ctx context.Context, req *model.QueryRequest) (string, error) {
+func (ss *streamingService) ExecuteStreamQuery(ctx context.Context, req *model.QueryRequest) (string, int64, error) {
 	// Check stream limit
 	if ss.getActiveStreamCount() >= ss.maxStreams {
-		return "", fmt.Errorf("maximum concurrent streams reached")
+		return "", 0, fmt.Errorf("maximum concurrent streams reached")
 	}
 
 	// Get data source
 	// TODO: Implement data source retrieval
-	dataSource := &model.DataSource{
-		ID:   req.DataSourceID,
-		Type: model.DatabaseTypeMySQL, // Placeholder
-	}
-
-	// Get connection
-	db, err := ss.connPool.GetConnection(ctx, dataSource)
+	dataSource, err := ss.datasourceRepo.GetByID(ctx, req.DataSourceID)
 	if err != nil {
-		return "", fmt.Errorf("failed to get connection: %w", err)
+		return "", 0, fmt.Errorf("failed to get data source: %w", err)
 	}
 
 	// Create context with timeout
-	streamCtx, cancel := context.WithTimeout(ctx, ss.streamTimeout)
+	streamCtx, cancel := context.WithTimeout(context.Background(), ss.streamTimeout)
+
+	// Get connection
+	db, err := ss.connPool.GetConnection(streamCtx, dataSource)
+	if err != nil {
+		cancel()
+		return "", 0, fmt.Errorf("failed to get connection: %w", err)
+	}
 
 	// Execute query
 	rows, err := db.QueryContext(streamCtx, req.SQL, req.Parameters...)
 	if err != nil {
 		cancel()
-		return "", fmt.Errorf("query execution failed: %w", err)
+		return "", 0, fmt.Errorf("query execution failed: %w", err)
 	}
 
 	// Get column information
@@ -203,7 +205,7 @@ func (ss *StreamingService) ExecuteStreamQuery(ctx context.Context, req *model.Q
 	if err != nil {
 		rows.Close()
 		cancel()
-		return "", fmt.Errorf("failed to get columns: %w", err)
+		return "", 0, fmt.Errorf("failed to get columns: %w", err)
 	}
 
 	// Build column info
@@ -227,11 +229,16 @@ func (ss *StreamingService) ExecuteStreamQuery(ctx context.Context, req *model.Q
 	ss.activeStreams[streamID] = stream
 	ss.streamsMutex.Unlock()
 
-	return streamID, nil
+	totalCount, err := ss.getRowCount(ctx, db, req.SQL)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get row count: %w", err)
+	}
+
+	return streamID, totalCount, nil
 }
 
 // FetchStreamChunk fetches the next chunk of data from a stream
-func (ss *StreamingService) FetchStreamChunk(ctx context.Context, streamID string) (*StreamChunk, error) {
+func (ss *streamingService) FetchStreamChunk(ctx context.Context, streamID string, batchSize int) (*StreamChunk, error) {
 	ss.streamsMutex.RLock()
 	stream, exists := ss.activeStreams[streamID]
 	ss.streamsMutex.RUnlock()
@@ -253,7 +260,7 @@ func (ss *StreamingService) FetchStreamChunk(ctx context.Context, streamID strin
 	var rows [][]interface{}
 	chunkRowCount := 0
 
-	for chunkRowCount < ss.chunkSize {
+	for chunkRowCount < batchSize {
 		if !stream.Rows.Next() {
 			// No more rows
 			break
@@ -293,7 +300,7 @@ func (ss *StreamingService) FetchStreamChunk(ctx context.Context, streamID strin
 	stream.LastActivityAt = time.Now()
 
 	// Check if there are more rows
-	hasMore := chunkRowCount == ss.chunkSize
+	hasMore := chunkRowCount == batchSize
 
 	// If no more rows, close the stream
 	if !hasMore {
@@ -309,69 +316,14 @@ func (ss *StreamingService) FetchStreamChunk(ctx context.Context, streamID strin
 		HasMore:  hasMore,
 		Metadata: StreamMetadata{
 			RowCount:      stream.RowsSent,
-			ChunkSize:     ss.chunkSize,
+			ChunkSize:     batchSize,
 			ExecutionTime: stream.StartedAt,
 		},
 	}, nil
 }
 
-// StreamToWriter streams query results directly to an io.Writer
-func (ss *StreamingService) StreamToWriter(ctx context.Context, streamID string, writer io.Writer, format string) error {
-	chunkID := int64(0)
-
-	// Write opening based on format
-	if format == "json" {
-		encoder := json.NewEncoder(writer)
-		if err := encoder.Encode(map[string]interface{}{"streamId": streamID, "status": "started"}); err != nil {
-			return err
-		}
-	}
-
-	for {
-		chunk, err := ss.FetchStreamChunk(ctx, streamID)
-		if err != nil {
-			// Write error to stream
-			if format == "json" {
-				encoder := json.NewEncoder(writer)
-				encoder.Encode(map[string]interface{}{"error": err.Error()})
-			}
-			return err
-		}
-
-		// Write chunk based on format
-		if format == "json" {
-			encoder := json.NewEncoder(writer)
-			if err := encoder.Encode(chunk); err != nil {
-				return err
-			}
-		} else if format == "csv" {
-			// Write CSV format
-			if chunkID == 0 {
-				// Write header
-				ss.writeCSVHeader(writer, chunk.Columns)
-			}
-			ss.writeCSVRows(writer, chunk.Rows)
-		}
-
-		chunkID++
-
-		// Check if stream is complete
-		if !chunk.HasMore {
-			break
-		}
-	}
-
-	// Write closing
-	if format == "json" {
-		encoder := json.NewEncoder(writer)
-		encoder.Encode(map[string]interface{}{"status": "completed", "totalChunks": chunkID})
-	}
-
-	return nil
-}
-
 // CloseStream closes an active stream
-func (ss *StreamingService) CloseStream(streamID string) error {
+func (ss *streamingService) CloseStream(streamID string) error {
 	ss.streamsMutex.Lock()
 	defer ss.streamsMutex.Unlock()
 
@@ -395,7 +347,7 @@ func (ss *StreamingService) CloseStream(streamID string) error {
 }
 
 // GetStreamStatus returns the status of an active stream
-func (ss *StreamingService) GetStreamStatus(streamID string) (*ActiveStream, error) {
+func (ss *streamingService) GetStreamStatus(streamID string) (*ActiveStream, error) {
 	ss.streamsMutex.RLock()
 	defer ss.streamsMutex.RUnlock()
 
@@ -418,7 +370,7 @@ func (ss *StreamingService) GetStreamStatus(streamID string) (*ActiveStream, err
 }
 
 // GetAllStreams returns all active streams
-func (ss *StreamingService) GetAllStreams() []*ActiveStream {
+func (ss *streamingService) GetAllStreams() []*ActiveStream {
 	ss.streamsMutex.RLock()
 	defer ss.streamsMutex.RUnlock()
 
@@ -431,7 +383,7 @@ func (ss *StreamingService) GetAllStreams() []*ActiveStream {
 }
 
 // CleanupInactiveStreams removes streams that have been inactive
-func (ss *StreamingService) CleanupInactiveStreams() int {
+func (ss *streamingService) CleanupInactiveStreams() int {
 	ss.streamsMutex.Lock()
 	defer ss.streamsMutex.Unlock()
 
@@ -456,7 +408,7 @@ func (ss *StreamingService) CleanupInactiveStreams() int {
 }
 
 // StartCleanupRoutine starts a background routine to clean up inactive streams
-func (ss *StreamingService) StartCleanupRoutine(ctx context.Context, interval time.Duration) {
+func (ss *streamingService) StartCleanupRoutine(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -475,17 +427,17 @@ func (ss *StreamingService) StartCleanupRoutine(ctx context.Context, interval ti
 
 // Helper methods
 
-func (ss *StreamingService) generateStreamID() string {
+func (ss *streamingService) generateStreamID() string {
 	return fmt.Sprintf("stream_%d", time.Now().UnixNano())
 }
 
-func (ss *StreamingService) getActiveStreamCount() int {
+func (ss *streamingService) getActiveStreamCount() int {
 	ss.streamsMutex.RLock()
 	defer ss.streamsMutex.RUnlock()
 	return len(ss.activeStreams)
 }
 
-func (ss *StreamingService) buildColumnInfo(columns []*sql.ColumnType, dbType model.DatabaseType) []model.ColumnInfo {
+func (ss *streamingService) buildColumnInfo(columns []*sql.ColumnType, dbType model.DatabaseType) []model.ColumnInfo {
 	columnInfo := make([]model.ColumnInfo, len(columns))
 
 	for i, col := range columns {
@@ -500,7 +452,7 @@ func (ss *StreamingService) buildColumnInfo(columns []*sql.ColumnType, dbType mo
 	return columnInfo
 }
 
-func (ss *StreamingService) writeCSVHeader(writer io.Writer, columns []model.ColumnInfo) error {
+func (ss *streamingService) writeCSVHeader(writer io.Writer, columns []model.ColumnInfo) error {
 	header := ""
 	for i, col := range columns {
 		if i > 0 {
@@ -513,7 +465,7 @@ func (ss *StreamingService) writeCSVHeader(writer io.Writer, columns []model.Col
 	return err
 }
 
-func (ss *StreamingService) writeCSVRows(writer io.Writer, rows [][]interface{}) error {
+func (ss *streamingService) writeCSVRows(writer io.Writer, rows [][]interface{}) error {
 	for _, row := range rows {
 		line := ""
 		for i, val := range row {
@@ -535,12 +487,12 @@ func (ss *StreamingService) writeCSVRows(writer io.Writer, rows [][]interface{})
 }
 
 // fetchWithStreaming executes a fetch query using the streaming approach
-func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
+func (ss *streamingService) FetchWithStreaming(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
 	// Create a new streaming session
 	session := &StreamingSession{
-		QueryID:      uqs.generateSessionID(),
-		Slug:         uqs.generateSlug(),
-		Token:        uqs.generateToken(),
+		QueryID:      ss.generateSessionID(),
+		Slug:         ss.generateSlug(),
+		Token:        ss.generateToken(),
 		DataSourceID: req.DataSourceID,
 		SQL:          req.SQL,
 		Type:         req.Type,
@@ -557,7 +509,7 @@ func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.
 		Offset:       0,
 		Timeout:      req.Timeout,
 	}
-	streamID, err := uqs.ExecuteStreamQuery(ctx, streamReq)
+	streamID, totalCount, err := ss.ExecuteStreamQuery(ctx, streamReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start streaming query: %w", err)
 	}
@@ -565,10 +517,10 @@ func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.
 	session.StreamID = streamID
 
 	// Fetch the first batch of data
-	chunk, err := uqs.FetchStreamChunk(ctx, streamID)
+	chunk, err := ss.FetchStreamChunk(ctx, streamID, req.BatchSize)
 	if err != nil {
 		// Try to close the stream even if there was an error
-		uqs.CloseStream(streamID)
+		ss.CloseStream(streamID)
 		return nil, fmt.Errorf("failed to fetch stream chunk: %w", err)
 	}
 
@@ -601,11 +553,11 @@ func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.
 	// Update session data
 	session.Columns = columns
 	session.Entries = entries
-	session.TotalRows = int64(len(entries)) // This is an approximation, we'll improve this
+	session.TotalRows = totalCount
 	session.FetchedRows = int64(len(entries))
 
 	// Store the session
-	uqs.streamingSessionManager.Store(session)
+	ss.streamingSessionManager.Store(session)
 
 	// Create a response similar to pagination service
 	response := &model.FetchQueryResponse{
@@ -620,16 +572,16 @@ func (uqs *StreamingService) FetchWithStreaming(ctx context.Context, req *model.
 
 	// Add NextURI if there are more results
 	if chunk.HasMore {
-		response.NextURI = uqs.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
+		response.NextURI = ss.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
 	}
 
 	return response, nil
 }
 
 // fetchNextBatchWithStreaming fetches the next batch using the streaming approach
-func (uqs *StreamingService) FetchNextBatchWithStreaming(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
+func (ss *streamingService) FetchNextBatchWithStreaming(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
 	// Get the streaming session
-	session, err := uqs.streamingSessionManager.Get(queryID)
+	session, err := ss.streamingSessionManager.Get(queryID)
 	if err != nil {
 		return nil, fmt.Errorf("session not found or expired: %w", err)
 	}
@@ -640,13 +592,13 @@ func (uqs *StreamingService) FetchNextBatchWithStreaming(ctx context.Context, qu
 	}
 
 	// Check if stream exists and is valid
-	_, err = uqs.GetStreamStatus(session.StreamID)
+	_, err = ss.GetStreamStatus(session.StreamID)
 	if err != nil {
 		return nil, fmt.Errorf("stream not found or expired: %w", err)
 	}
 
 	// Fetch the next chunk of data
-	chunk, err := uqs.FetchStreamChunk(ctx, session.StreamID)
+	chunk, err := ss.FetchStreamChunk(ctx, session.StreamID, batchSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch stream chunk: %w", err)
 	}
@@ -687,6 +639,7 @@ func (uqs *StreamingService) FetchNextBatchWithStreaming(ctx context.Context, qu
 	// Update session data
 	session.Entries = entries
 	session.FetchedRows += int64(len(entries))
+	session.Token = ss.generateToken()
 
 	// Create a response similar to pagination service
 	response := &model.FetchQueryResponse{
@@ -695,32 +648,70 @@ func (uqs *StreamingService) FetchNextBatchWithStreaming(ctx context.Context, qu
 		Token:      session.Token,
 		Columns:    columns,
 		Entries:    entries,
-		TotalCount: int(session.TotalRows), // This is an approximation
+		TotalCount: int(session.TotalRows),
 	}
 
 	// Add NextURI if there are more results
 	if chunk.HasMore {
-		response.NextURI = uqs.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
+		response.NextURI = ss.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
 	}
 
 	return response, nil
 }
 
 // buildNextURI builds the next URI for fetching more data
-func (uqs *StreamingService) buildNextURI(queryID, slug, token string, batchSize int) string {
+func (ss *streamingService) buildNextURI(queryID, slug, token string, batchSize int) string {
 	return fmt.Sprintf("/api/v1/fetch/%s/%s/%s?batch_size=%d", queryID, slug, token, batchSize)
 }
 
 // Helper functions
 
-func (uqs *StreamingService) generateSessionID() string {
+func (ss *streamingService) generateSessionID() string {
 	return uuid.New().String()
 }
 
-func (uqs *StreamingService) generateSlug() string {
+func (ss *streamingService) generateSlug() string {
 	return uuid.New().String()[:8]
 }
 
-func (uqs *StreamingService) generateToken() string {
+func (ss *streamingService) generateToken() string {
 	return uuid.New().String()
+}
+
+// getRowCount gets the total row count for the query
+func (ss *streamingService) getRowCount(ctx context.Context, db *sql.DB, sql string) (int64, error) {
+	// Remove ORDER BY clauses for count query as they don't affect the count
+	// Use case-insensitive regex to preserve original case of identifiers
+	countSQL := removeOrderByClause(sql)
+
+	// For complex queries with GROUP BY or DISTINCT, use subquery approach
+	upperSQL := strings.ToUpper(strings.TrimSpace(countSQL))
+	if strings.Contains(upperSQL, "GROUP BY") || strings.Contains(upperSQL, "DISTINCT") {
+		// Try standard ANSI SQL approach first (works for most databases)
+		countSQL = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS t", countSQL)
+
+		// Execute the count query
+		var count int64
+		err := db.QueryRowContext(ctx, countSQL).Scan(&count)
+		if err != nil {
+			// If the standard approach fails, try Oracle-style approach without alias
+			countSQL = fmt.Sprintf("SELECT COUNT(*) FROM (%s)", removeOrderByClause(sql))
+			err = db.QueryRowContext(ctx, countSQL).Scan(&count)
+			if err != nil {
+				return 0, fmt.Errorf("failed to count rows: %w", err)
+			}
+		}
+		return count, nil
+	} else {
+		// For simpler queries, replace SELECT clause with COUNT(*)
+		countSQL = replaceSelectWithCount(countSQL)
+
+		var count int64
+		err := db.QueryRowContext(ctx, countSQL).Scan(&count)
+		if err != nil {
+			return 0, fmt.Errorf("failed to count rows: %w", err)
+		}
+
+		return count, nil
+	}
 }

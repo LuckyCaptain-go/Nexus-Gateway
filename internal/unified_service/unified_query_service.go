@@ -7,19 +7,16 @@ import (
 	service "nexus-gateway/internal/service"
 )
 
-// QueryService interface that UnifiedQueryService implements
-type QueryService interface {
+type UnifiedQueryService interface {
 	ValidateQuery(ctx context.Context, req *model.QueryRequest) error
 	GetQueryStats(ctx context.Context) (*model.QueryStats, error)
 	FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error)
 	FetchNextBatch(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error)
 }
 
-// UnifiedQueryService provides a unified interface that can use either pagination or streaming
-// based on configuration, but always returns the same response format
-type UnifiedQueryService struct {
+type unifiedQueryService struct {
 	paginationService service.QueryService // The original QueryService implementation
-	streamingService  service.StreamingQueryService
+	streamingService  service.StreamingService
 	config            *config.Config
 }
 
@@ -27,10 +24,10 @@ type UnifiedQueryService struct {
 // pagination and streaming based on configuration
 func NewUnifiedQueryService(
 	paginationService service.QueryService,
-	streamingService service.StreamingQueryService,
+	streamingService service.StreamingService,
 	config *config.Config,
-) *UnifiedQueryService {
-	return &UnifiedQueryService{
+) UnifiedQueryService {
+	return &unifiedQueryService{
 		paginationService: paginationService,
 		streamingService:  streamingService,
 		config:            config,
@@ -38,17 +35,17 @@ func NewUnifiedQueryService(
 }
 
 // ValidateQuery validates the query using the pagination service's validator
-func (uqs *UnifiedQueryService) ValidateQuery(ctx context.Context, req *model.QueryRequest) error {
+func (uqs *unifiedQueryService) ValidateQuery(ctx context.Context, req *model.QueryRequest) error {
 	return uqs.paginationService.ValidateQuery(ctx, req)
 }
 
 // GetQueryStats returns query statistics
-func (uqs *UnifiedQueryService) GetQueryStats(ctx context.Context) (*model.QueryStats, error) {
+func (uqs *unifiedQueryService) GetQueryStats(ctx context.Context) (*model.QueryStats, error) {
 	return uqs.paginationService.GetQueryStats(ctx)
 }
 
 // FetchQuery executes a fetch query using the pagination service
-func (uqs *UnifiedQueryService) FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
+func (uqs *unifiedQueryService) FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
 	// Determine execution mode based on configuration
 	executionMode := uqs.getExecutionMode()
 
@@ -67,7 +64,7 @@ func (uqs *UnifiedQueryService) FetchQuery(ctx context.Context, req *model.Fetch
 }
 
 // FetchNextBatch fetches the next batch using the pagination service
-func (uqs *UnifiedQueryService) FetchNextBatch(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
+func (uqs *unifiedQueryService) FetchNextBatch(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
 	// Determine execution mode based on configuration
 	executionMode := uqs.getExecutionMode()
 
@@ -86,7 +83,7 @@ func (uqs *UnifiedQueryService) FetchNextBatch(ctx context.Context, queryID, slu
 }
 
 // getExecutionMode determines the execution mode based on configuration
-func (uqs *UnifiedQueryService) getExecutionMode() string {
+func (uqs *unifiedQueryService) getExecutionMode() string {
 	if uqs.config != nil && uqs.config.Query.ExecutionMode != "" {
 		return uqs.config.Query.ExecutionMode
 	}
