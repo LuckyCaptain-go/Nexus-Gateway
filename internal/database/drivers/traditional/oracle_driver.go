@@ -4,12 +4,29 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"strings"
 
 	"nexus-gateway/internal/model"
 )
 
 // OracleDriver implements Driver for Oracle
 type OracleDriver struct{}
+
+func (d *OracleDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	sql = strings.TrimSpace(sql)
+
+	// Check if query already has LIMIT or OFFSET
+	sqlUpper := strings.ToUpper(sql)
+	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
+		// For complex queries with existing pagination, add a subquery wrapper
+		return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset), nil
+
+	}
+	if offset > 0 {
+		return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset), nil
+	}
+	return fmt.Sprintf("SELECT * FROM (%s) WHERE ROWNUM <= %d", sql, batchSize), nil
+}
 
 func (d *OracleDriver) Open(dsn string) (*sql.DB, error) {
 	return sql.Open("oracle", dsn)

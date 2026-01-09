@@ -55,6 +55,7 @@ func (db *DriverBase) GetCategory() DriverCategory {
 
 // Driver interface
 type Driver interface {
+	ApplyBatchPagination(sql string, batchSize, offset int64) (string, error)
 	// Open opens a database connection
 	Open(dsn string) (*sql.DB, error)
 
