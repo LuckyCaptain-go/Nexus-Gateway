@@ -16,13 +16,13 @@ import (
 )
 
 type QueryController struct {
-	queryService unifiedservice.QueryService // Changed to use unified service
+	queryService unifiedservice.UnifiedQueryService // Changed to use unified service
 	validator    *validator.Validate
 }
 
-func NewQueryController(queryService unifiedservice.QueryService) *QueryController { // Changed parameter type
+func NewQueryController(unifiedQueryService unifiedservice.UnifiedQueryService) *QueryController { // Changed parameter type
 	return &QueryController{
-		queryService: queryService,
+		queryService: unifiedQueryService,
 		validator:    validator.New(),
 	}
 }
