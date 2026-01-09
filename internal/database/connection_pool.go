@@ -112,6 +112,14 @@ func (cp *ConnectionPool) createConnection(ctx context.Context, dataSource *mode
 	return db, nil
 }
 
+func (d *ConnectionPool) ApplyBatchPagination(dbType model.DatabaseType, sql string, batchSize, offset int64) (string, error) {
+	driver, err := globalDriverRegistry.GetDriver(dbType)
+	if err != nil {
+		return "", err
+	}
+	return driver.ApplyBatchPagination(sql, batchSize, offset)
+}
+
 // openDatabase opens a database connection based on database type
 func (cp *ConnectionPool) openDatabase(dbType model.DatabaseType, dsn string) (*sql.DB, error) {
 	driver, err := GetDriverRegistry().GetDriver(dbType)

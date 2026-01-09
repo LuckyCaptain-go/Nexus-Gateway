@@ -392,7 +392,7 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 	}
 
 	// Execute query and get first batch
-	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, conn, req.SQL, int64(req.BatchSize), 0)
+	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, datasource.Type, conn, req.SQL, int64(req.BatchSize), 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
@@ -463,7 +463,7 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 	offset := session.FetchedRows
 
 	// Execute query for next batch
-	columns, entries, _, err := qs.executeBatchQuery(ctx, conn, session.SQL, int64(batchSize), offset)
+	columns, entries, _, err := qs.executeBatchQuery(ctx, datasource.Type, conn, session.SQL, int64(batchSize), offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}
@@ -547,7 +547,7 @@ func (qs *queryService) buildNextURI(queryID, slug, token string, batchSize int)
 }
 
 // executeBatchQuery executes a query and returns results in batch format
-func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{}, query string, batchSize, offset int64) ([]model.ColumnInfo, []*[]interface{}, int64, error) {
+func (qs *queryService) executeBatchQuery(ctx context.Context, dbType model.DatabaseType, conn interface{}, query string, batchSize, offset int64) ([]model.ColumnInfo, []*[]interface{}, int64, error) {
 	// Convert conn to *sql.DB
 	db, ok := conn.(*sql.DB)
 	if !ok {
@@ -555,7 +555,7 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	}
 
 	// Apply pagination to the SQL query
-	paginatedSQL := qs.applyBatchPagination(query, batchSize, offset)
+	paginatedSQL, err := qs.connPool.ApplyBatchPagination(dbType, query, batchSize, offset)
 
 	// Execute the query
 	rows, err := db.QueryContext(ctx, paginatedSQL)
@@ -600,29 +600,6 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, conn interface{},
 	return columns, entries, totalCount, nil
 }
 
-// applyBatchPagination applies pagination to SQL query for batch fetching
-func (qs *queryService) applyBatchPagination(sql string, batchSize, offset int64) string {
-	sql = strings.TrimSpace(sql)
-
-	// Check if query already has LIMIT or OFFSET
-	sqlUpper := strings.ToUpper(sql)
-	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
-		// For complex queries with existing pagination, add a subquery wrapper
-		return qs.applySubqueryPagination(sql, batchSize, offset)
-	}
-
-	// Use standard LIMIT/OFFSET for most databases
-	return qs.applyStandardPagination(sql, batchSize, offset)
-}
-
-// applyStandardPagination applies standard LIMIT/OFFSET pagination
-func (qs *queryService) applyStandardPagination(sql string, batchSize, offset int64) string {
-	if offset > 0 {
-		return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
-	}
-	return fmt.Sprintf("%s LIMIT %d", sql, batchSize)
-}
-
 // applyPostgreSQLPagination applies PostgreSQL-specific pagination
 func (qs *queryService) applyPostgreSQLPagination(sql string, batchSize, offset int64) string {
 	if offset > 0 {
@@ -640,38 +617,32 @@ func (qs *queryService) applyOraclePagination(sql string, batchSize, offset int6
 }
 
 // applyGaussDBPagination applies GaussDB-specific pagination
-func (qs *queryService) applyGaussDBPagination(sql string, batchSize, offset int64) string {
-	// GaussDB may use standard SQL syntax or have specific requirements
-	// For now, using standard pagination but this can be enhanced based on specific needs
-	return qs.applyStandardPagination(sql, batchSize, offset)
-}
-
-// applyKingBasePagination applies KingBaseES-specific pagination
-func (qs *queryService) applyKingBasePagination(sql string, batchSize, offset int64) string {
-	// KingBaseES is a Chinese database that typically supports standard SQL syntax
-	// but may have specific requirements for Chinese character handling
-	return qs.applyStandardPagination(sql, batchSize, offset)
-}
-
-// applyOceanBasePagination applies OceanBase-specific pagination
-func (qs *queryService) applyOceanBasePagination(sql string, batchSize, offset int64) string {
-	// OceanBase is a distributed database that may have specific pagination needs
-	// Using standard SQL syntax for now, but can be enhanced for OceanBase specific features
-	return qs.applyStandardPagination(sql, batchSize, offset)
-}
-
-// applyDMPagination applies DM (达梦) database specific pagination
-func (qs *queryService) applyDMPagination(sql string, batchSize, offset int64) string {
-	// DM database is a Chinese database with specific syntax requirements
-	// Using standard SQL syntax for now, but can be enhanced for DM specific features
-	return qs.applyStandardPagination(sql, batchSize, offset)
-}
-
-// applySubqueryPagination applies pagination with subquery wrapper for complex queries
-func (qs *queryService) applySubqueryPagination(sql string, batchSize, offset int64) string {
-	// Use a standard approach with LIMIT/OFFSET for simplicity
-	return fmt.Sprintf("SELECT * FROM (%s) AS batch_query LIMIT %d OFFSET %d", sql, batchSize, offset)
-}
+//func (qs *queryService) applyGaussDBPagination(sql string, batchSize, offset int64) string {
+//	// GaussDB may use standard SQL syntax or have specific requirements
+//	// For now, using standard pagination but this can be enhanced based on specific needs
+//	return qs.applyStandardPagination(sql, batchSize, offset)
+//}
+//
+//// applyKingBasePagination applies KingBaseES-specific pagination
+//func (qs *queryService) applyKingBasePagination(sql string, batchSize, offset int64) string {
+//	// KingBaseES is a Chinese database that typically supports standard SQL syntax
+//	// but may have specific requirements for Chinese character handling
+//	return qs.applyStandardPagination(sql, batchSize, offset)
+//}
+//
+//// applyOceanBasePagination applies OceanBase-specific pagination
+//func (qs *queryService) applyOceanBasePagination(sql string, batchSize, offset int64) string {
+//	// OceanBase is a distributed database that may have specific pagination needs
+//	// Using standard SQL syntax for now, but can be enhanced for OceanBase specific features
+//	return qs.applyStandardPagination(sql, batchSize, offset)
+//}
+//
+//// applyDMPagination applies DM (达梦) database specific pagination
+//func (qs *queryService) applyDMPagination(sql string, batchSize, offset int64) string {
+//	// DM database is a Chinese database with specific syntax requirements
+//	// Using standard SQL syntax for now, but can be enhanced for DM specific features
+//	return qs.applyStandardPagination(sql, batchSize, offset)
+//}
 
 // buildBatchColumnInfo builds column information from column types
 func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []model.ColumnInfo {
@@ -687,65 +658,6 @@ func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []mo
 	}
 
 	return columns
-}
-
-// mapColumnTypeToStandard maps database-specific type names to standard types
-// Extended to better handle Chinese database types
-func (qs *queryService) mapColumnTypeToStandard(dbTypeName string) string {
-	dbTypeUpper := strings.ToUpper(dbTypeName)
-
-	switch dbTypeUpper {
-	// Integer types
-	case "INT", "INTEGER", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
-		"INT4", "INT8", "INT2", "SERIAL", "BIGSERIAL", "SMALLSERIAL",
-		"INTEGER UNSIGNED", "BIGINT UNSIGNED", "SMALLINT UNSIGNED",
-		"NUMBER", "DOUBLE PRECISION":
-		return "integer"
-
-	// Floating point types
-	case "FLOAT", "DOUBLE", "DECIMAL", "NUMERIC", "REAL":
-		return "decimal"
-
-	// String types - including Chinese character set handling
-	case "VARCHAR", "CHAR", "TEXT", "LONGTEXT", "MEDIUMTEXT", "TINYTEXT",
-		"NVARCHAR", "NCHAR", "NTEXT", "VARCHAR2", "CHAR2", "VARCHARC", "CHARC",
-		"CLOB", "NCLOB", "LONG", "LONG RAW",
-		"TEXT(n)", "VARCHAR(n)", "NVARCHAR(n)", "VARCHAR2(n)":
-		return "string"
-
-	// Date/time types
-	case "DATE", "TIME", "DATETIME", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE",
-		"DATE ONLY", "TIME ONLY", "DATETIME2", "SMALLDATETIME", "DATETIMEOFFSET":
-		return "datetime"
-
-	// Boolean types
-	case "BOOLEAN", "BOOL", "BIT", "TINYINT(1)", "YESNO":
-		return "boolean"
-
-	// Binary types
-	case "BINARY", "VARBINARY", "BLOB", "BYTEA", "RAW", "BLOB(n)", "BINARY(n)":
-		return "binary"
-
-	// JSON types
-	case "JSON", "JSONB", "JSONB(n)", "JSONC":
-		return "json"
-
-	// UUID types
-	case "UUID", "UNIQUEIDENTIFIER", "GUID":
-		return "uuid"
-
-	// Chinese database specific types
-	case "TIMESTAMP6", "TIMESTAMP WITH LOCAL TIME ZONE":
-		return "datetime"
-	case "NUMBER(n)", "NUMBER(n,m)":
-		return "decimal"
-	case "VARCHARC(n)", "CHARC(n)":
-		return "string"
-
-	default:
-		// For unknown types, return string but log for future enhancement
-		return "string"
-	}
 }
 
 // scanBatchRow scans a single row and returns string values
