@@ -146,7 +146,6 @@ type StreamChunk struct {
 	ChunkID  int64              `json:"chunkId"`
 	Columns  []model.ColumnInfo `json:"columns,omitempty"` // Only in first chunk
 	Rows     [][]interface{}    `json:"rows"`
-	HasMore  bool               `json:"hasMore"`
 	Metadata StreamMetadata     `json:"metadata"`
 }
 
@@ -277,7 +276,6 @@ func (ss *streamingService) FetchStreamChunk(ctx context.Context, streamID strin
 
 		if err := stream.Rows.Scan(rowPointers...); err != nil {
 			// Error scanning row - close stream
-			stream.Rows.Close()
 			ss.CloseStream(streamID)
 			return nil, fmt.Errorf("error scanning row: %w", err)
 		}
@@ -290,7 +288,6 @@ func (ss *streamingService) FetchStreamChunk(ctx context.Context, streamID strin
 
 	// Check for errors
 	if err := stream.Rows.Err(); err != nil {
-		stream.Rows.Close()
 		ss.CloseStream(streamID)
 		return nil, fmt.Errorf("row iteration error: %w", err)
 	}
@@ -299,21 +296,11 @@ func (ss *streamingService) FetchStreamChunk(ctx context.Context, streamID strin
 	stream.RowsSent += int64(chunkRowCount)
 	stream.LastActivityAt = time.Now()
 
-	// Check if there are more rows
-	hasMore := chunkRowCount == batchSize
-
-	// If no more rows, close the stream
-	if !hasMore {
-		stream.Rows.Close()
-		ss.CloseStream(streamID)
-	}
-
 	return &StreamChunk{
 		StreamID: streamID,
 		ChunkID:  stream.RowsSent,
 		Columns:  stream.Columns, // Include columns in every chunk for stateless clients
 		Rows:     rows,
-		HasMore:  hasMore,
 		Metadata: StreamMetadata{
 			RowCount:      stream.RowsSent,
 			ChunkSize:     batchSize,
@@ -514,8 +501,6 @@ func (ss *streamingService) FetchWithStreaming(ctx context.Context, req *model.F
 		return nil, fmt.Errorf("failed to start streaming query: %w", err)
 	}
 
-	session.StreamID = streamID
-
 	// Fetch the first batch of data
 	chunk, err := ss.FetchStreamChunk(ctx, streamID, req.BatchSize)
 	if err != nil {
@@ -550,15 +535,6 @@ func (ss *streamingService) FetchWithStreaming(ctx context.Context, req *model.F
 		}
 	}
 
-	// Update session data
-	session.Columns = columns
-	session.Entries = entries
-	session.TotalRows = totalCount
-	session.FetchedRows = int64(len(entries))
-
-	// Store the session
-	ss.streamingSessionManager.Store(session)
-
 	// Create a response similar to pagination service
 	response := &model.FetchQueryResponse{
 		QueryID:    session.QueryID,
@@ -567,12 +543,25 @@ func (ss *streamingService) FetchWithStreaming(ctx context.Context, req *model.F
 		NextURI:    "", // We'll set this if there are more results
 		Columns:    columns,
 		Entries:    entries,
-		TotalCount: int(session.TotalRows),
+		TotalCount: int(totalCount),
 	}
 
-	// Add NextURI if there are more results
-	if chunk.HasMore {
+	if req.Type == 2 && len(entries) < int(totalCount) {
+		// Add NextURI if there are more results
 		response.NextURI = ss.buildNextURI(session.QueryID, session.Slug, session.Token, req.BatchSize)
+
+		// Update session data
+		session.StreamID = streamID
+		session.Columns = columns
+		session.Entries = entries
+		session.TotalRows = totalCount
+		session.FetchedRows = int64(len(entries))
+
+		// Store the session
+		ss.streamingSessionManager.Store(session)
+
+	} else {
+		ss.CloseStream(streamID)
 	}
 
 	return response, nil
@@ -652,8 +641,12 @@ func (ss *streamingService) FetchNextBatchWithStreaming(ctx context.Context, que
 	}
 
 	// Add NextURI if there are more results
-	if chunk.HasMore {
+	if session.FetchedRows < session.TotalRows {
 		response.NextURI = ss.buildNextURI(session.QueryID, session.Slug, session.Token, batchSize)
+	} else {
+		// Close the stream if no more results
+		ss.CloseStream(session.StreamID)
+		ss.streamingSessionManager.Delete(session.QueryID)
 	}
 
 	return response, nil
