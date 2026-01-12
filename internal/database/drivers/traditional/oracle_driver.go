@@ -17,15 +17,16 @@ func (d *OracleDriver) ApplyBatchPagination(sql string, batchSize, offset int64)
 
 	// Check if query already has LIMIT or OFFSET
 	sqlUpper := strings.ToUpper(sql)
-	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
+	if (strings.Contains(sqlUpper, " OFFSET ") && strings.Contains(sqlUpper, " ROWS")) ||
+		(strings.Contains(sqlUpper, " FETCH FIRST ") && strings.Contains(sqlUpper, " ROWS ONLY")) {
 		// For complex queries with existing pagination, add a subquery wrapper
-		return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset), nil
+		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
 
 	}
 	if offset > 0 {
-		return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset), nil
+		return fmt.Sprintf("%s OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
 	}
-	return fmt.Sprintf("SELECT * FROM (%s) WHERE ROWNUM <= %d", sql, batchSize), nil
+	return fmt.Sprintf("%s FETCH FIRST %d ROWS ONLY", sql, batchSize), nil
 }
 
 func (d *OracleDriver) Open(dsn string) (*sql.DB, error) {
