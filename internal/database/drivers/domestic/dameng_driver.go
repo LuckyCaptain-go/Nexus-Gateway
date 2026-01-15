@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"strings"
 	"time"
 
 	"nexus-gateway/internal/model"
@@ -81,9 +82,35 @@ func (d *DaMengDriver) GetDefaultPort() int {
 }
 
 // BuildDSN builds a connection string from configuration
-func (d *DaMengDriver) BuildDSN(config interface{}) string {
-	// For now, just return empty string since we don't have a config type here
-	return ""
+func (d *DaMengDriver) BuildDSN(config *model.DataSourceConfig) string {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+		config.Username,
+		config.Password,
+		config.Host,
+		config.Port,
+		config.Database,
+	)
+
+	// Add parameters
+	params := []string{}
+	if config.SSL {
+		params = append(params, "charset=utf8")
+	}
+	if config.Timezone != "" {
+		params = append(params, "loc="+config.Timezone)
+	}
+
+	if len(params) > 0 {
+		dsn += "?"
+		for i, param := range params {
+			if i > 0 {
+				dsn += "&"
+			}
+			dsn += param
+		}
+	}
+
+	return dsn
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -105,8 +132,8 @@ func (d *DaMengDriver) GetDriverName() string {
 }
 
 // GetCategory returns the driver category
-func (d *DaMengDriver) GetCategory() string {
-	return "domestic_database"
+func (d *DaMengDriver) GetCategory() drivers.DriverCategory {
+	return drivers.CategoryDomesticDatabase
 }
 
 // GetCapabilities returns driver capabilities
@@ -224,6 +251,22 @@ func (a *DaMengDBAdapter) GetCapabilities() drivers.DriverCapabilities {
 		SupportsStreaming:       caps["SupportsStreaming"],
 	}
 }
+func (a *DaMengDBAdapter) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	sql = strings.TrimSpace(sql)
+
+	// Check if query already has pagination clauses
+	sqlUpper := strings.ToUpper(sql)
+	if (strings.Contains(sqlUpper, " OFFSET ") && strings.Contains(sqlUpper, " ROWS")) ||
+		(strings.Contains(sqlUpper, " FETCH FIRST ") && strings.Contains(sqlUpper, " ROWS ONLY")) {
+		// For complex queries with existing pagination, add a subquery wrapper
+		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
+	}
+	if offset > 0 {
+		return fmt.Sprintf("%s OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
+	}
+	return fmt.Sprintf("%s FETCH FIRST %d ROWS ONLY", sql, batchSize), nil
+}
+
 func (a *DaMengDBAdapter) ConfigureAuth(authConfig interface{}) error {
 	return a.Inner.ConfigureAuth(authConfig)
 }

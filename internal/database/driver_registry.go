@@ -3,10 +3,17 @@ package database
 import (
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"nexus-gateway/internal/database/drivers/domestic"
+	"nexus-gateway/internal/database/drivers/nosql"
+	"nexus-gateway/internal/database/drivers/olap"
+
+	//"nexus-gateway/internal/database/drivers/olap"
+
 	//"nexus-gateway/internal/database/drivers/domestic"
 	//"nexus-gateway/internal/database/drivers/olap"
 	//"nexus-gateway/internal/database/drivers/table_formats"
 	"nexus-gateway/internal/database/drivers/traditional"
+	"nexus-gateway/internal/database/drivers/warehouses"
 
 	"sync"
 
@@ -49,46 +56,94 @@ func (dr *DriverRegistry) registerDrivers() {
 	dr.register(model.DatabaseTypeOracle, func() drivers.Driver {
 		return &traditional.OracleDriver{}
 	})
+	dr.register(model.DatabaseTypeSQLServer, func() drivers.Driver {
+		return &traditional.SQLServerDriver{}
+	})
 
 	// Chinese domestic databases
-	//dr.register(model.DatabaseTypeDaMeng, func() drivers.Driver {
-	//	return &domestic.DaMengDBAdapter{
-	//		Inner: &domestic.DaMengDriver{},
-	//	}
-	//})
-	//dr.register(model.DatabaseTypeOceanBaseMySQL, func() drivers.Driver {
-	//	return &domestic.OceanBaseDriver{}
-	//})
-	//dr.register(model.DatabaseTypeOceanBaseOracle, func() drivers.Driver {
-	//	return &domestic.OceanBaseOracleDriver{}
-	//})
-	//dr.register(model.DatabaseTypeTiDB, func() drivers.Driver {
-	//	return &domestic.TiDBDriver{}
-	//})
-	//dr.register(model.DatabaseTypeTDSQL, func() drivers.Driver {
-	//	return &domestic.TDSQLDriver{}
-	//})
-	//dr.register(model.DatabaseTypeGaussDBMySQL, func() drivers.Driver {
-	//	return &domestic.GaussDBDriver{}
-	//})
-	//dr.register(model.DatabaseTypeGaussDBPostgres, func() drivers.Driver {
-	//	return &domestic.GaussDBDriver{}
-	//})
-	//dr.register(model.DatabaseTypeKingbaseES, func() drivers.Driver {
-	//	return &domestic.KingbaseESDriver{}
-	//})
-	//dr.register(model.DatabaseTypeGBase8s, func() drivers.Driver {
-	//	return &domestic.GBaseDriver{}
-	//})
-	//dr.register(model.DatabaseTypeGBase8t, func() drivers.Driver {
-	//	return &domestic.GBaseDriver{}
-	//})
-	//dr.register(model.DatabaseTypeOscar, func() drivers.Driver {
-	//	return &domestic.OscarDriver{}
-	//})
-	//dr.register(model.DatabaseTypeOpenGauss, func() drivers.Driver {
-	//	return &domestic.OpenGaussDriver{}
-	//})
+	dr.register(model.DatabaseTypeDaMeng, func() drivers.Driver {
+		return &domestic.DaMengDBAdapter{
+			Inner: &domestic.DaMengDriver{},
+		}
+	})
+	dr.register(model.DatabaseTypeOceanBaseMySQL, func() drivers.Driver {
+		return &domestic.OceanBaseDriver{}
+	})
+	dr.register(model.DatabaseTypeOceanBaseOracle, func() drivers.Driver {
+		return &domestic.OceanBaseOracleDriver{}
+	})
+	dr.register(model.DatabaseTypeTiDB, func() drivers.Driver {
+		return &domestic.TiDBDriver{}
+	})
+	dr.register(model.DatabaseTypeTDSQL, func() drivers.Driver {
+		return &domestic.TDSQLDriver{}
+	})
+	dr.register(model.DatabaseTypeGaussDBMySQL, func() drivers.Driver {
+		return &domestic.GaussDBDriver{}
+	})
+	dr.register(model.DatabaseTypeGaussDBPostgres, func() drivers.Driver {
+		return &domestic.GaussDBDriver{}
+	})
+	dr.register(model.DatabaseTypeKingbaseES, func() drivers.Driver {
+		return &domestic.KingbaseESDriver{}
+	})
+	dr.register(model.DatabaseTypeGBase8s, func() drivers.Driver {
+		return &domestic.GBaseDriver{}
+	})
+	dr.register(model.DatabaseTypeGBase8t, func() drivers.Driver {
+		return &domestic.GBaseDriver{}
+	})
+	dr.register(model.DatabaseTypeOscar, func() drivers.Driver {
+		return &domestic.OscarDriver{}
+	})
+	dr.register(model.DatabaseTypeOpenGauss, func() drivers.Driver {
+		return &domestic.OpenGaussDriver{}
+	})
+
+	//// Cloud Data Warehouses
+	dr.register(model.DatabaseTypeSnowflake, func() drivers.Driver {
+		return &warehouses.SnowflakeDriver{} // 使用 olap 包中的 SnowflakeDriver 而不是 warehouses 包中的
+	})
+	dr.register(model.DatabaseTypeDatabricks, func() drivers.Driver {
+		return &warehouses.DatabricksDriver{}
+	})
+	// Cloud Data Warehouses
+	dr.register(model.DatabaseTypeRedshift, func() drivers.Driver {
+		return &warehouses.RedshiftDriver{}
+	})
+	dr.register(model.DatabaseTypeBigQuery, func() drivers.Driver {
+		return &warehouses.BigQueryDriver{}
+	})
+	// Big Data Warehouses
+	dr.register(model.DatabaseTypeApacheHive, func() drivers.Driver {
+		return &warehouses.HiveDriver{}
+	})
+	dr.register(model.DatabaseTypeMaxCompute, func() drivers.Driver {
+		return &warehouses.MaxComputeDriver{}
+	})
+
+	// OLAP Engines
+	dr.register(model.DatabaseTypeClickHouse, func() drivers.Driver {
+		return &olap.ClickHouseDriver{}
+	})
+	dr.register(model.DatabaseTypeApacheDoris, func() drivers.Driver {
+		return &olap.DorisDriver{}
+	})
+	dr.register(model.DatabaseTypeStarRocks, func() drivers.Driver {
+		return &olap.StarRocksDriver{}
+	})
+	dr.register(model.DatabaseTypeApacheDruid, func() drivers.Driver {
+		return &olap.DruidDriver{}
+	})
+	dr.register(model.DatabaseTypeHologres, func() drivers.Driver {
+		return &olap.HologresDriver{}
+	})
+
+	// NoSQL databases
+	dr.register(model.DatabaseTypeMongoDB, func() drivers.Driver {
+		return &nosql.MongoDriver{}
+	})
+
 	//
 	//// Data Lake Table Formats
 	//dr.register(model.DatabaseTypeApacheIceberg, func() drivers.Driver {
@@ -99,21 +154,6 @@ func (dr *DriverRegistry) registerDrivers() {
 	//})
 	//dr.register(model.DatabaseTypeApacheHudi, func() drivers.Driver {
 	//	return &table_formats.HudiDriver{}
-	//})
-
-	//// Cloud Data Warehouses
-	//dr.register(model.DatabaseTypeSnowflake, func() drivers.Driver {
-	//	return &warehouses.SnowflakeDriver{} // 使用 olap 包中的 SnowflakeDriver 而不是 warehouses 包中的
-	//})
-	//dr.register(model.DatabaseTypeDatabricks, func() drivers.Driver {
-	//	return &olap.DatabricksDriver{}
-	//})
-	//// Cloud Data Warehouses
-	//dr.register(model.DatabaseTypeRedshift, func() drivers.Driver {
-	//	return &warehouses.RedshiftDriver{}
-	//})
-	//dr.register(model.DatabaseTypeBigQuery, func() drivers.Driver {
-	//	return &warehouses.BigQueryDriver{}
 	//})
 
 	// // Object Storage
@@ -189,19 +229,6 @@ func (dr *DriverRegistry) registerDrivers() {
 	// 	return &object_storage.MinIODeltaDriver{}
 	// })
 
-	// OLAP Engines
-	//dr.register(model.DatabaseTypeClickHouse, func() drivers.Driver {
-	//	return &olap.ClickHouseDriver{}
-	//})
-	//dr.register(model.DatabaseTypeApacheDoris, func() drivers.Driver {
-	//	return &olap.DorisDriver{}
-	//})
-	//dr.register(model.DatabaseTypeStarRocks, func() drivers.Driver {
-	//	return &olap.StarRocksDriver{}
-	//})
-	//dr.register(model.DatabaseTypeApacheDruid, func() drivers.Driver {
-	//	return &olap.DruidDriver{}
-	//})
 }
 
 // register registers a driver factory function

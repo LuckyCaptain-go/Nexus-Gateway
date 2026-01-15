@@ -431,7 +431,7 @@ func (ss *streamingService) buildColumnInfo(columns []*sql.ColumnType, dbType mo
 		nullable, _ := col.Nullable()
 		columnInfo[i] = model.ColumnInfo{
 			Name:     col.Name(),
-			Type:     col.DatabaseTypeName(),
+			Type:     ss.mapDatabaseTypeToStandard(col.DatabaseTypeName(), dbType, nullable),
 			Nullable: nullable,
 		}
 	}
@@ -707,4 +707,97 @@ func (ss *streamingService) getRowCount(ctx context.Context, db *sql.DB, sql str
 
 		return count, nil
 	}
+}
+
+// mapDatabaseTypeToStandard maps database-specific type to standardized type
+func (ss *streamingService) mapDatabaseTypeToStandard(dbTypeName string, dbType model.DatabaseType, nullable bool) model.StandardizedType {
+	// Use the DataTypeMapper from utils package or implement basic mapping
+	switch dbType {
+	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB:
+		return ss.mapMySQLTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypePostgreSQL:
+		return ss.mapPostgreSQLTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeOracle:
+		return ss.mapOracleTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeSnowflake:
+		return ss.mapSnowflakeTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeBigQuery:
+		return ss.mapBigQueryTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeDatabricks:
+		return ss.mapDatabricksTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeRedshift:
+		return ss.mapRedshiftTypeToStandard(dbTypeName, nullable)
+	default:
+		// Default mapping for unknown database types
+		return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+	}
+}
+
+// mapGenericDatabaseTypeToStandard provides generic type mapping
+func (ss *streamingService) mapGenericDatabaseTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	upperTypeName := strings.ToUpper(dbTypeName)
+
+	switch {
+	case strings.Contains(upperTypeName, "INT"):
+		return model.StandardizedTypeInteger
+	case strings.Contains(upperTypeName, "BIGINT"):
+		return model.StandardizedTypeBigInt
+	case strings.Contains(upperTypeName, "FLOAT"), strings.Contains(upperTypeName, "REAL"):
+		return model.StandardizedTypeFloat
+	case strings.Contains(upperTypeName, "DOUBLE"):
+		return model.StandardizedTypeDouble
+	case strings.Contains(upperTypeName, "DECIMAL"), strings.Contains(upperTypeName, "NUMERIC"):
+		return model.StandardizedTypeDecimal
+	case strings.Contains(upperTypeName, "VARCHAR"), strings.Contains(upperTypeName, "CHAR"), 
+		strings.Contains(upperTypeName, "TEXT"), strings.Contains(upperTypeName, "CLOB"):
+		return model.StandardizedTypeString
+	case strings.Contains(upperTypeName, "DATE"):
+		return model.StandardizedTypeDate
+	case strings.Contains(upperTypeName, "TIME"):
+		return model.StandardizedTypeTime
+	case strings.Contains(upperTypeName, "TIMESTAMP"):
+		return model.StandardizedTypeTimestamp
+	case strings.Contains(upperTypeName, "BOOLEAN"), strings.Contains(upperTypeName, "BOOL"):
+		return model.StandardizedTypeBoolean
+	case strings.Contains(upperTypeName, "BINARY"), strings.Contains(upperTypeName, "VARBINARY"),
+		strings.Contains(upperTypeName, "BLOB"), strings.Contains(upperTypeName, "IMAGE"):
+		return model.StandardizedTypeBinary
+	default:
+		return model.StandardizedTypeString
+	}
+}
+
+// mapMySQLTypeToStandard maps MySQL types to standard types
+func (ss *streamingService) mapMySQLTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapPostgreSQLTypeToStandard maps PostgreSQL types to standard types
+func (ss *streamingService) mapPostgreSQLTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapOracleTypeToStandard maps Oracle types to standard types
+func (ss *streamingService) mapOracleTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapSnowflakeTypeToStandard maps Snowflake types to standard types
+func (ss *streamingService) mapSnowflakeTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapBigQueryTypeToStandard maps BigQuery types to standard types
+func (ss *streamingService) mapBigQueryTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapDatabricksTypeToStandard maps Databricks types to standard types
+func (ss *streamingService) mapDatabricksTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
+}
+
+// mapRedshiftTypeToStandard maps Redshift types to standard types
+func (ss *streamingService) mapRedshiftTypeToStandard(dbTypeName string, nullable bool) model.StandardizedType {
+	return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)
 }

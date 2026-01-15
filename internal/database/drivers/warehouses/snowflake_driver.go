@@ -361,6 +361,19 @@ func (d *SnowflakeDriver) GetAccountInfo(ctx context.Context, db *sql.DB) (*Snow
 	return &info, nil
 }
 
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *SnowflakeDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Snowflake uses LIMIT and OFFSET for pagination
+	if batchSize <= 0 {
+		return "", fmt.Errorf("batch size must be greater than 0")
+	}
+
+	// Check if the SQL already has LIMIT clause
+	// For simplicity, we'll append LIMIT and OFFSET
+	limitOffsetClause := fmt.Sprintf(" LIMIT %d OFFSET %d", batchSize, offset)
+	return sql + limitOffsetClause, nil
+}
+
 // SnowflakeAccountInfo contains account information
 type SnowflakeAccountInfo struct {
 	Account   string

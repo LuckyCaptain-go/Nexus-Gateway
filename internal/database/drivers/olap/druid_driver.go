@@ -115,6 +115,11 @@ func (d *DruidDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination applies pagination to SQL query for batch processing
+func (d *DruidDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}
+
 // ExecuteSQL executes a SQL query via Druid SQL API
 func (d *DruidDriver) ExecuteSQL(ctx context.Context, sql string) (*DruidQueryResult, error) {
 	return d.restClient.ExecuteSQLQuery(ctx, sql)

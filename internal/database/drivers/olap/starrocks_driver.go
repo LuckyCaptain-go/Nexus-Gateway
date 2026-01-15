@@ -115,6 +115,11 @@ func (d *StarRocksDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination applies pagination to SQL query for batch processing
+func (d *StarRocksDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}
+
 // ExecutePipelineQuery executes a query using StarRocks pipeline engine
 func (d *StarRocksDriver) ExecutePipelineQuery(ctx context.Context, db *sql.DB, sql string) (*StarRocksPipelineResult, error) {
 	// Set session variable to enable pipeline

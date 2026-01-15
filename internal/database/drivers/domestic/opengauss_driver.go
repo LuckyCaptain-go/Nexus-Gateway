@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"strings"
 	"time"
 
 	"nexus-gateway/internal/model"
@@ -192,5 +193,22 @@ func (d *OpenGaussDriver) CreateRowSecurityPolicy(ctx context.Context, db *sql.D
 		policy.PolicyName, policy.TableName, policy.UsingExpression)
 	_, err := db.ExecContext(ctx, sql)
 	return err
+}
+
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *OpenGaussDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	sql = strings.TrimSpace(sql)
+
+	// Check if query already has LIMIT or OFFSET
+	sqlUpper := strings.ToUpper(sql)
+	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
+		// For complex queries with existing pagination, add a subquery wrapper
+		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+	}
+	// Use standard LIMIT/OFFSET for PostgreSQL-compatible databases
+	if offset > 0 {
+		return fmt.Sprintf("%%s LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+	}
+	return fmt.Sprintf("%%s LIMIT %%d", sql, batchSize), nil
 }
 

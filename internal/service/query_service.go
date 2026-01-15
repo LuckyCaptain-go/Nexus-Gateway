@@ -251,7 +251,7 @@ func (qs *queryService) buildColumnInfo(columns []*sql.ColumnType, dbType model.
 
 		columnInfo[i] = model.ColumnInfo{
 			Name:     col.Name(),
-			Type:     string(qs.typeMapper.MapToStandardType(dbType, col.DatabaseTypeName(), nullable)),
+			Type:     qs.typeMapper.MapToStandardType(dbType, col.DatabaseTypeName(), nullable),
 			Nullable: nullable,
 		}
 	}
@@ -600,50 +600,6 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, dbType model.Data
 	return columns, entries, totalCount, nil
 }
 
-// applyPostgreSQLPagination applies PostgreSQL-specific pagination
-func (qs *queryService) applyPostgreSQLPagination(sql string, batchSize, offset int64) string {
-	if offset > 0 {
-		return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
-	}
-	return fmt.Sprintf("%s LIMIT %d", sql, batchSize)
-}
-
-// applyOraclePagination applies Oracle-specific pagination using ROWNUM
-func (qs *queryService) applyOraclePagination(sql string, batchSize, offset int64) string {
-	if offset > 0 {
-		return fmt.Sprintf("SELECT * FROM (SELECT a.*, ROWNUM rnum FROM (%s) a WHERE ROWNUM <= %d) WHERE rnum > %d", sql, batchSize+offset, offset)
-	}
-	return fmt.Sprintf("SELECT * FROM (%s) WHERE ROWNUM <= %d", sql, batchSize)
-}
-
-// applyGaussDBPagination applies GaussDB-specific pagination
-//func (qs *queryService) applyGaussDBPagination(sql string, batchSize, offset int64) string {
-//	// GaussDB may use standard SQL syntax or have specific requirements
-//	// For now, using standard pagination but this can be enhanced based on specific needs
-//	return qs.applyStandardPagination(sql, batchSize, offset)
-//}
-//
-//// applyKingBasePagination applies KingBaseES-specific pagination
-//func (qs *queryService) applyKingBasePagination(sql string, batchSize, offset int64) string {
-//	// KingBaseES is a Chinese database that typically supports standard SQL syntax
-//	// but may have specific requirements for Chinese character handling
-//	return qs.applyStandardPagination(sql, batchSize, offset)
-//}
-//
-//// applyOceanBasePagination applies OceanBase-specific pagination
-//func (qs *queryService) applyOceanBasePagination(sql string, batchSize, offset int64) string {
-//	// OceanBase is a distributed database that may have specific pagination needs
-//	// Using standard SQL syntax for now, but can be enhanced for OceanBase specific features
-//	return qs.applyStandardPagination(sql, batchSize, offset)
-//}
-//
-//// applyDMPagination applies DM (达梦) database specific pagination
-//func (qs *queryService) applyDMPagination(sql string, batchSize, offset int64) string {
-//	// DM database is a Chinese database with specific syntax requirements
-//	// Using standard SQL syntax for now, but can be enhanced for DM specific features
-//	return qs.applyStandardPagination(sql, batchSize, offset)
-//}
-
 // buildBatchColumnInfo builds column information from column types
 func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []model.ColumnInfo {
 	columns := make([]model.ColumnInfo, len(columnTypes))
@@ -652,7 +608,7 @@ func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []mo
 		nullable, _ := col.Nullable()
 		columns[i] = model.ColumnInfo{
 			Name:     col.Name(),
-			Type:     string(qs.typeMapper.MapToStandardType(model.DatabaseTypeMySQL, col.DatabaseTypeName(), nullable)),
+			Type:     qs.typeMapper.MapToStandardType(model.DatabaseTypeMySQL, col.DatabaseTypeName(), nullable),
 			Nullable: nullable,
 		}
 	}
