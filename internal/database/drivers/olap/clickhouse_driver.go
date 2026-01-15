@@ -26,6 +26,11 @@ func NewClickHouseDriver(config *ClickHouseConfig) (*ClickHouseDriver, error) {
 	}, nil
 }
 
+// ApplyBatchPagination applies pagination to SQL query for batch processing
+func (d *ClickHouseDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}
+
 // Open opens a connection to ClickHouse
 func (d *ClickHouseDriver) Open(dsn string) (*sql.DB, error) {
 	// Use sql.Open with clickhouse driver

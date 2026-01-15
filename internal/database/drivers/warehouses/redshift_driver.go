@@ -17,7 +17,7 @@ type RedshiftDriver struct {
 	region         string
 	clusterID      string
 	iamRoleARN     string
-	rdsDataService *rdsdata.Service
+	rdsDataService *rdsdata.Client
 	useIAM         bool
 }
 
@@ -155,4 +155,16 @@ type RedshiftClusterStatus struct {
 	ClusterID string
 	Status    string
 	Nodes     int
+}
+
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *RedshiftDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Redshift uses LIMIT and OFFSET for pagination (similar to PostgreSQL)
+	if batchSize <= 0 {
+		return "", fmt.Errorf("batch size must be greater than 0")
+	}
+
+	// Append LIMIT and OFFSET clauses
+	limitOffsetClause := fmt.Sprintf(" LIMIT %d OFFSET %d", batchSize, offset)
+	return sql + limitOffsetClause, nil
 }

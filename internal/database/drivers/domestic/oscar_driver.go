@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"strings"
 	"time"
 
 	"nexus-gateway/internal/model"
@@ -246,31 +247,21 @@ type OscarDistributedResult struct {
 	NodesInvolved []string
 }
 
-// GetTablePartitionInfo retrieves partition information
-func (d *OscarDriver) GetTablePartitionInfo(ctx context.Context, db *sql.DB, tableName string) (*OscarPartitionInfo, error) {
-	sql := `
-		SELECT TABLE_NAME, PARTITION_NAME,
-		       PARTITION_POSITION, PARTITION_KEY
-		FROM USER_TAB_PARTITIONS
-		WHERE TABLE_NAME = ?
-	`
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *OscarDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	sql = strings.TrimSpace(sql)
 
-	info := &OscarPartitionInfo{
-		TableName: tableName,
+	// Check if query already has LIMIT or OFFSET
+	sqlUpper := strings.ToUpper(sql)
+	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
+		// For complex queries with existing pagination, add a subquery wrapper
+		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
 	}
-
-	err := db.QueryRowContext(ctx, sql, tableName).Scan(
-		&info.TableName,
-		&info.PartitionName,
-		&info.PartitionPosition,
-		&info.PartitionKey,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get partition info: %w", err)
+	// Use standard LIMIT/OFFSET for PostgreSQL-compatible databases
+	if offset > 0 {
+		return fmt.Sprintf("%%s LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
 	}
-
-	return info, nil
+	return fmt.Sprintf("%%s LIMIT %%d", sql, batchSize), nil
 }
 
-
+// GetTablePartitionInfo retrieves partition information

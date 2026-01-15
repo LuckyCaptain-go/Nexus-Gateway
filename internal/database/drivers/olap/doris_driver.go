@@ -115,6 +115,11 @@ func (d *DorisDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination applies pagination to SQL query for batch processing
+func (d *DorisDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}
+
 // GetTableSchema retrieves table schema from Doris
 func (d *DorisDriver) GetTableSchema(ctx context.Context, db *sql.DB, tableName string) (*DorisTableSchema, error) {
 	sql := fmt.Sprintf("DESCRIBE TABLE %s", tableName)

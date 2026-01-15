@@ -37,71 +37,71 @@ func (m *BigQueryTypeMapper) MapBigQueryTypeToStandardType(bqType string, isRepe
 	switch bqType {
 	case "STRING":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeString
+		return model.TypeString
 	case "BYTES":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeBinary
+		return model.TypeBinary
 	case "INTEGER", "INT64":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeInt64
+		return model.TypeBigInt
 	case "FLOAT", "FLOAT64":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeFloat64
+		return model.TypeFloat
 	case "BOOLEAN", "BOOL":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeBoolean
+		return model.TypeBoolean
 	case "TIMESTAMP":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeTimestamp
+		return model.TypeTimestamp
 	case "DATE":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeDate
+		return model.TypeDate
 	case "TIME":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeTime
+		return model.TypeTime
 	case "DATETIME":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeDateTime
+		return model.TypeDateTime
 	case "NUMERIC", "BIGNUMERIC":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeDecimal
+		return model.TypeDecimal
 	case "JSON":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeJSON
+		return model.TypeJSON
 	case "STRUCT", "RECORD":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeStruct
+		return model.TypeStruct
 	case "GEOGRAPHY":
 		if isRepeated {
-			return model.StandardizedTypeArray
+			return model.TypeArray
 		}
-		return model.StandardizedTypeGeography
+		return model.TypeGeography
 	default:
-		return model.StandardizedTypeString
+		return model.TypeString
 	}
 }
 
@@ -354,7 +354,7 @@ func (m *BigQueryTypeMapper) convertNumeric(value interface{}) (string, error) {
 		return s, nil
 	}
 	if f, ok := value.(float64); ok {
-		return fmt.Sprintf("%.f", f)
+		return fmt.Sprintf("%.2f", f), nil
 	}
 	return fmt.Sprintf("%v", value), nil
 }
@@ -395,15 +395,16 @@ func (m *BigQueryTypeMapper) GetFieldSchema(field *bigquery.FieldSchema) *BigQue
 		IsNullable: !field.Required,
 	}
 
-	if field.Type == "STRUCT" || field.Type == "RECORD" {
+	typeStr := string(field.Type)
+	if typeStr == "STRUCT" || typeStr == "RECORD" {
 		info.FieldType = &BigQueryTypeInfo{
-			Name: field.Type,
+			Name: typeStr,
 		}
 	}
 
 	if field.Repeated && field.Schema != nil {
 		info.ArrayElementType = &BigQueryTypeInfo{
-			Name: field.Type,
+			Name: typeStr,
 		}
 	}
 
@@ -493,14 +494,15 @@ func (c *BigQuerySchemaConverter) ConvertToStandardSchema(bqSchema bigquery.Sche
 	}
 
 	for _, field := range bqSchema {
+		typeStr := string(field.Type)
 		col := model.ColumnInfo{
 			Name:     field.Name,
-			Type:     c.mapper.MapBigQueryTypeToStandardType(field.Type, field.Repeated),
+			Type:     c.mapper.MapBigQueryTypeToStandardType(typeStr, field.Repeated),
 			Nullable: !field.Required,
 		}
 
 		// Handle nested structs
-		if field.Type == "STRUCT" || field.Type == "RECORD" {
+		if typeStr == "STRUCT" || typeStr == "RECORD" {
 			col.NestedFields = c.convertStructSchema(field.Schema)
 		}
 
@@ -515,13 +517,14 @@ func (c *BigQuerySchemaConverter) convertStructSchema(fields bigquery.Schema) []
 	cols := make([]model.ColumnInfo, 0, len(fields))
 
 	for _, field := range fields {
+		typeStr := string(field.Type)
 		col := model.ColumnInfo{
 			Name:     field.Name,
-			Type:     c.mapper.MapBigQueryTypeToStandardType(field.Type, field.Repeated),
+			Type:     c.mapper.MapBigQueryTypeToStandardType(typeStr, field.Repeated),
 			Nullable: !field.Required,
 		}
 
-		if field.Type == "STRUCT" || field.Type == "RECORD" {
+		if typeStr == "STRUCT" || typeStr == "RECORD" {
 			col.NestedFields = c.convertStructSchema(field.Schema)
 		}
 
@@ -538,7 +541,7 @@ func (c *BigQuerySchemaConverter) BuildBigQuerySchema(stdSchema model.TableSchem
 	for _, col := range stdSchema.Columns {
 		field := &bigquery.FieldSchema{
 			Name:     col.Name,
-			Type:     c.convertStandardTypeToBigQuery(col.Type),
+			Type:     bigquery.FieldType(c.convertStandardTypeToBigQuery(col.Type)),
 			Required: !col.Nullable,
 		}
 
@@ -555,33 +558,33 @@ func (c *BigQuerySchemaConverter) BuildBigQuerySchema(stdSchema model.TableSchem
 // convertStandardTypeToBigQuery converts standard type to BigQuery type string
 func (c *BigQuerySchemaConverter) convertStandardTypeToBigQuery(stdType model.StandardizedType) string {
 	switch stdType {
-	case model.StandardizedTypeString:
+	case model.TypeString:
 		return "STRING"
-	case model.StandardizedTypeBinary:
+	case model.TypeBinary:
 		return "BYTES"
-	case model.StandardizedTypeInt64:
+	case model.TypeBigInt:
 		return "INT64"
-	case model.StandardizedTypeFloat64:
+	case model.TypeFloat:
 		return "FLOAT64"
-	case model.StandardizedTypeBoolean:
+	case model.TypeBoolean:
 		return "BOOLEAN"
-	case model.StandardizedTypeTimestamp:
+	case model.TypeTimestamp:
 		return "TIMESTAMP"
-	case model.StandardizedTypeDate:
+	case model.TypeDate:
 		return "DATE"
-	case model.StandardizedTypeTime:
+	case model.TypeTime:
 		return "TIME"
-	case model.StandardizedTypeDateTime:
+	case model.TypeDateTime:
 		return "DATETIME"
-	case model.StandardizedTypeDecimal:
+	case model.TypeDecimal:
 		return "NUMERIC"
-	case model.StandardizedTypeJSON:
+	case model.TypeJSON:
 		return "JSON"
-	case model.StandardizedTypeStruct:
+	case model.TypeStruct:
 		return "STRUCT"
-	case model.StandardizedTypeArray:
+	case model.TypeArray:
 		return "ARRAY" // Element type depends on context
-	case model.StandardizedTypeGeography:
+	case model.TypeGeography:
 		return "GEOGRAPHY"
 	default:
 		return "STRING"
@@ -595,7 +598,7 @@ func (c *BigQuerySchemaConverter) buildNestedSchema(cols []model.ColumnInfo) big
 	for _, col := range cols {
 		field := &bigquery.FieldSchema{
 			Name:     col.Name,
-			Type:     c.convertStandardTypeToBigQuery(col.Type),
+			Type:     bigquery.FieldType(c.convertStandardTypeToBigQuery(col.Type)),
 			Required: !col.Nullable,
 		}
 

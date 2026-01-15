@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/snowflakedb/gosnowflake"
 	"nexus-gateway/internal/model"
 )
 
@@ -56,11 +55,13 @@ func (m *SnowflakeTypeMapper) MapSnowflakeTypeToStandardType(snowflakeType strin
 	case "TIMESTAMP", "TIMESTAMP_NTZ":
 		return model.StandardizedTypeTimestamp
 	case "TIMESTAMP_LTZ", "TIMESTAMP_TZ":
-		return model.StandardizedTypeTimestampWithZone
+		return model.StandardizedTypeTimestamp
 	case "TIME":
 		return model.StandardizedTypeTime
-	case "VARIANT", "OBJECT":
-		return model.StandardizedTypeVariant
+	case "VARIANT":
+		return model.StandardizedTypeJSON
+	case "OBJECT":
+		return model.StandardizedTypeStruct
 	case "ARRAY":
 		return model.StandardizedTypeArray
 	case "BINARY", "VARBINARY":
@@ -79,7 +80,9 @@ func (m *SnowflakeTypeMapper) MapStandardTypeToSnowflakeType(standardType model.
 		return "BOOLEAN"
 	case model.StandardizedTypeInteger:
 		return "NUMBER(38,0)"
-	case model.StandardizedTypeLong:
+	case model.StandardizedTypeBigInt:
+		return "NUMBER(38,0)"
+	case model.StandardizedTypeInt64: // Using the correct type alias
 		return "NUMBER(38,0)"
 	case model.StandardizedTypeFloat:
 		return "FLOAT"
@@ -95,15 +98,13 @@ func (m *SnowflakeTypeMapper) MapStandardTypeToSnowflakeType(standardType model.
 		return "TIME(9)"
 	case model.StandardizedTypeTimestamp, model.StandardizedTypeDateTime:
 		return "TIMESTAMP_NTZ(9)"
-	case model.StandardizedTypeTimestampWithZone:
-		return "TIMESTAMP_TZ(9)"
 	case model.StandardizedTypeBinary:
 		return "BINARY(8388608)"
-	case model.StandardizedTypeVariant:
+	case model.StandardizedTypeJSON:
 		return "VARIANT"
 	case model.StandardizedTypeArray:
 		return "ARRAY"
-	case model.StandardizedTypeStruct, model.StandardizedTypeObject:
+	case model.StandardizedTypeStruct:
 		return "OBJECT"
 	default:
 		return "VARCHAR(16777216)"
@@ -154,7 +155,7 @@ func (m *SnowflakeTypeMapper) ConvertSnowflakeValue(value interface{}, snowflake
 			}
 			return v, nil
 		default:
-			return v, nil
+			return value, nil  // Use the original value instead of v
 		}
 	default:
 		return value, nil
@@ -176,7 +177,7 @@ func (m *SnowflakeTypeMapper) GetSnowflakeTypeFromValue(value interface{}) strin
 		return "VARIANT"
 	}
 
-	switch v := value.(type) {
+	switch value.(type) {
 	case bool:
 		return "BOOLEAN"
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
@@ -330,12 +331,12 @@ func (m *SnowflakeTypeMapper) GetTypeInfo(snowflakeType string) *SnowflakeTypeIn
 	baseType, precision, scale, _ := m.ParseTypeDefinition(snowflakeType)
 
 	info := &SnowflakeTypeInfo{
-		BaseType:       baseType,
-		FullType:       snowflakeType,
-		Precision:      precision,
-		Scale:          scale,
+		BaseType:         baseType,
+		FullType:         snowflakeType,
+		Precision:        precision,
+		Scale:            scale,
 		IsSemiStructured: m.IsSemiStructuredType(snowflakeType),
-		Affinity:       m.GetTypeAffinity(snowflakeType),
+		Affinity:         m.GetTypeAffinity(snowflakeType),
 	}
 
 	return info
@@ -350,5 +351,3 @@ type SnowflakeTypeInfo struct {
 	IsSemiStructured bool
 	Affinity         TypeAffinity
 }
-
-

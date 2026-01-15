@@ -78,7 +78,7 @@ func (c *SnowflakeConfig) BuildDSN() (string, error) {
 
 	// Build DSN using gosnowflake format
 	// Format: user:password@account/database/schema?warehouse=warehouse&role=role
-	dsn := &gosnowflake.Config{
+	sfConfig := &gosnowflake.Config{
 		Account:        c.Account,
 		User:           c.User,
 		Password:       c.Password,
@@ -93,7 +93,13 @@ func (c *SnowflakeConfig) BuildDSN() (string, error) {
 		RequestTimeout: c.RequestTimeout,
 	}
 
-	return fmt.Sprintf("%s:%s:%s@%s:%d/%s", c.User, c.Password, c.Account, c.Host, c.Port, c.Database), nil
+	// Use gosnowflake's built-in DSN construction
+	dsn, err := gosnowflake.DSN(sfConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to build DSN: %w", err)
+	}
+
+	return dsn, nil
 }
 
 // BuildDSNFromModelConfig builds Snowflake config from model.DataSourceConfig
@@ -117,15 +123,15 @@ func BuildDSNFromModelConfig(config *model.DataSourceConfig) (*SnowflakeConfig, 
 	sfConfig.Database = config.Database
 
 	// Schema can be in additional props
-	if schema, ok := config.AdditionalProps["schema"]; ok {
+	if schema, ok := config.AdditionalProps["schema"].(string); ok {
 		sfConfig.Schema = schema
 	}
 
-	if warehouse, ok := config.AdditionalProps["warehouse"]; ok {
+	if warehouse, ok := config.AdditionalProps["warehouse"].(string); ok {
 		sfConfig.Warehouse = warehouse
 	}
 
-	if role, ok := config.AdditionalProps["role"]; ok {
+	if role, ok := config.AdditionalProps["role"].(string); ok {
 		sfConfig.Role = role
 	}
 
@@ -283,22 +289,8 @@ func EstimateQueryCost(warehouseSize, duration time.Duration) float64 {
 	// Simplified cost estimation based on warehouse size and duration
 	// Actual costs depend on Snowflake pricing and credits
 
-	creditsPerHour := map[string]float64{
-		"XSMALL":    1.0,
-		"SMALL":     2.0,
-		"MEDIUM":    4.0,
-		"LARGE":     8.0,
-		"XLARGE":    16.0,
-		"XXLARGE":   32.0,
-		"XXXLARGE":  64.0,
-		"XXXXLARGE": 128.0,
-	}
-
-	// Convert duration to hours for cost calculation
-	hours := duration.Hours()
-
-	// Use a default rate since warehouseSize is time.Duration, not string
-	rate := 2.0 // Default to SMALL
+	// Use a default rate
+	rate := 2.0 // Default to SMALL equivalent
 
 	hours := duration.Hours()
 	return hours * rate

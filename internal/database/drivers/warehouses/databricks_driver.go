@@ -349,3 +349,15 @@ func (d *DatabricksDriver) ExecuteNotebook(ctx context.Context, notebookID strin
 func (d *DatabricksDriver) CancelNotebookRun(ctx context.Context, runID string) error {
 	return fmt.Errorf("notebook cancellation not yet implemented")
 }
+
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *DatabricksDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Databricks uses LIMIT and OFFSET for pagination
+	if batchSize <= 0 {
+		return "", fmt.Errorf("batch size must be greater than 0")
+	}
+
+	// Append LIMIT and OFFSET clauses
+	limitOffsetClause := fmt.Sprintf(" LIMIT %d OFFSET %d", batchSize, offset)
+	return sql + limitOffsetClause, nil
+}

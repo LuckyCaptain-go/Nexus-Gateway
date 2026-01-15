@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nexus-gateway/internal/database/drivers"
+	"strings"
 	"time"
 
 	"nexus-gateway/internal/model"
@@ -221,12 +222,27 @@ func (d *OceanBaseOracleDriver) GetOracleCompatibilityMode(ctx context.Context, 
 	}, nil
 }
 
+// ApplyBatchPagination applies pagination to a SQL query for batch processing
+func (d *OceanBaseOracleDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	sql = strings.TrimSpace(sql)
+
+	// Check if query already has pagination clauses
+	sqlUpper := strings.ToUpper(sql)
+	if (strings.Contains(sqlUpper, " OFFSET ") && strings.Contains(sqlUpper, " ROWS")) ||
+		(strings.Contains(sqlUpper, " FETCH FIRST ") && strings.Contains(sqlUpper, " ROWS ONLY")) {
+		// For complex queries with existing pagination, add a subquery wrapper
+		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query OFFSET %%d ROWS FETCH FIRST %%d ROWS ONLY", sql, offset, batchSize), nil
+
+	}
+	if offset > 0 {
+		return fmt.Sprintf("%%s OFFSET %%d ROWS FETCH FIRST %%d ROWS ONLY", sql, offset, batchSize), nil
+	}
+	return fmt.Sprintf("%%s FETCH FIRST %%d ROWS ONLY", sql, batchSize), nil
+}
+
 // OceanBaseCompatibilityInfo represents compatibility mode info
 type OceanBaseCompatibilityInfo struct {
 	Version       string
 	Compatibility string
 	Mode          string
 }
-
-// RegisterOceanBaseOracleDriver registers the OceanBase Oracle driver globally
-

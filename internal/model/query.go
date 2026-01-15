@@ -49,9 +49,10 @@ type QueryResponse struct {
 
 // ColumnInfo represents column information in the result set
 type ColumnInfo struct {
-	Name     string `json:"name"`
-	Type     string `json:"type"`
-	Nullable bool   `json:"nullable"`
+	Name         string             `json:"name"`
+	Type         StandardizedType   `json:"type"`
+	Nullable     bool               `json:"nullable"`
+	NestedFields []ColumnInfo       `json:"nestedFields,omitempty"` // For nested structures like structs/records
 }
 
 // QueryMetadata contains metadata about the query execution
@@ -99,7 +100,9 @@ type StandardizedType string
 const (
 	TypeInteger   StandardizedType = "integer"
 	TypeBigInt    StandardizedType = "bigint"
+	TypeInt64     StandardizedType = "int64"     // Added for compatibility
 	TypeFloat     StandardizedType = "float"
+	TypeFloat64   StandardizedType = "float64"   // Added for compatibility
 	TypeDouble    StandardizedType = "double"
 	TypeDecimal   StandardizedType = "decimal"
 	TypeString    StandardizedType = "string"
@@ -112,8 +115,63 @@ const (
 	TypeBinary    StandardizedType = "binary"
 	TypeJSON      StandardizedType = "json"
 	TypeUUID      StandardizedType = "uuid"
+	TypeArray     StandardizedType = "array"
+	TypeStruct    StandardizedType = "struct"
+	TypeGeography StandardizedType = "geography"
 	TypeUnknown   StandardizedType = "unknown"
 )
+
+// Alias constants for backward compatibility
+const (
+	StandardizedTypeString    StandardizedType = TypeString
+	StandardizedTypeInteger   StandardizedType = TypeInteger
+	StandardizedTypeBigInt    StandardizedType = TypeBigInt
+	StandardizedTypeInt64     StandardizedType = TypeInt64     // Added alias
+	StandardizedTypeFloat     StandardizedType = TypeFloat
+	StandardizedTypeFloat64   StandardizedType = TypeFloat64   // Added alias
+	StandardizedTypeDouble    StandardizedType = TypeDouble
+	StandardizedTypeDecimal   StandardizedType = TypeDecimal
+	StandardizedTypeText      StandardizedType = TypeText
+	StandardizedTypeBoolean   StandardizedType = TypeBoolean
+	StandardizedTypeDate      StandardizedType = TypeDate
+	StandardizedTypeTime      StandardizedType = TypeTime
+	StandardizedTypeDateTime  StandardizedType = TypeDateTime
+	StandardizedTypeTimestamp StandardizedType = TypeTimestamp
+	StandardizedTypeBinary    StandardizedType = TypeBinary
+	StandardizedTypeJSON      StandardizedType = TypeJSON
+	StandardizedTypeUUID      StandardizedType = TypeUUID
+	StandardizedTypeArray     StandardizedType = TypeArray
+	StandardizedTypeStruct    StandardizedType = TypeStruct
+	StandardizedTypeGeography StandardizedType = TypeGeography
+	StandardizedTypeUnknown   StandardizedType = TypeUnknown
+)
+
+// TableSchema represents the schema of a single table
+type TableSchema struct {
+	Name        string         `json:"name"`
+	Schema      string         `json:"schema,omitempty"` // Database/schema name
+	Type        string         `json:"type,omitempty"`   // TABLE, VIEW, etc.
+	Columns     []ColumnInfo   `json:"columns"`
+	PrimaryKey  []string       `json:"primaryKey,omitempty"`
+	Indexes     []IndexSchema  `json:"indexes,omitempty"`
+	ForeignKeys []ForeignKeySchema `json:"foreignKeys,omitempty"`
+	Properties  map[string]interface{} `json:"properties,omitempty"` // Table-specific properties
+}
+
+// IndexSchema represents an index definition
+type IndexSchema struct {
+	Name    string   `json:"name"`
+	Columns []string `json:"columns"`
+	Unique  bool     `json:"unique"`
+}
+
+// ForeignKeySchema represents a foreign key definition
+type ForeignKeySchema struct {
+	Name         string   `json:"name"`
+	Columns      []string `json:"columns"`
+	ReferTable   string   `json:"referTable"`
+	ReferColumns []string `json:"referColumns"`
+}
 
 // QueryStats represents query execution statistics
 type QueryStats struct {
