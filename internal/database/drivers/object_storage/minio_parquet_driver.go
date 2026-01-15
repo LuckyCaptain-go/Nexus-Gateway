@@ -6,24 +6,23 @@ import (
 	"fmt"
 	"io"
 	"nexus-gateway/internal/database/drivers"
-
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+	"time"
 )
 
 // MinIOParquetDriver implements Driver interface for querying Parquet files on MinIO
 type MinIOParquetDriver struct {
-	minioClient      *MinIOClient
-	parquetReader    *ParquetReader
-	s3ParquetDriver  *S3ParquetDriver // Reuse S3 driver logic
-	config           *MinIOParquetDriverConfig
+	minioClient     *MinIOClient
+	parquetReader   *ParquetReader
+	s3ParquetDriver *S3ParquetDriver // Reuse S3 driver logic
+	config          *MinIOParquetDriverConfig
 }
 
 // MinIOParquetDriverConfig holds MinIO Parquet driver configuration
 type MinIOParquetDriverConfig struct {
-	MinIOConfig      *MinIOConfig
-	BatchSize        int
-	EnablePushdown   bool
+	MinIOConfig    *MinIOConfig
+	BatchSize      int
+	EnablePushdown bool
 }
 
 // NewMinIOParquetDriver creates a new MinIO Parquet driver
@@ -31,19 +30,6 @@ func NewMinIOParquetDriver(ctx context.Context, config *MinIOParquetDriverConfig
 	minioClient, err := NewMinIOClient(ctx, config.MinIOConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create MinIO client: %w", err)
-	}
-
-	// Create an S3-compatible config for the Parquet reader
-	s3Config := &S3Config{
-		Bucket:          config.MinIOConfig.Bucket,
-		Region:          config.MinIOConfig.Region,
-		AccessKey:       config.MinIOConfig.AccessKey,
-		SecretKey:       config.MinIOConfig.SecretKey,
-		SessionToken:    config.MinIOConfig.Token,
-		EndpointURL:     config.MinIOConfig.Endpoint,
-		DisableSSL:      !config.MinIOConfig.Secure,
-		ForcePathStyle:  true, // Required for MinIO
-		MaxRetries:      3,
 	}
 
 	// Note: We can't directly reuse S3Client because MinIO uses a different client
@@ -63,7 +49,7 @@ func (d *MinIOParquetDriver) Open(dsn string) (*sql.DB, error) {
 // ValidateDSN validates the connection string
 func (d *MinIOParquetDriver) ValidateDSN(dsn string) error {
 	// Parse MinIO URI
-	bucket, key, err := ParseS3URI(dsn) // Reuse S3 URI parser
+	bucket, _, err := ParseS3URI(dsn) // Reuse S3 URI parser
 	if err != nil {
 		return fmt.Errorf("invalid MinIO URI: %w", err)
 	}
@@ -142,12 +128,6 @@ func (d *MinIOParquetDriver) Query(ctx context.Context, query *MinIOParquetQuery
 		return nil, fmt.Errorf("Parquet file key is required")
 	}
 
-	// Download Parquet file
-	data, err := d.minioClient.GetObject(ctx, query.Key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Parquet file: %w", err)
-	}
-
 	// Create a seekable reader for the Parquet file
 	reader := NewMinIOParquetReader(d.minioClient, query.Key)
 
@@ -198,8 +178,8 @@ type MinIOParquetQuery struct {
 
 // MinIOParquetResult represents query results
 type MinIOParquetResult struct {
-	Rows     []map[string]interface{}
-	NumRows  int64
+	Rows      []map[string]interface{}
+	NumRows   int64
 	BytesRead int64
 }
 
@@ -345,10 +325,24 @@ func (d *MinIOParquetDriver) ValidateFile(ctx context.Context, key string) error
 	return err
 }
 
-
 // ConvertToStandardSchema converts Parquet schema to standard schema
 func (d *MinIOParquetDriver) ConvertToStandardSchema(parquetSchema *ParquetSchema) model.TableSchema {
-	return mapParquetTypeToStandardSchema(parquetSchema)
+	// TODO: Implement actual mapping from Parquet schema to standard schema
+	stdSchema := model.TableSchema{
+		Columns: make([]model.ColumnInfo, 0, len(parquetSchema.Columns)),
+	}
+
+	for _, col := range parquetSchema.Columns {
+		stdCol := model.ColumnInfo{
+			Name: col.Name,
+			// TODO: Implement proper type mapping
+			Type:     "string",
+			Nullable: true, // Default to true
+		}
+		stdSchema.Columns = append(stdSchema.Columns, stdCol)
+	}
+
+	return stdSchema
 }
 
 // MinIOParquetReader reads Parquet files from MinIO
@@ -367,18 +361,6 @@ func NewMinIOParquetReader(minioClient *MinIOClient, key string) *MinIOParquetRe
 
 // Read reads Parquet file from MinIO
 func (r *MinIOParquetReader) Read(ctx context.Context) (*ParquetFileReader, error) {
-	// Download file data
-	data, err := r.minioClient.GetObject(ctx, r.key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Parquet file: %w", err)
-	}
-
-	// Create a memory file reader
-	memFile := &MemoryFile{
-		data: data,
-		name: r.key,
-	}
-
 	// Create Parquet reader (simplified - would use actual Parquet library)
 	// For now, return a mock reader
 	return &ParquetFileReader{
@@ -429,8 +411,8 @@ func (f *MemoryFile) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Close implements io.Closer
+func (f *MemoryFile) Close() error {
 	return nil
-		    "time"
 }
 
 // GetSize returns the file size
@@ -438,4 +420,10 @@ func (f *MemoryFile) GetSize() int64 {
 	return int64(len(f.data))
 }
 
-import "time"
+// ApplyBatchPagination adds pagination to SQL query
+func (d *MinIOParquetDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For MinIO Parquet files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Parquet files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
+}

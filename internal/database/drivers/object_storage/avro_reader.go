@@ -1,9 +1,11 @@
 package object_storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/linkedin/goavro/v2"
 )
@@ -80,7 +82,8 @@ func (r *AvroFileReader) ReadAll() ([]map[string]interface{}, error) {
 	// Read all records
 	var records []map[string]interface{}
 	for {
-		datum, err := ocf.Read()
+		// Attempt to read the next record
+		textual, err := ocf.Read()
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -89,7 +92,7 @@ func (r *AvroFileReader) ReadAll() ([]map[string]interface{}, error) {
 		}
 
 		// Convert to map
-		record, ok := datum.(map[string]interface{})
+		record, ok := textual.(map[string]interface{})
 		if !ok {
 			return nil, fmt.Errorf("unexpected Avro datum type")
 		}
@@ -103,10 +106,7 @@ func (r *AvroFileReader) ReadAll() ([]map[string]interface{}, error) {
 // GetSchema returns Avro schema
 func (r *AvroFileReader) GetSchema() (*AvroSchema, error) {
 	// Extract schema from codec
-	schemaJSON, err := r.codec.Schema()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get schema: %w", err)
-	}
+	schemaJSON := r.codec.Schema()
 
 	schema := &AvroSchema{
 		JSON: schemaJSON,

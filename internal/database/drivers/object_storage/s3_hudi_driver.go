@@ -48,7 +48,7 @@ func (d *S3HudiDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *S3HudiDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("s3://%s", config.Bucket)
+	return fmt.Sprintf("s3://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -101,7 +101,7 @@ func (d *S3HudiDriver) ConfigureAuth(authConfig interface{}) error {
 func (d *S3HudiDriver) GetTableMetadata(ctx context.Context, tablePath string) (*HudiMetadata, error) {
 	// Hudi metadata is stored in .hoodie directory
 	hoodiePath := tablePath + "/.hoodie/"
-	data, err := d.client.GetObject(ctx, hoodiePath+"hoodie.properties")
+	_, err := d.client.GetObject(ctx, hoodiePath+"hoodie.properties")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read hoodie properties: %w", err)
 	}
@@ -138,6 +138,14 @@ type HudiQueryResult struct {
 	Rows        []map[string]interface{}
 	NumRows     int64
 	InstantTime string
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *S3HudiDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 Hudi files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Hudi files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }
 
 

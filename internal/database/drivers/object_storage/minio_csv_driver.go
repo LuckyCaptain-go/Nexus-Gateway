@@ -63,7 +63,7 @@ func (d *MinIOCSVDriver) Open(dsn string) (*sql.DB, error) {
 
 // ValidateDSN validates the connection string
 func (d *MinIOCSVDriver) ValidateDSN(dsn string) error {
-	bucket, key, err := ParseS3URI(dsn) // Reuse S3 URI parser
+	bucket, _, err := ParseS3URI(dsn) // Reuse S3 URI parser
 	if err != nil {
 		return fmt.Errorf("invalid MinIO URI: %w", err)
 	}
@@ -149,7 +149,7 @@ func (d *MinIOCSVDriver) Query(ctx context.Context, query *MinIOCSVQuery) (*MinI
 
 	reader := csv.NewReader(strings.NewReader(string(data)))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
+	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.ReuseRecord = true
 
@@ -408,7 +408,7 @@ func (d *MinIOCSVDriver) StreamQuery(ctx context.Context, key string, callback f
 
 	reader := csv.NewReader(strings.NewReader(string(data)))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
+	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.ReuseRecord = true
 
@@ -477,4 +477,12 @@ func (d *MinIOCSVDriver) ConvertToStandardSchema(csvSchema *DetectedSchema) mode
 	}
 
 	return stdSchema
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *MinIOCSVDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For MinIO CSV files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since CSV files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }

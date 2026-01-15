@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 // S3Client wraps AWS S3 client with convenience methods
@@ -45,7 +46,7 @@ func NewS3Client(ctx context.Context, s3Config *S3Config) (*S3Client, error) {
 	}
 
 	// Load AWS configuration
-	cfgOpts := []config.LoadOptionsOption{
+	cfgOpts := []func(*config.LoadOptions) error{
 		config.WithRegion(s3Config.Region),
 	}
 
@@ -73,10 +74,14 @@ func NewS3Client(ctx context.Context, s3Config *S3Config) (*S3Client, error) {
 
 	// Assume IAM role if specified
 	if s3Config.RoleARN != "" {
-		stsClient := stscreds.NewAssumeRoleProvider(stscreds.NewAssumeRoleProvider(
-		// STS client would be created here
-		))
-		cfg.Credentials = stsClient
+		// Create STS client for role assumption
+		stsSvc := sts.NewFromConfig(cfg)
+		stsRoleCredentials := stscreds.NewAssumeRoleProvider(stsSvc, s3Config.RoleARN, func(o *stscreds.AssumeRoleOptions) {
+			if s3Config.ExternalID != "" {
+				o.ExternalID = aws.String(s3Config.ExternalID)
+			}
+		})
+		cfg.Credentials = stsRoleCredentials
 	}
 
 	// Create S3 client
@@ -127,8 +132,8 @@ func (c *S3Client) ListObjects(ctx context.Context, prefix string, maxKeys int32
 	for _, obj := range result.Contents {
 		objects = append(objects, S3Object{
 			Key:          aws.ToString(obj.Key),
-			Size:         obj.Size,
-			LastModified: obj.LastModified,
+			Size:         aws.ToInt64(obj.Size),
+			LastModified: aws.ToTime(obj.LastModified),
 			ETag:         aws.ToString(obj.ETag),
 			StorageClass: string(obj.StorageClass),
 		})
@@ -158,8 +163,8 @@ func (c *S3Client) ListObjectsWithDelimiter(ctx context.Context, prefix, delimit
 	for _, obj := range result.Contents {
 		s3Result.Objects = append(s3Result.Objects, S3Object{
 			Key:          aws.ToString(obj.Key),
-			Size:         obj.Size,
-			LastModified: obj.LastModified,
+			Size:         aws.ToInt64(obj.Size),
+			LastModified: aws.ToTime(obj.LastModified),
 			ETag:         aws.ToString(obj.ETag),
 			StorageClass: string(obj.StorageClass),
 		})
@@ -298,7 +303,7 @@ func (c *S3Client) DeleteObjects(ctx context.Context, keys []string) error {
 
 	input := &s3.DeleteObjectsInput{
 		Bucket: aws.String(c.config.Bucket),
-		Delete: types.Delete{Objects: objectIds},
+		Delete: &types.Delete{Objects: objectIds},
 	}
 
 	_, err := c.client.DeleteObjects(ctx, input)
@@ -389,7 +394,7 @@ func (c *S3Client) GetBucketLocation(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to get bucket location: %w", err)
 	}
 
-	location := aws.ToString(result.LocationConstraint)
+	location := string(result.LocationConstraint)
 	if location == "" {
 		location = "us-east-1" // Default region
 	}

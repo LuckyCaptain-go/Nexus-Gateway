@@ -72,7 +72,7 @@ type DetectedColumn struct {
 func (d *CSVSchemadDetector) DetectSchema(data []byte) (*DetectedSchema, error) {
 	reader := csv.NewReader(bytes.NewReader(data))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
+	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 
 	// Skip header rows if needed
@@ -103,7 +103,7 @@ func (d *CSVSchemadDetector) DetectSchema(data []byte) (*DetectedSchema, error) 
 		if err == io.EOF {
 			break
 		}
-		if err != null {
+		if err != nil {
 			return nil, fmt.Errorf("failed to read row: %w", err)
 		}
 
@@ -171,7 +171,7 @@ func (d *CSVSchemadDetector) detectColumn(name string, colIdx int, rows [][]stri
 	valueSet := make(map[string]bool)
 	typeCounts := make(map[string]int)
 
-	for _, row := range row {
+	for _, row := range rows {
 		if colIdx >= len(row) {
 			continue
 		}
@@ -419,7 +419,8 @@ func (d *CSVSchemadDetector) DetectDelimiter(data []byte) rune {
 func (d *CSVSchemadDetector) DetectHasHeader(data []byte) bool {
 	reader := csv.NewReader(bytes.NewReader(data))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
+	reader.FieldsPerRecord = -1
+	reader.LazyQuotes = true
 
 	// Read first few rows
 	rows := make([][]string, 0, 10)

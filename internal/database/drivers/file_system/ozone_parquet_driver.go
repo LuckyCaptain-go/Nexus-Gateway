@@ -15,6 +15,11 @@ type OzoneParquetDriver struct {
 	client *OzoneClient
 }
 
+func (d *OzoneParquetDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewOzoneParquetDriver creates a new Ozone Parquet driver
 func NewOzoneParquetDriver(ctx context.Context, config *OzoneConfig) (*OzoneParquetDriver, error) {
 	client, err := NewOzoneClient(ctx, config)
@@ -131,5 +136,3 @@ type OzoneParquetResult struct {
 func (d *OzoneParquetDriver) GetCapacity(ctx context.Context) (*OzoneCapacity, error) {
 	return d.client.GetCapacity(ctx)
 }
-
-

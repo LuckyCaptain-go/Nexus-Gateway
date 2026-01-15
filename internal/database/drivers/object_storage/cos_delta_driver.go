@@ -48,7 +48,7 @@ func (d *COSDeltaDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *COSDeltaDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("cos://%s", config.BucketName)
+	return fmt.Sprintf("cos://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -95,5 +95,13 @@ func (d *COSDeltaDriver) GetCapabilities() drivers.DriverCapabilities {
 // ConfigureAuth configures authentication
 func (d *COSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *COSDeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For COS Delta files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Delta files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }
 

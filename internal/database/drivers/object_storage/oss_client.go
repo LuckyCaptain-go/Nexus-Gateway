@@ -1,9 +1,11 @@
 package object_storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -11,9 +13,9 @@ import (
 
 // OSSClient wraps Alibaba Cloud OSS client
 type OSSClient struct {
-	client     *oss.Client
-	bucket     *oss.Bucket
-	config     *OSSConfig
+	client *oss.Client
+	bucket *oss.Bucket
+	config *OSSConfig
 }
 
 // OSSConfig holds Alibaba Cloud OSS configuration
@@ -114,12 +116,32 @@ func (c *OSSClient) GetObjectMetadata(ctx context.Context, key string) (*OSSObje
 		return nil, fmt.Errorf("failed to get object metadata: %w", err)
 	}
 
+	// Initialize basic metadata
 	metadata := &OSSObjectMetadata{
-		Key:           key,
-		ContentLength: meta.ContentLength,
-		ContentType:   meta.ContentType,
-		LastModified:  meta.LastModified,
-		ETag:          meta.ETag,
+		Key: key,
+	}
+
+	// Parse Content-Length from the metadata
+	if contentLengthStr := meta.Get("Content-Length"); contentLengthStr != "" {
+		if contentLength, parseErr := strconv.ParseInt(contentLengthStr, 10, 64); parseErr == nil {
+			metadata.ContentLength = contentLength
+		}
+	}
+
+	// Parse Last-Modified timestamp
+	if lastModifiedStr := meta.Get("Last-Modified"); lastModifiedStr != "" {
+		if lastModified, parseErr := time.Parse(time.RFC1123, lastModifiedStr); parseErr == nil {
+			metadata.LastModified = lastModified
+		}
+	}
+
+	// Set ETag
+	if etag := meta.Get("ETag"); etag != "" {
+		metadata.ETag = etag
+	}
+
+	if contentType := meta.Get("Content-Type"); contentType != "" {
+		metadata.ContentType = contentType
 	}
 
 	if contentEncoding := meta.Get("Content-Encoding"); contentEncoding != "" {
@@ -260,7 +282,3 @@ func extractRegionFromEndpoint(endpoint string) string {
 	}
 	return "unknown"
 }
-
-import (
-	"bytes"
-)

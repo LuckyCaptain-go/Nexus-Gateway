@@ -188,6 +188,14 @@ func (c *MinIOClient) GetObjectMetadata(ctx context.Context, key string) (*MinIO
 		return nil, fmt.Errorf("failed to stat object: %w", err)
 	}
 
+	// Convert http.Header to map[string]string
+	metadataMap := make(map[string]string)
+	for k, v := range stat.Metadata {
+		if len(v) > 0 {
+			metadataMap[k] = v[0]
+		}
+	}
+
 	metadata := &MinIOObjectMetadata{
 		Key:           key,
 		ContentLength: stat.Size,
@@ -195,7 +203,7 @@ func (c *MinIOClient) GetObjectMetadata(ctx context.Context, key string) (*MinIO
 		LastModified:  stat.LastModified,
 		ETag:          stat.ETag,
 		Expires:       stat.Expires,
-		Metadata:      stat.Metadata,
+		Metadata:      metadataMap,
 	}
 
 	if stat.ContentType != "" {
@@ -272,17 +280,23 @@ func (c *MinIOClient) DeleteObjects(ctx context.Context, keys []string) error {
 
 // CopyObject copies an object within MinIO
 func (c *MinIOClient) CopyObject(ctx context.Context, srcKey, destKey string) error {
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
+	// Get the source object
+	obj, err := c.client.GetObject(ctx, c.bucket, srcKey, minio.GetObjectOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get source object: %w", err)
+	}
+	defer obj.Close()
 
-	srcOpts := minio.CopySrcOptions{
-		Bucket: c.bucket,
-		Object: srcKey,
+	// Get object info
+	objInfo, err := obj.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat source object: %w", err)
 	}
 
-	destOpts := minio.PutObjectOptions{}
-
-	_, err := c.client.CopyObject(ctx, c.bucket, destKey, srcOpts, destOpts)
+	// Copy by uploading the content to the destination
+	_, err = c.client.PutObject(ctx, c.bucket, destKey, obj, objInfo.Size, minio.PutObjectOptions{
+		ContentType: objInfo.ContentType,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to copy object: %w", err)
 	}

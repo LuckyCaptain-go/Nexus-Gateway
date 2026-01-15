@@ -40,6 +40,9 @@ func (h *AzureSASTokenHandler) GenerateSASToken(blobName string, permissions str
 		return "", fmt.Errorf("failed to create credential: %w", err)
 	}
 
+		// Create permissions from string
+	pBlobPermissions := createBlobPermissionsFromString(permissions)
+
 	// Build SAS URL
 	sasQueryParams, err := sas.BlobSignatureValues{
 		Protocol:      sas.ProtocolHTTPS,
@@ -47,7 +50,7 @@ func (h *AzureSASTokenHandler) GenerateSASToken(blobName string, permissions str
 		ExpiryTime:    expiryTime.UTC(),
 		ContainerName: h.containerName,
 		BlobName:      blobName,
-		Permissions:   sas.BlobPermissions(permissions).String(),
+		Permissions:   pBlobPermissions.String(),
 	}.SignWithSharedKey(credential)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign SAS token: %w", err)
@@ -70,12 +73,15 @@ func (h *AzureSASTokenHandler) GenerateContainerSAS(permissions string, expiry t
 		return "", fmt.Errorf("failed to create credential: %w", err)
 	}
 
+	// Create permissions from string
+	pBlobPermissions := createBlobPermissionsFromString(permissions)
+
 	sasQueryParams, err := sas.BlobSignatureValues{
 		Protocol:      sas.ProtocolHTTPS,
 		StartTime:     time.Now().UTC().Add(-5 * time.Minute),
 		ExpiryTime:    expiryTime.UTC(),
 		ContainerName: h.containerName,
-		Permissions:   sas.BlobPermissions(permissions).String(),
+		Permissions:   pBlobPermissions.String(),
 	}.SignWithSharedKey(credential)
 	if err != nil {
 		return "", fmt.Errorf("failed to sign SAS token: %w", err)
@@ -228,4 +234,36 @@ func (h *AzureSASTokenHandler) GenerateReadWriteSAS(blobName string, expiry time
 // GenerateListSAS generates a list-only SAS token
 func (h *AzureSASTokenHandler) GenerateListSAS(expiry time.Duration) (string, error) {
 	return h.GenerateContainerSAS("l", expiry)
+}
+
+// createBlobPermissionsFromString creates a BlobPermissions struct from a permission string
+func createBlobPermissionsFromString(permissionStr string) sas.BlobPermissions {
+	var perms sas.BlobPermissions
+	for _, char := range permissionStr {
+		switch char {
+		case 'r':
+			perms.Read = true
+		case 'w':
+			perms.Write = true
+		case 'd':
+			perms.Delete = true
+		case 'l':
+			perms.List = true
+		case 'a':
+			perms.Add = true
+		case 'c':
+			perms.Create = true
+		case 'e':
+			perms.Execute = true
+		case 'm':
+			perms.Move = true
+		case 't':
+			perms.Tag = true
+		case 'o':
+			perms.Ownership = true
+		case 'p':
+			perms.Permissions = true
+		}
+	}
+	return perms
 }

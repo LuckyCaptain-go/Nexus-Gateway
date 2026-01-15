@@ -99,18 +99,19 @@ func (d *HDFSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 
 // GetTableMetadata retrieves Delta Lake table metadata
 func (d *HDFSDeltaDriver) GetTableMetadata(ctx context.Context, tablePath string) (*DeltaMetadata, error) {
-	logPath := tablePath + "/_delta_log"
-	data, err := d.client.ReadFile(ctx, logPath+"/00000000000000000000.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read delta log: %w", err)
-	}
-
-	// Parse Delta Lake transaction log (placeholder)
-	return &DeltaMetadata{
-		TableLocation: tablePath,
-		Format:        "delta",
-		Version:       0,
-	}, nil
+	//logPath := tablePath + "/_delta_log"
+	//data, err := d.client.ReadFile(ctx, logPath+"/00000000000000000000.json")
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to read delta log: %w", err)
+	//}
+	//
+	//// Parse Delta Lake transaction log (placeholder)
+	//return &DeltaMetadata{
+	//	TableLocation: tablePath,
+	//	Format:        "delta",
+	//	Version:       0,
+	//}, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 // DeltaMetadata and DeltaQueryResult are defined in common_types.go
@@ -125,4 +126,3 @@ func (d *HDFSDeltaDriver) QueryTable(ctx context.Context, tablePath string, vers
 }
 
 // RegisterHDFSDeltaDriver registers the HDFS Delta Lake driver globally
-

@@ -1,9 +1,9 @@
 package object_storage
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"regexp"
 	"strings"
 )

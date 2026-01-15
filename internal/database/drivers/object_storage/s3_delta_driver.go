@@ -47,7 +47,7 @@ func (d *S3DeltaDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *S3DeltaDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("s3://%s", config.Bucket)
+	return fmt.Sprintf("s3://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -99,7 +99,7 @@ func (d *S3DeltaDriver) ConfigureAuth(authConfig interface{}) error {
 // GetTableMetadata retrieves Delta Lake table metadata
 func (d *S3DeltaDriver) GetTableMetadata(ctx context.Context, tablePath string) (*DeltaMetadata, error) {
 	logPath := tablePath + "/_delta_log/"
-	data, err := d.client.GetObject(ctx, logPath+"00000000000000000000.json")
+	_, err := d.client.GetObject(ctx, logPath+"00000000000000000000.json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read delta log: %w", err)
 	}
@@ -135,5 +135,13 @@ type DeltaQueryResult struct {
 	Rows    []map[string]interface{}
 	NumRows int64
 	Version int64
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *S3DeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 Delta files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Delta files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }
 

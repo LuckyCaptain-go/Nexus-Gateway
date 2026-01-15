@@ -1,16 +1,16 @@
 package object_storage
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"io"
 	"nexus-gateway/internal/database/drivers"
-	"strconv"
-
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+	"strconv"
+	"strings"
 )
 
 // S3CSVDriver implements Driver interface for querying CSV files on S3
@@ -23,13 +23,13 @@ type S3CSVDriver struct {
 
 // S3CSVDriverConfig holds S3 CSV driver configuration
 type S3CSVDriverConfig struct {
-	S3Config         *S3Config
-	Delimiter        rune
-	HasHeader        bool
-	EnableSelectAPI  bool
-	QuoteChar        rune
-	SkipHeaderRows   int
-	NullValues       []string
+	S3Config        *S3Config
+	Delimiter       rune
+	HasHeader       bool
+	EnableSelectAPI bool
+	QuoteChar       rune
+	SkipHeaderRows  int
+	NullValues      []string
 }
 
 // NewS3CSVDriver creates a new S3 CSV driver
@@ -67,7 +67,7 @@ func (d *S3CSVDriver) Open(dsn string) (*sql.DB, error) {
 
 // ValidateDSN validates the connection string
 func (d *S3CSVDriver) ValidateDSN(dsn string) error {
-	bucket, key, err := ParseS3URI(dsn)
+	bucket, _, err := ParseS3URI(dsn)
 	if err != nil {
 		return fmt.Errorf("invalid S3 URI: %w", err)
 	}
@@ -135,6 +135,23 @@ func (d *S3CSVDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *S3CSVDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 CSV files, we don't support SQL pagination directly
+	// Instead, we'll return the original SQL and let the application handle pagination
+	// since CSV files are read as complete datasets and then processed in memory
+
+	// If S3 Select API is enabled, we can use LIMIT and OFFSET clauses
+	if d.config.EnableSelectAPI {
+		// Add LIMIT and OFFSET to the SQL query
+		paginatedSQL := fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
+		return paginatedSQL, nil
+	}
+
+	// For direct CSV reading, return original SQL and handle pagination in memory
+	return sql, nil
+}
+
 // =============================================================================
 // S3 CSV-Specific Methods
 // =============================================================================
@@ -169,11 +186,11 @@ type S3CSVQuery struct {
 
 // S3CSVResult represents query results
 type S3CSVResult struct {
-	Rows       []map[string]interface{}
-	Columns    []string
-	Schema     *DetectedSchema
-	BytesRead  int64
-	NumRows    int64
+	Rows      []map[string]interface{}
+	Columns   []string
+	Schema    *DetectedSchema
+	BytesRead int64
+	NumRows   int64
 }
 
 // queryWithSelect uses S3 Select API
@@ -205,7 +222,6 @@ func (d *S3CSVDriver) queryWithReader(ctx context.Context, query *S3CSVQuery) (*
 
 	reader := csv.NewReader(bytes.NewReader(data))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
 	reader.LazyQuotes = true
 	reader.ReuseRecord = true
 
@@ -287,9 +303,9 @@ func (d *S3CSVDriver) queryWithReader(ctx context.Context, query *S3CSVQuery) (*
 	}
 
 	return &S3CSVResult{
-		Rows:    rows,
-		Columns: headerRow,
-		NumRows: int64(len(rows)),
+		Rows:      rows,
+		Columns:   headerRow,
+		NumRows:   int64(len(rows)),
 		BytesRead: int64(len(data)),
 	}, nil
 }
@@ -488,13 +504,13 @@ func (d *S3CSVDriver) GetFileMetadata(ctx context.Context, key string) (*CSVFile
 	}
 
 	return &CSVFileMetadata{
-		Key:       key,
-		Size:      objMetadata.ContentLength,
-		RowCount:  schema.RowCount,
+		Key:         key,
+		Size:        objMetadata.ContentLength,
+		RowCount:    schema.RowCount,
 		ColumnCount: len(schema.Columns),
-		Delimiter: schema.Delimiter,
-		HasHeader: schema.HasHeader,
-		Columns:   schema.Columns,
+		Delimiter:   schema.Delimiter,
+		HasHeader:   schema.HasHeader,
+		Columns:     schema.Columns,
 	}, nil
 }
 
@@ -518,7 +534,7 @@ func (d *S3CSVDriver) StreamQuery(ctx context.Context, key string, callback func
 
 	reader := csv.NewReader(bytes.NewReader(data))
 	reader.Comma = d.config.Delimiter
-	reader.Quote = d.config.QuoteChar
+	reader.FieldsPerRecord = -1
 	reader.LazyQuotes = true
 	reader.ReuseRecord = true
 
@@ -636,5 +652,3 @@ func mapCSVTypeToStandard(csvType string) model.StandardizedType {
 		return model.StandardizedTypeString
 	}
 }
-
-

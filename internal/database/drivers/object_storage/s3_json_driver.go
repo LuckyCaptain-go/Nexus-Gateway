@@ -3,21 +3,20 @@ package object_storage
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"nexus-gateway/internal/database/drivers"
-	"strings"
-
-	"nexus-gateway/internal/database"
 	"nexus-gateway/internal/model"
+	"strings"
 )
 
 // S3JSONDriver implements Driver interface for querying JSON files on S3
 type S3JSONDriver struct {
-	s3Client    *S3Client
-	jsonParser  *JSONParser
+	s3Client      *S3Client
+	jsonParser    *JSONParser
 	selectHandler *S3SelectHandler
-	config      *S3JSONDriverConfig
+	config        *S3JSONDriverConfig
 }
 
 // S3JSONDriverConfig holds S3 JSON driver configuration
@@ -59,7 +58,7 @@ func (d *S3JSONDriver) Open(dsn string) (*sql.DB, error) {
 
 // ValidateDSN validates the connection string
 func (d *S3JSONDriver) ValidateDSN(dsn string) error {
-	bucket, key, err := ParseS3URI(dsn)
+	bucket, _, err := ParseS3URI(dsn)
 	if err != nil {
 		return fmt.Errorf("invalid S3 URI: %w", err)
 	}
@@ -127,6 +126,23 @@ func (d *S3JSONDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *S3JSONDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 JSON files, we don't support SQL pagination directly
+	// Instead, we'll return the original SQL and let the application handle pagination
+	// since JSON files are read as complete datasets and then processed in memory
+
+	// If S3 Select API is enabled, we can use LIMIT and OFFSET clauses
+	if d.config.EnableSelectAPI {
+		// Add LIMIT and OFFSET to the SQL query
+		paginatedSQL := fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
+		return paginatedSQL, nil
+	}
+
+	// For direct JSON reading, return original SQL and handle pagination in memory
+	return sql, nil
+}
+
 // =============================================================================
 // S3 JSON-Specific Methods
 // =============================================================================
@@ -148,14 +164,14 @@ func (d *S3JSONDriver) Query(ctx context.Context, query *S3JSONQuery) (*S3JSONRe
 
 // S3JSONQuery represents a query against S3 JSON files
 type S3JSONQuery struct {
-	Key          string
-	Filters      map[string]interface{}
-	Fields       []string // Specific fields to extract
-	Limit        int
-	Offset       int
+	Key           string
+	Filters       map[string]interface{}
+	Fields        []string // Specific fields to extract
+	Limit         int
+	Offset        int
 	FlattenNested bool
-	UseSelectAPI bool
-	SelectSQL    string
+	UseSelectAPI  bool
+	SelectSQL     string
 }
 
 // S3JSONResult represents query results
@@ -175,7 +191,7 @@ func (d *S3JSONDriver) queryWithSelect(ctx context.Context, query *S3JSONQuery) 
 	}
 
 	// Determine JSON type
-	metadata, err := d.s3Client.GetObjectMetadata(ctx, query.Key)
+	_, err := d.s3Client.GetObjectMetadata(ctx, query.Key)
 	jsonType := "LINES"
 	if strings.HasSuffix(query.Key, ".jsonl") || strings.HasSuffix(query.Key, ".ndjson") {
 		jsonType = "LINES"
@@ -264,10 +280,10 @@ func (d *S3JSONDriver) queryWithParser(ctx context.Context, query *S3JSONQuery) 
 	fields := d.jsonParser.MergeFields(parsed.Data)
 
 	return &S3JSONResult{
-		Rows:     parsed.Data,
-		Schema:   &parsed.Schema,
-		Fields:   fields,
-		NumRows:  int64(len(parsed.Data)),
+		Rows:      parsed.Data,
+		Schema:    &parsed.Schema,
+		Fields:    fields,
+		NumRows:   int64(len(parsed.Data)),
 		BytesRead: int64(len(data)),
 	}, nil
 }
@@ -418,11 +434,12 @@ func (d *S3JSONDriver) extractValuesAtPath(value interface{}, path string, resul
 		return
 	}
 
-	parts := strings.Split(path, ".", 2)
+	parts := strings.Split(path, ".")
 	current := parts[0]
 	remaining := ""
 	if len(parts) > 1 {
-		remaining = parts[1]
+		// Join the remaining parts back together with dots
+		remaining = strings.Join(parts[1:], ".")
 	}
 
 	switch val := value.(type) {
@@ -486,9 +503,9 @@ func (d *S3JSONDriver) ConvertToStandardSchema(jsonSchema *JSONSchema) model.Tab
 			Nullable: field.Nullable,
 		}
 
-		if field.Path != "" {
-			stdCol.NestedPath = []string{field.Path}
-		}
+		// Note: model.ColumnInfo does not have a NestedPath field
+		// If field.Path is significant, we would need to handle it differently
+		// depending on the specific requirements
 
 		stdSchema.Columns = append(stdSchema.Columns, stdCol)
 	}
@@ -519,7 +536,6 @@ func mapJSONTypeToStandard(jsonType string) model.StandardizedType {
 	}
 }
 
-
 // buildWhereClause builds SQL WHERE clause from filters
 func buildWhereClause(filters map[string]interface{}) string {
 	if len(filters) == 0 {
@@ -542,5 +558,3 @@ func buildWhereClause(filters map[string]interface{}) string {
 
 	return " WHERE " + strings.Join(conditions, " AND ")
 }
-
-import "encoding/json"

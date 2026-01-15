@@ -213,7 +213,7 @@ func (d *DeltaDriver) GetPartitioningStrategy(ctx context.Context, catalog, sche
 	}
 
 	// Delta partition info would be in table properties
-	// Look for partition information in properties
+	// Look for partition-related properties
 	partitionCols := make([]string, 0)
 	
 	// Check if there are partition-related properties
@@ -318,6 +318,15 @@ func (d *DeltaDriver) GetLatestVersion(ctx context.Context, tablePath string) (i
 	return d.parser.GetLatestVersion(commits)
 }
 
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *DeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Delta Lake doesn't support direct pagination via SQL, but we can implement it using LIMIT and OFFSET
+	// when integrated with compute engines like Databricks, Spark, etc.
+	if batchSize <= 0 {
+		batchSize = 1000 // Default batch size
+	}
 
-
-
+	// For Delta Lake, we append LIMIT and OFFSET to the query
+	// Note: This assumes the query doesn't already have LIMIT clause
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}
