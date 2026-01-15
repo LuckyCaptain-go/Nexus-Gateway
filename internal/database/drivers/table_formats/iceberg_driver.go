@@ -176,3 +176,16 @@ func (d *IcebergDriver) GetSnapshotAtTime(ctx context.Context, namespace, table 
 func (d *IcebergDriver) GetSnapshotInfo(ctx context.Context, namespace, table string, snapshotID int64) (*IcebergSnapshot, error) {
 	return d.restClient.GetTableSnapshot(ctx, namespace, table, fmt.Sprintf("%d", snapshotID))
 }
+
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *IcebergDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Iceberg doesn't support direct pagination via SQL, but we can implement it using LIMIT and OFFSET
+	// when integrated with compute engines like Trino, Spark, etc.
+	if batchSize <= 0 {
+		batchSize = 1000 // Default batch size
+	}
+
+	// For Iceberg, we append LIMIT and OFFSET to the query
+	// Note: This assumes the query doesn't already have LIMIT clause
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}

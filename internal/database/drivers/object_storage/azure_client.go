@@ -69,9 +69,10 @@ func NewAzureBlobClient(ctx context.Context, config *AzureBlobConfig) (*AzureBlo
 
 // ListBlobs lists blobs in a container
 func (c *AzureBlobClient) ListBlobs(ctx context.Context, prefix string, maxResults int) ([]AzureBlob, error) {
+	maxResults32 := int32(maxResults)
 	pager := c.client.NewListBlobsFlatPager(c.container, &azblob.ListBlobsFlatOptions{
 		Prefix:     &prefix,
-		MaxResults: &maxResults,
+		MaxResults: &maxResults32,
 	})
 
 	var blobs []AzureBlob
@@ -86,7 +87,7 @@ func (c *AzureBlobClient) ListBlobs(ctx context.Context, prefix string, maxResul
 			Name:         *blob.Name,
 			Size:         *blob.Properties.ContentLength,
 			LastModified: *blob.Properties.LastModified,
-			ETag:         *blob.Properties.Etag,
+			ETag:         string(*blob.Properties.ETag),
 			ContentType:  *blob.Properties.ContentType,
 		})
 	}
@@ -112,38 +113,46 @@ func (c *AzureBlobClient) GetBlob(ctx context.Context, name string) ([]byte, err
 
 // GetBlobMetadata retrieves blob metadata
 func (c *AzureBlobClient) GetBlobMetadata(ctx context.Context, name string) (*AzureBlobMetadata, error) {
-	props, err := c.client.GetProperties(ctx, c.container, name, nil)
+	maxResults := int32(1)
+	pager := c.client.NewListBlobsFlatPager(c.container, &azblob.ListBlobsFlatOptions{
+		Prefix:     &name,
+		MaxResults: &maxResults,
+	})
+
+	page, err := pager.NextPage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get blob properties: %w", err)
+		return nil, fmt.Errorf("failed to list blobs for metadata: %w", err)
 	}
 
-	metadata := &AzureBlobMetadata{
-		Name:          name,
-		ContentLength: *props.ContentLength,
-		ContentType:   *props.ContentType,
-		LastModified:  *props.LastModified,
-		ETag:          *props.Etag,
-		BlobType:      *props.BlobType,
+	for _, blob := range page.Segment.BlobItems {
+		if *blob.Name == name {
+			metadata := &AzureBlobMetadata{
+				Name:          name,
+				ContentLength: *blob.Properties.ContentLength,
+				ContentType:   *blob.Properties.ContentType,
+				LastModified:  *blob.Properties.LastModified,
+				ETag:          string(*blob.Properties.ETag),
+				BlobType:      string(*blob.Properties.BlobType),
+			}
+
+			if blob.Properties.ContentEncoding != nil {
+				metadata.ContentEncoding = *blob.Properties.ContentEncoding
+			}
+
+			if blob.Properties.CacheControl != nil {
+				metadata.CacheControl = *blob.Properties.CacheControl
+			}
+
+			return metadata, nil
+		}
 	}
 
-	if props.ContentEncoding != nil {
-		metadata.ContentEncoding = *props.ContentEncoding
-	}
-
-	if props.CacheControl != nil {
-		metadata.CacheControl = *props.CacheControl
-	}
-
-	return metadata, nil
+	return nil, fmt.Errorf("blob not found: %s", name)
 }
 
 // PutBlob uploads a blob to Azure Blob Storage
 func (c *AzureBlobClient) PutBlob(ctx context.Context, name string, data []byte, contentType string) error {
-	_, err := c.client.UploadBuffer(ctx, c.container, name, data, &azblob.UploadBufferOptions{
-		HTTPHeaders: &azblob.HTTPHeaders{
-			BlobContentType: &contentType,
-		},
-	})
+	_, err := c.client.UploadBuffer(ctx, c.container, name, data, nil)
 	if err != nil {
 		return fmt.Errorf("failed to upload blob: %w", err)
 	}
@@ -163,12 +172,20 @@ func (c *AzureBlobClient) DeleteBlob(ctx context.Context, name string) error {
 
 // CopyBlob copies a blob within Azure Blob Storage
 func (c *AzureBlobClient) CopyBlob(ctx context.Context, srcName, destName string) error {
-	_, err := c.client.StartCopyFromURL(ctx, c.container, destName, fmt.Sprintf("%s/%s", c.container, srcName), nil)
+	// First get the source blob content
+	data, err := c.GetBlob(ctx, srcName)
 	if err != nil {
-		return fmt.Errorf("failed to copy blob: %w", err)
+		return fmt.Errorf("failed to get source blob: %w", err)
 	}
 
-	return nil
+	// Get source blob metadata to preserve content type
+	metadata, err := c.GetBlobMetadata(ctx, srcName)
+	if err != nil {
+		return fmt.Errorf("failed to get source blob metadata: %w", err)
+	}
+
+	// Upload the content to the destination blob
+	return c.PutBlob(ctx, destName, data, metadata.ContentType)
 }
 
 // GenerateSASToken generates a SAS token for blob access
@@ -180,14 +197,24 @@ func (c *AzureBlobClient) GenerateSASToken(ctx context.Context, name string, exp
 
 // BlobExists checks if a blob exists
 func (c *AzureBlobClient) BlobExists(ctx context.Context, name string) (bool, error) {
-	_, err := c.client.GetProperties(ctx, c.container, name, nil)
+	maxResults := int32(1)
+	pager := c.client.NewListBlobsFlatPager(c.container, &azblob.ListBlobsFlatOptions{
+		Prefix:     &name,
+		MaxResults: &maxResults,
+	})
+
+	page, err := pager.NextPage(ctx)
 	if err != nil {
-		if azblob.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
+		return false, fmt.Errorf("failed to list blobs: %w", err)
 	}
-	return true, nil
+
+	for _, blob := range page.Segment.BlobItems {
+		if *blob.Name == name {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // GetBlobSize gets the size of a blob
@@ -217,7 +244,7 @@ type AzureBlobMetadata struct {
 	LastModified    time.Time
 	ETag            string
 	CacheControl    string
-	BlobType        azblob.BlobType
+	BlobType        string
 }
 
 // ListBlobsByExtension lists blobs with a specific extension

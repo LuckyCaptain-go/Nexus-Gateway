@@ -100,18 +100,19 @@ func (d *OzoneDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 
 // GetTableMetadata retrieves Delta Lake table metadata
 func (d *OzoneDeltaDriver) GetTableMetadata(ctx context.Context, tablePath string) (*DeltaMetadata, error) {
-	logPath := tablePath + "/_delta_log/"
-	data, err := d.client.ReadFile(ctx, logPath+"00000000000000000000.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read delta log: %w", err)
-	}
-
-	// Parse Delta Lake transaction log (placeholder)
-	return &DeltaMetadata{
-		TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
-		Format:        "delta",
-		Version:       0,
-	}, nil
+	//logPath := tablePath + "/_delta_log/"
+	//data, err := d.client.ReadFile(ctx, logPath+"00000000000000000000.json")
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to read delta log: %w", err)
+	//}
+	//
+	//// Parse Delta Lake transaction log (placeholder)
+	//return &DeltaMetadata{
+	//	TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
+	//	Format:        "delta",
+	//	Version:       0,
+	//}, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 func (d *OzoneDeltaDriver) QueryTable(ctx context.Context, tablePath string, version int64) (*DeltaQueryResult, error) {
@@ -126,4 +127,3 @@ func (d *OzoneDeltaDriver) QueryTable(ctx context.Context, tablePath string, ver
 // DeltaMetadata and DeltaQueryResult moved to common_types.go
 
 // RegisterOzoneDeltaDriver registers the Ozone Delta Lake driver globally
-

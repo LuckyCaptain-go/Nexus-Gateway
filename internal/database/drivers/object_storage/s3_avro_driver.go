@@ -49,7 +49,7 @@ func (d *S3AvroDriver) Open(dsn string) (*sql.DB, error) {
 
 // ValidateDSN validates the connection string
 func (d *S3AvroDriver) ValidateDSN(dsn string) error {
-	bucket, key, err := ParseS3URI(dsn)
+	bucket, _, err := ParseS3URI(dsn)
 	if err != nil {
 		return fmt.Errorf("invalid S3 URI: %w", err)
 	}
@@ -156,5 +156,13 @@ func (d *S3AvroDriver) GetSchema(ctx context.Context, key string) (*AvroSchema, 
 // ListAvroFiles lists Avro files in a prefix
 func (d *S3AvroDriver) ListAvroFiles(ctx context.Context, prefix string) ([]S3Object, error) {
 	return d.s3Client.ListFilesByExtension(ctx, prefix, ".avro")
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *S3AvroDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 Avro files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Avro files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }
 

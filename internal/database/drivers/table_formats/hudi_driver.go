@@ -334,3 +334,16 @@ func (d *HudiDriver) GetCompressionCodec(ctx context.Context, basePath string) (
 
 	return d.parser.GetCompressionCodec(metadata), nil
 }
+
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *HudiDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// Hudi doesn't support direct pagination via SQL, but we can implement it using LIMIT and OFFSET
+	// when integrated with compute engines like Spark, Flink, etc.
+	if batchSize <= 0 {
+		batchSize = 1000 // Default batch size
+	}
+
+	// For Hudi, we append LIMIT and OFFSET to the query
+	// Note: This assumes the query doesn't already have LIMIT clause
+	return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
+}

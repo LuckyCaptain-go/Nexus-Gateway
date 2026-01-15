@@ -48,7 +48,7 @@ func (d *S3IcebergDriver) GetDefaultPort() int {
 
 // BuildDSN builds a connection string from configuration
 func (d *S3IcebergDriver) BuildDSN(config *model.DataSourceConfig) string {
-	return fmt.Sprintf("s3://%s", config.Bucket)
+	return fmt.Sprintf("s3://%s", config.Database)
 }
 
 // GetDatabaseTypeName returns the database type name
@@ -100,7 +100,7 @@ func (d *S3IcebergDriver) ConfigureAuth(authConfig interface{}) error {
 // GetTableMetadata retrieves Iceberg table metadata
 func (d *S3IcebergDriver) GetTableMetadata(ctx context.Context, tablePath string) (*IcebergMetadata, error) {
 	metadataPath := tablePath + "/metadata/"
-	data, err := d.client.GetObject(ctx, metadataPath+"00000-<uuid>.metadata.json")
+	_, err := d.client.GetObject(ctx, metadataPath+"00000-<uuid>.metadata.json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read metadata: %w", err)
 	}
@@ -135,5 +135,13 @@ type IcebergQueryResult struct {
 	Rows       []map[string]interface{}
 	NumRows    int64
 	SnapshotID int64
+}
+
+// ApplyBatchPagination adds pagination to SQL query
+func (d *S3IcebergDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 Iceberg files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Iceberg files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
 }
 

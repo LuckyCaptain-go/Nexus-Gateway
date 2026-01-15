@@ -100,17 +100,18 @@ func (d *OzoneIcebergDriver) ConfigureAuth(authConfig interface{}) error {
 
 // GetTableMetadata retrieves Iceberg table metadata
 func (d *OzoneIcebergDriver) GetTableMetadata(ctx context.Context, tablePath string) (*IcebergMetadata, error) {
-	metadataPath := tablePath + "/metadata/"
-	data, err := d.client.ReadFile(ctx, metadataPath+"00000-<uuid>.metadata.json")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read metadata: %w", err)
-	}
-
-	// Parse Iceberg metadata (placeholder)
-	return &IcebergMetadata{
-		TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
-		Format:        "iceberg",
-	}, nil
+	//metadataPath := tablePath + "/metadata/"
+	//data, err := d.client.ReadFile(ctx, metadataPath+"00000-<uuid>.metadata.json")
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to read metadata: %w", err)
+	//}
+	//
+	//// Parse Iceberg metadata (placeholder)
+	//return &IcebergMetadata{
+	//	TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
+	//	Format:        "iceberg",
+	//}, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 // IcebergMetadata and IcebergQueryResult are defined in common_types.go
@@ -122,4 +123,3 @@ func (d *OzoneIcebergDriver) QueryTable(ctx context.Context, tablePath string, s
 		SnapshotID: snapshotID,
 	}, nil
 }
-

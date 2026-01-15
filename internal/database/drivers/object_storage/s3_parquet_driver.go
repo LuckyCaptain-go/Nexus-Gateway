@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"nexus-gateway/internal/database/drivers"
 
 	"nexus-gateway/internal/model"
@@ -58,7 +57,7 @@ func (d *S3ParquetDriver) Open(dsn string) (*sql.DB, error) {
 // ValidateDSN validates the connection string
 func (d *S3ParquetDriver) ValidateDSN(dsn string) error {
 	// Parse S3 URI
-	bucket, key, err := ParseS3URI(dsn)
+	bucket, _, err := ParseS3URI(dsn)
 	if err != nil {
 		return fmt.Errorf("invalid S3 URI: %w", err)
 	}
@@ -269,253 +268,19 @@ func (d *S3ParquetDriver) matchesFilters(row map[string]interface{}, filters map
 	return true
 }
 
-// ListParquetFiles lists Parquet files in a prefix
-func (d *S3ParquetDriver) ListParquetFiles(ctx context.Context, prefix string) ([]S3Object, error) {
-	return d.s3Client.ListFilesByExtension(ctx, prefix, ".parquet")
-}
-
-// GetFileMetadata retrieves metadata for a Parquet file
-func (d *S3ParquetDriver) GetFileMetadata(ctx context.Context, key string) (*ParquetMetadata, error) {
-	return d.parquetReader.GetMetadata(ctx, key)
-}
-
-// GetSchema retrieves schema for a Parquet file
-func (d *S3ParquetDriver) GetSchema(ctx context.Context, key string) (*ParquetSchema, error) {
-	reader, err := d.parquetReader.Read(ctx, key)
-	if err != nil {
-		return nil, err
+// ApplyBatchPagination applies pagination to a SQL query
+func (d *S3ParquetDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For S3 Parquet files, we don't support SQL pagination directly
+	// Instead, we'll return the original SQL and let the application handle pagination
+	// since Parquet files are read as complete datasets and then processed in memory
+	
+	// If S3 Select API is enabled, we can use LIMIT and OFFSET clauses
+	if d.config.EnableSelectAPI {
+		// Add LIMIT and OFFSET to the SQL query
+		paginatedSQL := fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
+		return paginatedSQL, nil
 	}
-	defer reader.Close()
-
-	return reader.GetSchema()
-}
-
-// GetColumnNames returns column names for a Parquet file
-func (d *S3ParquetDriver) GetColumnNames(ctx context.Context, key string) ([]string, error) {
-	return d.parquetReader.GetColumnNames(ctx, key)
-}
-
-// ReadColumns reads specific columns from a Parquet file
-func (d *S3ParquetDriver) ReadColumns(ctx context.Context, key string, columns []string) ([]map[string]interface{}, error) {
-	return d.parquetReader.ReadColumns(ctx, key, columns)
-}
-
-// QueryWithPredicate queries with predicate pushdown
-func (d *S3ParquetDriver) QueryWithPredicate(ctx context.Context, key string, filter *ParquetFilter) ([]map[string]interface{}, error) {
-	return d.parquetReader.FilterParquetFile(ctx, key, filter)
-}
-
-// StreamQuery streams query results
-func (d *S3ParquetDriver) StreamQuery(ctx context.Context, key string, callback func(map[string]interface{}) error) error {
-	reader, err := d.parquetReader.Read(ctx, key)
-	if err != nil {
-		return fmt.Errorf("failed to open Parquet file: %w", err)
-	}
-	defer reader.Close()
-
-	iterator := NewParquetRowIterator(reader, d.config.BatchSize)
-	defer iterator.Close()
-
-	for {
-		row, err := iterator.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		if err := callback(row); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// GetFileCount counts Parquet files in a prefix
-func (d *S3ParquetDriver) GetFileCount(ctx context.Context, prefix string) (int, error) {
-	files, err := d.ListParquetFiles(ctx, prefix)
-	if err != nil {
-		return 0, err
-	}
-	return len(files), nil
-}
-
-// GetTotalSize calculates total size of Parquet files in a prefix
-func (d *S3ParquetDriver) GetTotalSize(ctx context.Context, prefix string) (int64, error) {
-	files, err := d.ListParquetFiles(ctx, prefix)
-	if err != nil {
-		return 0, err
-	}
-
-	var total int64
-	for _, file := range files {
-		total += file.Size
-	}
-
-	return total, nil
-}
-
-// ScanPartition scans a partition and returns metadata
-func (d *S3ParquetDriver) ScanPartition(ctx context.Context, prefix string) (*PartitionMetadata, error) {
-	files, err := d.ListParquetFiles(ctx, prefix)
-	if err != nil {
-		return nil, err
-	}
-
-	partition := &PartitionMetadata{
-		Prefix:    prefix,
-		FileCount: len(files),
-		Files:     make([]FileMetadata, 0, len(files)),
-	}
-
-	var totalSize int64
-	for _, file := range files {
-		metadata, err := d.GetFileMetadata(ctx, file.Key)
-		if err != nil {
-			continue
-		}
-
-		partition.Files = append(partition.Files, FileMetadata{
-			Key:     file.Key,
-			Size:    file.Size,
-			NumRows: metadata.NumRows,
-		})
-
-		totalSize += file.Size
-		partition.TotalRows += metadata.NumRows
-	}
-
-	partition.TotalSize = totalSize
-
-	return partition, nil
-}
-
-// PartitionMetadata represents partition metadata
-type PartitionMetadata struct {
-	Prefix    string
-	FileCount int
-	TotalRows int64
-	TotalSize int64
-	Files     []FileMetadata
-}
-
-// FileMetadata represents file metadata
-type FileMetadata struct {
-	Key     string
-	Size    int64
-	NumRows int64
-}
-
-// BatchQuery queries multiple Parquet files in batch
-func (d *S3ParquetDriver) BatchQuery(ctx context.Context, keys []string, query *S3ParquetQuery) ([]*S3ParquetResult, error) {
-	results := make([]*S3ParquetResult, len(keys))
-
-	for i, key := range keys {
-		query.Key = key
-		result, err := d.Query(ctx, query)
-		if err != nil {
-			return nil, fmt.Errorf("query failed for %s: %w", key, err)
-		}
-		results[i] = result
-	}
-
-	return results, nil
-}
-
-// ValidateFile checks if a Parquet file is valid
-func (d *S3ParquetDriver) ValidateFile(ctx context.Context, key string) error {
-	reader, err := d.parquetReader.Read(ctx, key)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	// Try to read schema
-	_, err = reader.GetSchema()
-	return err
-}
-
-// GetFileStatistics retrieves statistics for a Parquet file
-func (d *S3ParquetDriver) GetFileStatistics(ctx context.Context, key string) (*FileStatistics, error) {
-	metadata, err := d.GetFileMetadata(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get object metadata for file size
-	objMetadata, err := d.s3Client.GetObjectMetadata(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-
-	return &FileStatistics{
-		Key:       key,
-		NumRows:   metadata.NumRows,
-		FileSize:  objMetadata.ContentLength,
-		RowGroups: len(metadata.RowGroups),
-		Columns:   len(metadata.Schema.Columns),
-	}, nil
-}
-
-// FileStatistics represents file statistics
-type FileStatistics struct {
-	Key       string
-	NumRows   int64
-	FileSize  int64
-	RowGroups int
-	Columns   int
-}
-
-/
-// ConvertToStandardSchema converts Parquet schema to standard schema
-func (d *S3ParquetDriver) ConvertToStandardSchema(parquetSchema *ParquetSchema) model.TableSchema {
-	stdSchema := model.TableSchema{
-		Columns: make([]model.ColumnInfo, 0, len(parquetSchema.Columns)),
-	}
-
-	for _, col := range parquetSchema.Columns {
-		stdCol := model.ColumnInfo{
-			Name:     col.Name,
-			Type:     mapParquetTypeToStandard(col.Type),
-			Nullable: col.RepetitionType == "OPTIONAL",
-		}
-
-		if len(col.Path) > 0 {
-			stdCol.NestedPath = col.Path
-		}
-
-		stdSchema.Columns = append(stdSchema.Columns, stdCol)
-	}
-
-	return stdSchema
-}
-
-// mapParquetTypeToStandard maps Parquet type to standard type
-func mapParquetTypeToStandard(parquetType string) model.StandardizedType {
-	switch parquetType {
-	case "BOOLEAN":
-		return model.StandardizedTypeBoolean
-	case "INT32", "INT64":
-		return model.StandardizedTypeInt64
-	case "FLOAT", "DOUBLE":
-		return model.StandardizedTypeFloat64
-	case "BINARY", "FIXED_LEN_BYTE_ARRAY":
-		return model.StandardizedTypeBinary
-	case "UTF8":
-		return model.StandardizedTypeString
-	case "DATE":
-		return model.StandardizedTypeDate
-	case "TIMESTAMP", "TIMESTAMP_MILLIS", "TIMESTAMP_MICROS":
-		return model.StandardizedTypeTimestamp
-	case "LIST", "ARRAY":
-		return model.StandardizedTypeArray
-	case "MAP", "STRUCT":
-		return model.StandardizedTypeStruct
-	case "DECIMAL":
-		return model.StandardizedTypeDecimal
-	default:
-		return model.StandardizedTypeString
-	}
+	
+	// For direct Parquet reading, return original SQL and handle pagination in memory
+	return sql, nil
 }

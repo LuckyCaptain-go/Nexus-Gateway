@@ -15,6 +15,11 @@ type HDFSTextDriver struct {
 	client *HDFSClient
 }
 
+func (d *HDFSTextDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewHDFSTextDriver creates a new HDFS text driver
 func NewHDFSTextDriver(ctx context.Context, config *HDFSConfig) (*HDFSTextDriver, error) {
 	client, err := NewHDFSClient(ctx, config)
@@ -139,4 +144,3 @@ type HDFSTextResult struct {
 	BytesRead int64
 	FilePath  string
 }
-

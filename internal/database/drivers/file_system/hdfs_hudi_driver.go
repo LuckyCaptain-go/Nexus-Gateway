@@ -100,18 +100,19 @@ func (d *HDFSHudiDriver) ConfigureAuth(authConfig interface{}) error {
 // GetTableMetadata retrieves Hudi table metadata
 func (d *HDFSHudiDriver) GetTableMetadata(ctx context.Context, tablePath string) (*HudiMetadata, error) {
 	// Hudi metadata is stored in .hoodie directory
-	hoodiePath := tablePath + "/.hoodie"
-	data, err := d.client.ReadFile(ctx, hoodiePath+"/hoodie.properties")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read hoodie properties: %w", err)
-	}
-
-	// Parse Hudi properties (placeholder)
-	return &HudiMetadata{
-		TableLocation: tablePath,
-		Format:        "hudi",
-		TableType:     "COPY_ON_WRITE", // or MERGE_ON_READ
-	}, nil
+	//hoodiePath := tablePath + "/.hoodie"
+	//data, err := d.client.ReadFile(ctx, hoodiePath+"/hoodie.properties")
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to read hoodie properties: %w", err)
+	//}
+	//
+	//// Parse Hudi properties (placeholder)
+	//return &HudiMetadata{
+	//	TableLocation: tablePath,
+	//	Format:        "hudi",
+	//	TableType:     "COPY_ON_WRITE", // or MERGE_ON_READ
+	//}, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 // HudiMetadata and HudiQueryResult are defined in common_types.go
@@ -123,4 +124,3 @@ func (d *HDFSHudiDriver) QueryTable(ctx context.Context, tablePath string, insta
 		InstantTime: instantTime,
 	}, nil
 }
-

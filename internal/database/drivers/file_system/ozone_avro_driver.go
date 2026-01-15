@@ -15,6 +15,11 @@ type OzoneAvroDriver struct {
 	client *OzoneClient
 }
 
+func (d *OzoneAvroDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewOzoneAvroDriver creates a new Ozone Avro driver
 func NewOzoneAvroDriver(ctx context.Context, config *OzoneConfig) (*OzoneAvroDriver, error) {
 	client, err := NewOzoneClient(ctx, config)
@@ -128,4 +133,3 @@ type OzoneAvroResult struct {
 }
 
 // RegisterOzoneAvroDriver registers the Ozone Avro driver globally
-

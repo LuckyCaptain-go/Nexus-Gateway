@@ -15,6 +15,11 @@ type OzoneTextDriver struct {
 	client *OzoneClient
 }
 
+func (d *OzoneTextDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewOzoneTextDriver creates a new Ozone text driver
 func NewOzoneTextDriver(ctx context.Context, config *OzoneConfig) (*OzoneTextDriver, error) {
 	client, err := NewOzoneClient(ctx, config)

@@ -15,6 +15,11 @@ type HDFSCSVDriver struct {
 	client *HDFSClient
 }
 
+func (d *HDFSCSVDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewHDFSCSVDriver creates a new HDFS CSV driver
 func NewHDFSCSVDriver(ctx context.Context, config *HDFSConfig) (*HDFSCSVDriver, error) {
 	client, err := NewHDFSClient(ctx, config)

@@ -41,15 +41,15 @@ func NewCOSClient(ctx context.Context, config *COSConfig) (*COSClient, error) {
 	}
 
 	// Build COS bucket URL
-	bucketURL, err := cos.NewBucketURL(config.BucketName, config.Region, config.SecretID, config.SecretKey)
+	bucketURL, err := cos.NewBucketURL(config.BucketName, config.Region, config.HTTPS)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bucket URL: %w", err)
 	}
 
 	// Create COS client
-	client := cos.NewClient(&http.Client{
+	client := cos.NewClient(&cos.BaseURL{BucketURL: bucketURL}, &http.Client{
 		Timeout: 30 * time.Second,
-	}, &cos.BaseURL{BucketURL: bucketURL})
+	})
 
 	return &COSClient{
 		client: client,
@@ -72,12 +72,13 @@ func (c *COSClient) ListObjects(ctx context.Context, prefix string, maxKeys int)
 
 	objects := make([]COSObject, 0, len(resp.Contents))
 	for _, obj := range resp.Contents {
-		objects = append(objects, COSObject{
-			Key:          obj.Key,
-			Size:         int64(obj.ContentLength),
-			LastModified: time.Unix(int64(obj.LastModified), 0),
-			ETag:         obj.ETag,
-		})
+				parsedTime, _ := time.Parse(time.RFC3339, obj.LastModified)
+			objects = append(objects, COSObject{
+				Key:          obj.Key,
+				Size:         int64(obj.Size),
+				LastModified: parsedTime,
+				ETag:         obj.ETag,
+			})
 	}
 
 	return objects, nil
@@ -162,7 +163,7 @@ func (c *COSClient) CopyObject(ctx context.Context, srcKey, destKey string) erro
 
 // PresignURL generates a presigned URL for temporary access
 func (c *COSClient) PresignURL(ctx context.Context, key string, expiration time.Duration) (string, error) {
-	presignedURL, err := c.client.Object.GetPresignedURL(ctx, http.MethodGet, key, c.config.SecretID, c.config.SecretKey, time.Now().Add(expiration), nil)
+	presignedURL, err := c.client.Object.GetPresignedURL(ctx, http.MethodGet, key, c.config.SecretID, c.config.SecretKey, expiration, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to presign URL: %w", err)
 	}

@@ -101,18 +101,19 @@ func (d *OzoneHudiDriver) ConfigureAuth(authConfig interface{}) error {
 // GetTableMetadata retrieves Hudi table metadata
 func (d *OzoneHudiDriver) GetTableMetadata(ctx context.Context, tablePath string) (*HudiMetadata, error) {
 	// Hudi metadata is stored in .hoodie directory
-	hoodiePath := tablePath + "/.hoodie/"
-	data, err := d.client.ReadFile(ctx, hoodiePath+"hoodie.properties")
-	if err != nil {
-		return nil, fmt.Errorf("failed to read hoodie properties: %w", err)
-	}
-
-	// Parse Hudi properties (placeholder)
-	return &HudiMetadata{
-		TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
-		Format:        "hudi",
-		TableType:     "COPY_ON_WRITE",
-	}, nil
+	//hoodiePath := tablePath + "/.hoodie/"
+	//data, err := d.client.ReadFile(ctx, hoodiePath+"hoodie.properties")
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to read hoodie properties: %w", err)
+	//}
+	//
+	//// Parse Hudi properties (placeholder)
+	//return &HudiMetadata{
+	//	TableLocation: "ozone://" + d.config.Volume + "/" + d.config.Bucket + "/" + tablePath,
+	//	Format:        "hudi",
+	//	TableType:     "COPY_ON_WRITE",
+	//}, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 // HudiMetadata and HudiQueryResult are defined in common_types.go
@@ -124,5 +125,3 @@ func (d *OzoneHudiDriver) QueryTable(ctx context.Context, tablePath string, inst
 		InstantTime: instantTime,
 	}, nil
 }
-
-

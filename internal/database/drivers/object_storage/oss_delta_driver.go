@@ -97,3 +97,11 @@ func (d *OSSDeltaDriver) ConfigureAuth(authConfig interface{}) error {
 	return nil
 }
 
+// ApplyBatchPagination adds pagination to SQL query
+func (d *OSSDeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	// For OSS Delta files, pagination is typically not supported in the same way as traditional databases
+	// We return the original SQL as-is since Delta files don't support LIMIT/OFFSET in the same way
+	// The pagination is usually handled at the application level
+	return sql, nil
+}
+

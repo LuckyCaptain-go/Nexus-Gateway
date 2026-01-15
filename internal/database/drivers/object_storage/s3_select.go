@@ -114,15 +114,9 @@ func (h *S3SelectHandler) Query(ctx context.Context, query *SelectQuery) (*Selec
 
 	// Read response from event stream
 	eventStream := result.GetStream()
-	for {
-		event, err := eventStream.Read()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, fmt.Errorf("failed to read event: %w", err)
-		}
-
+	
+	// Use the Events channel to receive events
+	for event := range eventStream.Events() {
 		switch v := event.(type) {
 		case *types.SelectObjectContentEventStreamMemberRecords:
 			// Parse records
@@ -135,9 +129,19 @@ func (h *S3SelectHandler) Query(ctx context.Context, query *SelectQuery) (*Selec
 		case *types.SelectObjectContentEventStreamMemberStats:
 			// Parse statistics
 			stats := v.Value
-			selectResult.BytesScanned = aws.ToInt64(stats.BytesScanned)
-			selectResult.BytesProcessed = aws.ToInt64(stats.BytesProcessed)
-			selectResult.BytesReturned = aws.ToInt64(stats.BytesReturned)
+			// Access the correct fields from the Stats object
+			// In AWS SDK Go v2, Stats has Details field containing the byte counts
+			if stats.Details != nil {
+				if stats.Details.BytesScanned != nil {
+					selectResult.BytesScanned = *stats.Details.BytesScanned
+				}
+				if stats.Details.BytesProcessed != nil {
+					selectResult.BytesProcessed = *stats.Details.BytesProcessed
+				}
+				if stats.Details.BytesReturned != nil {
+					selectResult.BytesReturned = *stats.Details.BytesReturned
+				}
+			}
 
 		case *types.SelectObjectContentEventStreamMemberProgress:
 			// Progress event - can be used for monitoring
@@ -473,26 +477,23 @@ func (h *S3SelectHandler) QueryStreaming(ctx context.Context, query *SelectQuery
 	}
 
 	// Start goroutine to stream records
-	go h.streamRecords(result.GetStream(), streamResult)
+	go h.streamRecords(ctx, result.GetStream(), streamResult)
 
 	return streamResult, nil
 }
 
+// Close closes the streaming result
+func (r *StreamingSelectResult) Close() {
+	close(r.Done)
+}
+
 // streamRecords streams records from event stream
-func (h *S3SelectHandler) streamRecords(eventStream *types.SelectObjectContentEventStream, result *StreamingSelectResult) {
+func (h *S3SelectHandler) streamRecords(ctx context.Context, eventStream *s3.SelectObjectContentEventStream, result *StreamingSelectResult) {
 	defer close(result.RecordChan)
 	defer close(result.ErrorChan)
 
-	for {
-		event, err := eventStream.Read()
-		if err != nil {
-			if err == io.EOF {
-				return
-			}
-			result.ErrorChan <- fmt.Errorf("failed to read event: %w", err)
-			return
-		}
-
+	// Use the Events channel to receive events
+	for event := range eventStream.Events() {
 		switch v := event.(type) {
 		case *types.SelectObjectContentEventStreamMemberRecords:
 			records, err := h.parseRecords(v.Value.Payload)
@@ -513,11 +514,6 @@ func (h *S3SelectHandler) streamRecords(eventStream *types.SelectObjectContentEv
 			return
 		}
 	}
-}
-
-// Close closes the streaming result
-func (r *StreamingSelectResult) Close() {
-	close(r.Done)
 }
 
 // SelectWithLimit executes S3 Select with result limit

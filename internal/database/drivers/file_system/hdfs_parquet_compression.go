@@ -15,6 +15,11 @@ type HDFSParquetCompressionDriver struct {
 	client *HDFSClient
 }
 
+func (d *HDFSParquetCompressionDriver) ApplyBatchPagination(sql string, batchSize, offset int64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // NewHDFSParquetCompressionDriver creates a new HDFS compressed Parquet driver
 func NewHDFSParquetCompressionDriver(ctx context.Context, config *HDFSConfig) (*HDFSParquetCompressionDriver, error) {
 	client, err := NewHDFSClient(ctx, config)
@@ -131,4 +136,3 @@ func (d *HDFSParquetCompressionDriver) QueryCompressedParquetFile(ctx context.Co
 }
 
 // RegisterHDFSParquetCompressionDriver registers the HDFS compressed Parquet driver globally
-
