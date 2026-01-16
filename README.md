@@ -11,7 +11,14 @@
 
 </div>
 
+## 🌐 Language Versions / 语言版本
+
+- [English Version](README_en.md)
+- [中文版本](README_zh.md)
+
 ## Overview
+
+**Nexus-Gateway: The enterprise-grade, high-performance universal data gateway providing secure, unified SQL access to 90+ data sources with smart routing, extensible architecture, and seamless integration across heterogeneous environments.**
 
 Nexus-Gateway is a universal multi-database proxy gateway written in Go that provides **unified SQL access to 90+ data sources** across cloud warehouses, data lakes, OLAP engines, object storage, distributed file systems, and domestic databases. It acts as a secure query proxy that routes SQL queries to the appropriate data source based on UUID-based identification.
 
@@ -80,82 +87,6 @@ docker run -d \
   nexus-gateway:latest
 ```
 
-## API Usage
-
-For detailed API usage examples, see [API Usage Guide](docs/api_usage.md).
-
-Basic query example:
-```bash
-curl -X POST http://localhost:8099/api/v1/query \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -d '{
-    "dataSourceId": "uuid-of-datasource",
-    "sql": "SELECT * FROM table WHERE condition = ?",
-    "parameters": ["value"],
-    "limit": 100
-  }'
-```
-
-## Architecture
-
-Nexus-Gateway follows a clean, modular architecture:
-
-```
-Nexus-Gateway/
-├── cmd/server/                    # Application entry point
-├── internal/
-│   ├── controller/               # HTTP request handlers
-│   ├── service/                  # Business logic layer
-│   ├── repository/               # Data access layer
-│   ├── model/                    # Data models and DTOs
-│   ├── middleware/               # HTTP middleware (JWT, rate limiting, etc.)
-│   └── database/
-│       └── drivers/              # Database drivers (90+ implementations)
-│           ├── table_format/     # Iceberg, Delta Lake, Hudi
-│           ├── warehouses/       # Snowflake, Databricks, Redshift, BigQuery
-│           ├── olap/             # ClickHouse, Doris, StarRocks, Druid
-│           ├── object_storage/   # S3, MinIO, OSS, COS, Azure Blob
-│           ├── file_system/      # HDFS, Apache Ozone
-│           └── domestic/         # OceanBase, TiDB, TDSQL, etc.
-├── configs/                      # Configuration files
-├── pkg/                          # Reusable packages
-├── docs/                         # Detailed documentation
-└── scripts/                      # Build and deployment scripts
-```
-
-For detailed architecture information, see [Architecture Guide](docs/architecture.md).
-
-## Configuration
-
-See [Configuration Guide](docs/configuration.md) for detailed configuration options.
-
-## Development
-
-### Adding a New Database Driver
-
-1. Create a new file in `internal/database/drivers/<category>/`
-2. Implement the `Driver` interface:
-
-```go
-type Driver interface {
-    Open(dsn string) (*sql.DB, error)
-    ValidateDSN(dsn string) error
-    GetDefaultPort() int
-    BuildDSN(config *model.DataSourceConfig) string
-    GetDatabaseTypeName() string
-    TestConnection(db *sql.DB) error
-    GetDriverName() string
-    GetCategory() DriverCategory
-    GetCapabilities() DriverCapabilities
-    ConfigureAuth(authConfig interface{}) error
-}
-```
-
-3. Register the driver in the driver registry
-
-For detailed development information, see [Development Guide](docs/development.md).
-
 ## Roadmap
 
 ### ✅ Phase 1: Enhanced Single-Source Capabilities (COMPLETED)
@@ -182,36 +113,11 @@ For detailed development information, see [Development Guide](docs/development.m
 
 ### 📋 Phase 3-5: See [Roadmap Details](docs/roadmap.md)
 
-## Contributing
-
-We welcome contributions! Please see our contributing guidelines:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Write tests for new functionality
-4. Ensure all tests pass (`go test ./...`)
-5. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-6. Push to the branch (`git push origin feature/AmazingFeature`)
-7. Open a Pull Request
-
-For more details, see [Contributing Guide](docs/contributing.md).
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
 ## Support
 
 - Documentation: [Full Docs](https://LuckyCaptain-go.github.io/Nexus-Gateway)
 - Issues: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
 - Discussions: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
-
-## Acknowledgments
-
-- Built with [Gin](https://gin-gonic.com/) web framework
-- ORM powered by [GORM](https://gorm.io/)
-- Database drivers inspired by various open-source projects
-- Thanks to all contributors who helped implement 90+ database drivers
 
 ---
 
