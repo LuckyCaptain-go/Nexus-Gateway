@@ -18,9 +18,7 @@
 
 ## Overview
 
-**Nexus-Gateway: The enterprise-grade, high-performance universal data gateway providing secure, unified SQL access to 90+ data sources with smart routing, extensible architecture, and seamless integration across heterogeneous environments.**
-
-Nexus-Gateway is a universal multi-database proxy gateway written in Go that provides **unified SQL access to 90+ data sources** across cloud warehouses, data lakes, OLAP engines, object storage, distributed file systems, and domestic databases. It acts as a secure query proxy that routes SQL queries to the appropriate data source based on UUID-based identification.
+**Nexus-Gateway** is an enterprise-grade universal data gateway that serves as the foundational data access layer for AI agents, RAG systems, BI reports, and data scientists. It provides secure, unified SQL access to 90+ data sources with smart routing and extensible architecture for diverse analytical needs.
 
 ## Key Features
 

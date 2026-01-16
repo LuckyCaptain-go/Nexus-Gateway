@@ -1,8 +1,8 @@
-# Nexus-Gateway - Enterprise-Grade Universal Data Access Platform
+哦显示# Nexus-Gateway - Enterprise-Grade Universal Data Access Platform
 
 <div align="center">
 
-**Empowering Data-Driven Decision Making with Universal Data Gateway**
+**Empowering Data-Driven Decision Making and AI Applications with Universal Data Gateway**
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![Gin](https://img.shields.io/badge/Gin-Web-Framework-green?style=flat)](https://gin-gonic.com/)
@@ -13,7 +13,7 @@
 
 ## 🌟 Core Advantages
 
-Nexus-Gateway is an enterprise-grade multi-database proxy gateway designed to address challenges in modern complex data environments. We are committed to providing a unified, secure, and high-performance data access solution that helps enterprises achieve data-driven transformation in heterogeneous data source environments.
+Nexus-Gateway is an enterprise-grade multi-database proxy gateway designed to address challenges in modern complex data environments. We are committed to providing a unified, secure, and high-performance data access solution that helps enterprises achieve data-driven transformation in heterogeneous data source environments. Also serves as the foundational data access layer for AI agents and RAG systems, enabling unified data retrieval for LLMs and intelligent applications.
 
 ### 🚀 Unparalleled Data Source Coverage
 - **90+ Data Sources Supported**: From traditional relational databases to modern cloud data warehouses, from data lake table formats to domestic Chinese databases, comprehensive coverage
@@ -64,16 +64,6 @@ Nexus-Gateway adopts a modular, extensible architecture design:
 - **Service Layer**: Query processing, connection management, caching services
 - **Driver Layer**: 90+ data source drivers, supporting expansion
 - **Data Layer**: Various data sources
-
-## 📈 Market Competitiveness
-
-Compared to other data access solutions, Nexus-Gateway has the following unique advantages:
-
-- **Widest Coverage**: Supports 90+ data sources, including numerous domestic databases, leading market coverage
-- **Enterprise-Grade Security**: Comprehensive security protection, meets stringent requirements of finance, government, and other industries
-- **High-Performance**: Optimized for big data scenarios, supports streaming processing
-- **Cloud-Native Friendly**: Native Docker, Kubernetes support, easy to deploy and scale
-- **Open Source & Open**: Apache 2.0 license, community-driven, continuous evolution
 
 ## 🚀 Quick Start
 
