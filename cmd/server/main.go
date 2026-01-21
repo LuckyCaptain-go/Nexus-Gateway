@@ -105,6 +105,7 @@ func startHTTPServer(cfg *config.Config) {
 	queryController := controller.NewQueryController(queryService)
 	databaseController := controller.NewDatabaseController(datasourceRepo, healthChecker)
 	healthController := controller.NewHealthController(db)
+	sqlTranslationController := controller.NewSQLTranslationController() // Added SQL translation controller
 
 	// Create Gin router
 	router := gin.New()
@@ -132,6 +133,14 @@ func startHTTPServer(cfg *config.Config) {
 		public.GET("/health", healthController.HealthCheck)
 		public.GET("/database/types", databaseController.GetDatabaseTypes)
 		public.GET("/database/compatibility", databaseController.GetDatabaseCompatibility)
+	}
+
+	// SQL translation endpoints (no authentication required)
+	sqlGroup := api.Group("/sql")
+	{
+		sqlGroup.POST("/translate", sqlTranslationController.TranslateSQL)
+		sqlGroup.GET("/dialects", sqlTranslationController.GetSupportedDialects)
+		sqlGroup.POST("/validate", sqlTranslationController.ValidateSQL)
 	}
 
 	// Auth endpoints (authentication required)

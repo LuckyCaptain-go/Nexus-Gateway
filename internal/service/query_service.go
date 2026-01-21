@@ -13,6 +13,7 @@ import (
 	"nexus-gateway/internal/repository"
 	"nexus-gateway/internal/security"
 	"nexus-gateway/internal/utils"
+	"nexus-gateway/internal/utils/sql_translator"
 
 	"github.com/google/uuid"
 )
@@ -58,6 +59,7 @@ type queryService struct {
 	stats           *queryStats
 	sessionManager  *SessionManager
 	preferStreaming bool
+	sqlTranslator   *sql_translator.SQLTranslationManager  // Added SQL translator
 }
 
 type queryStats struct {
@@ -80,6 +82,7 @@ func NewQueryService(datasourceRepo repository.DataSourceRepository, connPool *d
 		stats:           newQueryStats(),
 		sessionManager:  NewSessionManager(),
 		preferStreaming: preferStreaming,
+		sqlTranslator:   sql_translator.NewSQLTranslationManager(true), // Initialize SQL translator
 	}
 }
 
@@ -117,12 +120,45 @@ func (qs *queryService) ValidateQuery(ctx context.Context, req *model.QueryReque
 		return err
 	}
 
+	// Translate SQL if needed
+	// If the user is sending SQL in a different dialect, translate it to the target database dialect
+	translatedSQL, err := qs.translateSQLIfNeeded(req.SQL, req.SourceDialect, string(dataSource.Type))
+	if err != nil {
+		return fmt.Errorf("failed to translate SQL: %w", err)
+	}
+	
+	// Use translated SQL for validation
+	if translatedSQL != "" {
+		req.SQL = translatedSQL
+	}
+
 	// Validate SQL with data source-specific syntax checking
 	if err := qs.sqlValidator.ValidateDataSourceSyntax(req.SQL, dataSource.Type); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// translateSQLIfNeeded translates SQL if a source dialect is specified and differs from target
+func (qs *queryService) translateSQLIfNeeded(sql, sourceDialect, targetDialect string) (string, error) {
+	// If no source dialect is specified, no translation is needed
+	if sourceDialect == "" {
+		return "", nil
+	}
+	
+	// If source and target are the same, no translation is needed
+	if strings.EqualFold(sourceDialect, targetDialect) {
+		return "", nil
+	}
+	
+	// Translate the SQL
+	translatedSQL, err := qs.sqlTranslator.TranslateQuery(sql, sourceDialect, targetDialect)
+	if err != nil {
+		return "", fmt.Errorf("failed to translate SQL from %s to %s: %w", sourceDialect, targetDialect, err)
+	}
+	
+	return translatedSQL, nil
 }
 
 func (qs *queryService) GetQueryStats(ctx context.Context) (*model.QueryStats, error) {
@@ -146,8 +182,20 @@ func (qs *queryService) GetQueryStats(ctx context.Context) (*model.QueryStats, e
 
 // executeQueryWithConnection executes a query using the provided database connection
 func (qs *queryService) executeQueryWithConnection(ctx context.Context, db *sql.DB, req *model.QueryRequest, dbType model.DatabaseType) (*model.QueryResponse, error) {
+	// Translate SQL if needed
+	sqlToExecute := req.SQL
+	if req.SourceDialect != "" {
+		translatedSQL, err := qs.translateSQLIfNeeded(req.SQL, req.SourceDialect, string(dbType))
+		if err != nil {
+			return nil, fmt.Errorf("failed to translate SQL: %w", err)
+		}
+		if translatedSQL != "" {
+			sqlToExecute = translatedSQL
+		}
+	}
+	
 	// Prepare the query with LIMIT and OFFSET if not already present
-	finalSQL := qs.applyPagination(req.SQL, req.Limit, req.Offset, dbType)
+	finalSQL := qs.applyPagination(sqlToExecute, req.Limit, req.Offset, dbType)
 
 	// Execute query
 	rows, err := db.QueryContext(ctx, finalSQL, req.Parameters...)
@@ -372,6 +420,18 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 		return nil, fmt.Errorf("failed to get data source: %w", err)
 	}
 
+	// Translate SQL if needed
+	sqlToExecute := req.SQL
+	if req.SourceDialect != "" {
+		translatedSQL, err := qs.translateSQLIfNeeded(req.SQL, req.SourceDialect, string(datasource.Type))
+		if err != nil {
+			return nil, fmt.Errorf("failed to translate SQL: %w", err)
+		}
+		if translatedSQL != "" {
+			sqlToExecute = translatedSQL
+		}
+	}
+
 	// Get connection from pool
 	conn, err := qs.connPool.GetConnection(ctx, datasource)
 	if err != nil {
@@ -384,7 +444,7 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 		Slug:         qs.generateSlug(),
 		Token:        qs.generateToken(),
 		DataSourceID: req.DataSourceID,
-		SQL:          req.SQL,
+		SQL:          sqlToExecute,
 		Type:         req.Type,
 		BatchSize:    req.BatchSize,
 		CreatedAt:    time.Now(),
@@ -392,7 +452,7 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 	}
 
 	// Execute query and get first batch
-	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, datasource.Type, conn, req.SQL, int64(req.BatchSize), 0)
+	columns, entries, totalCount, err := qs.executeBatchQuery(ctx, datasource.Type, conn, sqlToExecute, int64(req.BatchSize), 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute batch query: %w", err)
 	}

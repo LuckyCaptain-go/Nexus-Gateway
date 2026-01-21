@@ -38,6 +38,7 @@
 - **📖 Comprehensive API** - RESTful API with Swagger documentation
 - **🔧 Extensible Architecture** - Easy to add new database drivers via plugin system
 - **🤖 AI Integration Ready** - **NEW!** Supports Model Context Protocol (MCP) for AI agent integration
+- **🔄 SQL Dialect Translation** - **NEW!** Convert SQL between different database dialects (MySQL, Trino, PostgreSQL, etc.)
 
 ## Quick Start
 
@@ -92,6 +93,24 @@ The server will start on `http://localhost:8099`
 
 3. **Connect to AI clients** such as Claude Desktop, VSCode, Cursor, etc.
 
+### SQL Dialect Translation
+
+**NEW!** Translate SQL between different database dialects:
+
+```bash
+# Translate MySQL to PostgreSQL
+curl -X POST http://localhost:8099/api/v1/sql/translate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sql": "SELECT * FROM users LIMIT 10",
+    "sourceDialect": "mysql",
+    "targetDialect": "postgresql"
+  }'
+
+# Get supported dialects
+curl http://localhost:8099/api/v1/sql/dialects
+```
+
 ### Docker Deployment
 
 ```bash
@@ -117,6 +136,15 @@ Nexus-Gateway now supports the Model Context Protocol (MCP), allowing AI agents 
 - **list_tables**: List all tables in a specific data source
 
 This enables RAG (Retrieval Augmented Generation) systems and AI agents to access your structured data seamlessly.
+
+## SQL Dialect Translation
+
+The new SQL dialect translation feature allows users to write SQL in familiar dialects (like MySQL or Trino) and have it automatically converted to the target database's dialect:
+
+- **Cross-database compatibility**: Write once, run anywhere
+- **AI-friendly**: AI models can use familiar SQL syntax
+- **Multiple dialects**: Supports 10+ database dialects
+- **Real-time conversion**: On-the-fly SQL translation
 
 ## Roadmap
 
@@ -150,6 +178,7 @@ This enables RAG (Retrieval Augmented Generation) systems and AI agents to acces
 - Issues: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
 - Discussions: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
 - MCP Documentation: [MCP Guide](MCP_DOCUMENTATION.md)
+- SQL Translation: [SQL Translation Guide](SQL_TRANSLATION_FEATURES.md)
 
 ---
 
