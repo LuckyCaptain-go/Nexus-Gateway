@@ -7,6 +7,7 @@ import (
 	"nexus-gateway/internal/config"
 	"nexus-gateway/internal/controller"
 	"nexus-gateway/internal/database"
+	"nexus-gateway/internal/mcp"
 	"nexus-gateway/internal/middleware"
 	"nexus-gateway/internal/model"
 	"nexus-gateway/internal/repository"
@@ -25,6 +26,18 @@ func main() {
 		log.Fatal("Failed to load configuration:", err)
 	}
 
+	// Check if MCP server mode is enabled
+	if cfg.MCP.Enabled {
+		log.Println("Starting Nexus-Gateway as MCP Server...")
+		startMCPServer(cfg)
+		return
+	}
+
+	// Normal HTTP server mode
+	startHTTPServer(cfg)
+}
+
+func startHTTPServer(cfg *config.Config) {
 	// Set Gin mode
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -58,7 +71,12 @@ func main() {
 	healthChecker := database.NewHealthChecker(connPool)
 
 	// Initialize security
-	jwtManager := security.NewJWTManager(cfg.Security.JWTSecret, cfg.Security.JWTExpiration)
+	// Parse JWT expiration duration from string
+	jwtExpiration, err := time.ParseDuration(cfg.Security.JWTExpiration)
+	if err != nil {
+		log.Fatalf("Failed to parse JWT expiration: %v", err)
+	}
+	jwtManager := security.NewJWTManager(cfg.Security.JWTSecret, jwtExpiration)
 	authMiddleware := security.NewAuthMiddleware(jwtManager)
 
 	// Initialize rate limiting
@@ -172,5 +190,56 @@ func main() {
 
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatal("Failed to start server:", err)
+	}
+}
+
+func startMCPServer(cfg *config.Config) {
+	// Initialize database connection
+	db, err := config.InitDatabase(cfg)
+	if err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+
+	// Initialize repositories
+	datasourceRepo := repository.NewDataSourceRepository(db)
+
+	// Initialize security
+	// Use a 32-byte key for AES-256 encryption
+	masterKey := []byte("12345678901234567890123456789012") // 32 bytes - TODO: make this configurable
+	vault, err := security.NewCredentialVault(masterKey)
+	if err != nil {
+		log.Fatalf("Failed to create credential vault: %v", err)
+	}
+
+	// Initialize infrastructure
+	connPool := database.NewConnectionPool(security.NewTokenManager(vault), vault)
+
+	// Initialize services
+	_ = service.NewDataSourceService(datasourceRepo) // Removed unused variable
+
+	// Initialize streaming service
+	streamingService := service.NewStreamingService(datasourceRepo, connPool)
+
+	// Initialize pagination service (original query service) with streaming support
+	paginationService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)
+
+	// Initialize unified query service that chooses between pagination and streaming based on config
+	unifiedQueryService := unifiedservice.NewUnifiedQueryService(paginationService, streamingService, cfg)
+	
+	// Create MCP server
+	mcpServer := mcp.NewMCPServer(unifiedQueryService, datasourceRepo)
+
+	// Start the MCP server based on the configured transport
+	log.Printf("Starting MCP Server with transport: %s", cfg.MCP.Transport)
+	switch cfg.MCP.Transport {
+	case "stdio":
+		if err := mcpServer.StartStdio(); err != nil {
+			log.Fatal("Failed to start MCP server with stdio transport:", err)
+		}
+	default:
+		log.Printf("Unknown transport '%s', defaulting to stdio", cfg.MCP.Transport)
+		if err := mcpServer.StartStdio(); err != nil {
+			log.Fatal("Failed to start MCP server with stdio transport:", err)
+		}
 	}
 }

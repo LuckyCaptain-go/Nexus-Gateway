@@ -2,71 +2,77 @@ package config
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Security SecurityConfig `mapstructure:"security"`
-	Logging  LoggingConfig  `mapstructure:"logging"`
-	Query    QueryConfig    `mapstructure:"query"`
+	Server    ServerConfig    `yaml:"server"`
+	Database  DatabaseConfig  `yaml:"database"`
+	Security  SecurityConfig  `yaml:"security"`
+	Logging   LoggingConfig   `yaml:"logging"`
+	Query     QueryConfig     `yaml:"query"`
+	MCP       MCPConfig       `yaml:"mcp"`  // Added MCP configuration
 }
 
 type ServerConfig struct {
-	Port string `mapstructure:"port"`
-	Mode string `mapstructure:"mode"`
-	Host string `mapstructure:"host"`
+	Port string `yaml:"port"`
+	Mode string `yaml:"mode"`  // debug, release, test
+	Host string `yaml:"host"`
 }
 
 type DatabaseConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     string `mapstructure:"port"`
-	Database string `mapstructure:"database"`
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	SSL      string `mapstructure:"ssl"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	Database string `yaml:"database"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	SSL      string `yaml:"ssl"`
 }
 
 type SecurityConfig struct {
-	JWTSecret          string        `mapstructure:"jwt_secret"`
-	JWTExpiration      time.Duration `mapstructure:"jwt_expiration"`
-	RateLimitPerMinute int           `mapstructure:"rate_limit_per_minute"`
-	RateLimitBurst     int           `mapstructure:"rate_limit_burst"`
-	EnableAuth         bool          `mapstructure:"enable_auth"`
-	EnableRateLimit    bool          `mapstructure:"enable_rate_limit"`
+	JWTSecret            string `yaml:"jwt_secret"`
+	JWTExpiration        string `yaml:"jwt_expiration"`
+	RateLimitPerMinute   int    `yaml:"rate_limit_per_minute"`
+	RateLimitBurst       int    `yaml:"rate_limit_burst"`
+	EnableAuth           bool   `yaml:"enable_auth"`
+	EnableRateLimit      bool   `yaml:"enable_rate_limit"`
 }
 
 type LoggingConfig struct {
-	Level  string `mapstructure:"level"`
-	Format string `mapstructure:"format"`
+	Level  string `yaml:"level"`  // debug, info, warn, error
+	Format string `yaml:"format"` // json, text
+}
+
+type QueryConfig struct {
+	PreferStreaming  bool   `yaml:"prefer_streaming"`
+	ExecutionMode    string `yaml:"execution_mode"` // auto, streaming, pagination
+}
+
+type MCPConfig struct {  // MCP configuration
+	Enabled     bool   `yaml:"enabled"`      // Whether MCP server is enabled
+	Transport   string `yaml:"transport"`    // Transport protocol: stdio, http, sse
+	Port        string `yaml:"port"`         // Port for HTTP transport
+	Host        string `yaml:"host"`         // Host for HTTP transport
 }
 
 func Load() (*Config, error) {
+	// Set defaults
+	setDefaults()
+
+	// Configure viper
 	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./configs")
 	viper.AddConfigPath(".")
 
-	// Set default values
-	setDefaults()
-
-	// Enable environment variable support
-	viper.AutomaticEnv()
-
 	// Read config file
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found, use defaults and environment
-			fmt.Println("Config file not found, using defaults and environment variables")
-		} else {
-			return nil, fmt.Errorf("error reading config file: %w", err)
-		}
+		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
 
 	var config Config
+	
+	// Unmarshal config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, fmt.Errorf("error unmarshaling config: %w", err)
 	}
@@ -102,10 +108,10 @@ func setDefaults() {
 	// Query defaults
 	viper.SetDefault("query.prefer_streaming", true)
 	viper.SetDefault("query.execution_mode", "auto") // auto, streaming, pagination
-}
 
-// QueryConfig holds settings related to query execution
-type QueryConfig struct {
-	PreferStreaming bool   `mapstructure:"prefer_streaming"`
-	ExecutionMode   string `mapstructure:"execution_mode"`
+	// MCP defaults
+	viper.SetDefault("mcp.enabled", false)
+	viper.SetDefault("mcp.transport", "stdio")
+	viper.SetDefault("mcp.port", "8081")
+	viper.SetDefault("mcp.host", "0.0.0.0")
 }
