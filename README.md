@@ -37,6 +37,7 @@
 - **🐳 Docker & Kubernetes Ready** - Multi-stage Dockerfile and K8s manifests included
 - **📖 Comprehensive API** - RESTful API with Swagger documentation
 - **🔧 Extensible Architecture** - Easy to add new database drivers via plugin system
+- **🤖 AI Integration Ready** - **NEW!** Supports Model Context Protocol (MCP) for AI agent integration
 
 ## Quick Start
 
@@ -71,6 +72,26 @@
 
 The server will start on `http://localhost:8099`
 
+### MCP Server Mode (AI Integration)
+
+**NEW!** Run Nexus-Gateway as an MCP Server to connect AI models directly to your data sources:
+
+1. **Configure MCP in config.yaml**
+   ```yaml
+   mcp:
+     enabled: true
+     transport: "stdio"  # or "http"
+     port: "8090"
+     host: "0.0.0.0"
+   ```
+
+2. **Start in MCP mode**
+   ```bash
+   go run cmd/server/main.go
+   ```
+
+3. **Connect to AI clients** such as Claude Desktop, VSCode, Cursor, etc.
+
 ### Docker Deployment
 
 ```bash
@@ -84,6 +105,18 @@ docker run -d \
   -v $(pwd)/configs:/app/configs \
   nexus-gateway:latest
 ```
+
+## AI Integration - MCP Server
+
+Nexus-Gateway now supports the Model Context Protocol (MCP), allowing AI agents to directly access your data sources through standardized tools:
+
+- **list_data_sources**: Discover available data sources
+- **execute_sql_query**: Execute SQL queries on connected databases
+- **get_data_source_info**: Retrieve detailed information about data sources
+- **validate_sql_query**: Validate SQL queries before execution
+- **list_tables**: List all tables in a specific data source
+
+This enables RAG (Retrieval Augmented Generation) systems and AI agents to access your structured data seamlessly.
 
 ## Roadmap
 
@@ -116,6 +149,7 @@ docker run -d \
 - Documentation: [Full Docs](https://LuckyCaptain-go.github.io/Nexus-Gateway)
 - Issues: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
 - Discussions: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
+- MCP Documentation: [MCP Guide](MCP_DOCUMENTATION.md)
 
 ---
 

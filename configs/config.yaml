@@ -26,3 +26,9 @@ logging:
 query:
   prefer_streaming: true
   execution_mode: "auto"  # auto, streaming, pagination
+
+mcp:
+  enabled: true  # Set to true to run as MCP server
+  transport: "stdio"  # Options: stdio, http, sse
+  port: "8090"  # Port for HTTP transport
+  host: "0.0.0.0"  # Host for HTTP transport
