@@ -11,12 +11,14 @@ import (
 	"nexus-gateway/internal/model"
 	"nexus-gateway/internal/unified_service"
 	"nexus-gateway/internal/repository"
+	"nexus-gateway/internal/utils/sql_translator"
 )
 
 // MCPServer represents the MCP server that exposes Nexus-Gateway functionality
 type MCPServer struct {
 	unifiedQueryService unifiedservice.UnifiedQueryService
 	datasourceRepo      repository.DataSourceRepository
+	sqlTranslator       *sql_translator.SQLTranslationManager  // Added SQL translator
 	server              *server.MCPServer
 }
 
@@ -30,6 +32,7 @@ func NewMCPServer(unifiedQueryService unifiedservice.UnifiedQueryService, dataso
 	mcpServer := &MCPServer{
 		unifiedQueryService: unifiedQueryService,
 		datasourceRepo:      datasourceRepo,
+		sqlTranslator:       sql_translator.NewSQLTranslationManager(true), // Initialize SQL translator
 		server:              s,
 	}
 
@@ -51,6 +54,7 @@ func (m *MCPServer) registerTools() {
 		mcp.WithDescription("Execute a SQL query against a specified data source"),
 		mcp.WithString("datasource_id", mcp.Required(), mcp.Description("The ID of the data source to query")),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL query to execute")),
+		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, postgres)")),
 		mcp.WithNumber("batch_size", mcp.Description("Number of records to return per batch, default 10000")),
 		mcp.WithNumber("timeout", mcp.Description("Query timeout in seconds, default 60")))
 	m.server.AddTool(executeSQLQueryTool, m.handleExecuteSQLQuery)
@@ -65,7 +69,8 @@ func (m *MCPServer) registerTools() {
 	validateSQLQueryTool := mcp.NewTool("validate_sql_query",
 		mcp.WithDescription("Validate a SQL query without executing it"),
 		mcp.WithString("datasource_id", mcp.Required(), mcp.Description("The ID of the data source to validate against")),
-		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL query to validate")))
+		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL query to validate")),
+		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, postgres)")))
 	m.server.AddTool(validateSQLQueryTool, m.handleValidateSQLQuery)
 
 	// Tool to list tables in a specific data source
@@ -73,6 +78,19 @@ func (m *MCPServer) registerTools() {
 		mcp.WithDescription("List all tables in a specific data source"),
 		mcp.WithString("datasource_id", mcp.Required(), mcp.Description("The ID of the data source to list tables from")))
 	m.server.AddTool(listTablesTool, m.handleListTables)
+
+	// Tool to translate SQL between dialects
+	translateSQLTool := mcp.NewTool("translate_sql",
+		mcp.WithDescription("Translate SQL from one dialect to another"),
+		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL to translate")),
+		mcp.WithString("source_dialect", mcp.Required(), mcp.Description("Source SQL dialect (e.g., mysql, trino, postgres)")),
+		mcp.WithString("target_dialect", mcp.Required(), mcp.Description("Target SQL dialect (e.g., mysql, trino, postgres)")))
+	m.server.AddTool(translateSQLTool, m.handleTranslateSQL)
+
+	// Tool to list supported SQL dialects
+	listDialectsTool := mcp.NewTool("list_supported_dialects",
+		mcp.WithDescription("List all supported SQL dialects"))
+	m.server.AddTool(listDialectsTool, m.handleListSupportedDialects)
 }
 
 // handleListDataSources handles the list_data_sources tool call
@@ -122,15 +140,34 @@ func (m *MCPServer) handleExecuteSQLQuery(ctx context.Context, request mcp.CallT
 	// Extract parameters from the request
 	datasourceID := mcp.ParseString(request, "datasource_id", "")
 	sql := mcp.ParseString(request, "sql", "")
+	sourceDialect := mcp.ParseString(request, "source_dialect", "") // Optional source dialect
 	batchSize := int(mcp.ParseInt(request, "batch_size", 10000))
 	timeout := int(mcp.ParseInt(request, "timeout", 60))
 
+	// If source dialect is specified, translate the SQL to the target database's dialect
+	finalSQL := sql
+	if sourceDialect != "" {
+		// Get the target database type to determine the target dialect
+		dataSource, err := m.datasourceRepo.GetByID(ctx, datasourceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get data source: %w", err)
+		}
+
+		// Translate SQL from source dialect to target dialect
+		translatedSQL, err := m.sqlTranslator.TranslateQuery(sql, sourceDialect, string(dataSource.Type))
+		if err != nil {
+			return nil, fmt.Errorf("failed to translate SQL: %w", err)
+		}
+		finalSQL = translatedSQL
+	}
+
 	// Prepare the fetch query request
 	req := &model.FetchQueryRequest{
-		DataSourceID: datasourceID,
-		SQL:          sql,
-		BatchSize:    batchSize,
-		Timeout:      timeout,
+		DataSourceID:  datasourceID,
+		SQL:           finalSQL,
+		SourceDialect: sourceDialect, // Pass the source dialect for reference
+		BatchSize:     batchSize,
+		Timeout:       timeout,
 	}
 
 	// Execute the query using the unified query service
@@ -190,11 +227,30 @@ func (m *MCPServer) handleValidateSQLQuery(ctx context.Context, request mcp.Call
 	// Extract parameters from the request
 	datasourceID := mcp.ParseString(request, "datasource_id", "")
 	sql := mcp.ParseString(request, "sql", "")
+	sourceDialect := mcp.ParseString(request, "source_dialect", "") // Optional source dialect
+
+	// If source dialect is specified, translate the SQL to the target database's dialect
+	finalSQL := sql
+	if sourceDialect != "" {
+		// Get the target database type to determine the target dialect
+		dataSource, err := m.datasourceRepo.GetByID(ctx, datasourceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get data source: %w", err)
+		}
+
+		// Translate SQL from source dialect to target dialect
+		translatedSQL, err := m.sqlTranslator.TranslateQuery(sql, sourceDialect, string(dataSource.Type))
+		if err != nil {
+			return nil, fmt.Errorf("failed to translate SQL: %w", err)
+		}
+		finalSQL = translatedSQL
+	}
 
 	// Create a basic query request for validation
 	req := &model.QueryRequest{
-		DataSourceID: datasourceID,
-		SQL:          sql,
+		DataSourceID:  datasourceID,
+		SQL:           finalSQL,
+		SourceDialect: sourceDialect, // Pass the source dialect for reference
 	}
 
 	// Validate the query using the unified query service
@@ -277,6 +333,70 @@ func (m *MCPServer) handleListTables(ctx context.Context, request mcp.CallToolRe
 
 	// Convert result to JSON for response
 	jsonResp, err := json.Marshal(result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
+	}
+
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.NewTextContent(string(jsonResp)),
+		},
+	}, nil
+}
+
+// handleTranslateSQL handles the translate_sql tool call
+func (m *MCPServer) handleTranslateSQL(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// Extract parameters from the request
+	sql := mcp.ParseString(request, "sql", "")
+	sourceDialect := mcp.ParseString(request, "source_dialect", "")
+	targetDialect := mcp.ParseString(request, "target_dialect", "")
+
+	if sql == "" {
+		return nil, fmt.Errorf("SQL parameter is required")
+	}
+	if sourceDialect == "" {
+		return nil, fmt.Errorf("source_dialect parameter is required")
+	}
+	if targetDialect == "" {
+		return nil, fmt.Errorf("target_dialect parameter is required")
+	}
+
+	// Translate the SQL
+	translatedSQL, err := m.sqlTranslator.TranslateQuery(sql, sourceDialect, targetDialect)
+	if err != nil {
+		return nil, fmt.Errorf("failed to translate SQL: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"original_sql":   sql,
+		"source_dialect": sourceDialect,
+		"target_dialect": targetDialect,
+		"translated_sql": translatedSQL,
+	}
+
+	jsonResp, err := json.Marshal(response)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
+	}
+
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.NewTextContent(string(jsonResp)),
+		},
+	}, nil
+}
+
+// handleListSupportedDialects handles the list_supported_dialects tool call
+func (m *MCPServer) handleListSupportedDialects(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	// Get supported dialects
+	supportedDialects := m.sqlTranslator.GetSupportedDialects()
+
+	response := map[string]interface{}{
+		"supported_dialects": supportedDialects,
+		"count":              len(supportedDialects),
+	}
+
+	jsonResp, err := json.Marshal(response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal response: %w", err)
 	}
