@@ -122,7 +122,7 @@ func (dr *DriverRegistry) registerDrivers() {
 		return &warehouses.HiveDriver{}
 	})
 	dr.register(model.DatabaseTypeMaxCompute, func() drivers.Driver {
-		return &warehouses.MaxComputeDriver{}
+		return warehouses.NewMaxComputeDriver()
 	})
 
 	// OLAP Engines

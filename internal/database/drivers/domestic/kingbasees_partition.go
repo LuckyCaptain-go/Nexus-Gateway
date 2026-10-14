@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // KingbaseESPartitionManager handles KingbaseES partitioning features
@@ -32,7 +33,7 @@ func (m *KingbaseESPartitionManager) CreateRangePartition(ctx context.Context, d
 
 // CreateListPartition creates a list partition
 func (m *KingbaseESPartitionManager) CreateListPartition(ctx context.Context, db *sql.DB, tableName, partitionName string, values []string) error {
-	valuesStr := fmt.Sprintf("('%s')", fmt.Sprintf("','", values))
+	valuesStr := "('" + strings.Join(values, "','") + "')"
 	sql := fmt.Sprintf("ALTER TABLE %s ADD PARTITION %s VALUES IN %s",
 		tableName, partitionName, valuesStr)
 

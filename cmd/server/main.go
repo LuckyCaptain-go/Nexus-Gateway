@@ -97,6 +97,12 @@ func main() {
 	router.Use(middleware.Cors())
 	router.Use(middleware.CorrelationID())
 
+	// Authenticate optional JWTs before rate limiting so verified users share
+	// a per-user bucket. Invalid or absent credentials fall back to the peer IP.
+	if cfg.Security.EnableAuth && cfg.Security.EnableRateLimit {
+		router.Use(authMiddleware.OptionalAuth())
+	}
+
 	// Add rate limiting if enabled
 	if cfg.Security.EnableRateLimit {
 		router.Use(rateLimiter.RateLimit())

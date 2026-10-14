@@ -153,7 +153,6 @@ func (d *OceanBaseDriver) DetectCompatMode(ctx context.Context, db *sql.DB) (str
 	return "MYSQL", nil
 }
 
-
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && s[:len(substr)] == substr
 }
@@ -166,11 +165,11 @@ func (d *OceanBaseDriver) ApplyBatchPagination(sql string, batchSize, offset int
 	sqlUpper := strings.ToUpper(sql)
 	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
 		// For complex queries with existing pagination, add a subquery wrapper
-		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query LIMIT %d OFFSET %d", sql, batchSize, offset), nil
 	}
 	// Use standard LIMIT/OFFSET for MySQL-compatible databases
 	if offset > 0 {
-		return fmt.Sprintf("%%s LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+		return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
 	}
-	return fmt.Sprintf("%%s LIMIT %%d", sql, batchSize), nil
+	return fmt.Sprintf("%s LIMIT %d", sql, batchSize), nil
 }

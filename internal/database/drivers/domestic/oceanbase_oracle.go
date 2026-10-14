@@ -231,13 +231,13 @@ func (d *OceanBaseOracleDriver) ApplyBatchPagination(sql string, batchSize, offs
 	if (strings.Contains(sqlUpper, " OFFSET ") && strings.Contains(sqlUpper, " ROWS")) ||
 		(strings.Contains(sqlUpper, " FETCH FIRST ") && strings.Contains(sqlUpper, " ROWS ONLY")) {
 		// For complex queries with existing pagination, add a subquery wrapper
-		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query OFFSET %%d ROWS FETCH FIRST %%d ROWS ONLY", sql, offset, batchSize), nil
+		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
 
 	}
 	if offset > 0 {
-		return fmt.Sprintf("%%s OFFSET %%d ROWS FETCH FIRST %%d ROWS ONLY", sql, offset, batchSize), nil
+		return fmt.Sprintf("%s OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", sql, offset, batchSize), nil
 	}
-	return fmt.Sprintf("%%s FETCH FIRST %%d ROWS ONLY", sql, batchSize), nil
+	return fmt.Sprintf("%s FETCH FIRST %d ROWS ONLY", sql, batchSize), nil
 }
 
 // OceanBaseCompatibilityInfo represents compatibility mode info
