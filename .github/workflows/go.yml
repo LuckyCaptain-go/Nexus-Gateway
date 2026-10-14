@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -24,10 +26,16 @@ jobs:
           cache: true
 
       - name: Check formatting
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          files="$(git ls-files '*.go')"
-          if [ -n "$files" ]; then
-            unformatted="$(gofmt -l $files)"
+          if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            mapfile -t files < <(git diff --name-only "$BASE_SHA"...HEAD -- '*.go')
+          else
+            mapfile -t files < <(git ls-files '*.go')
+          fi
+          if [ "${#files[@]}" -gt 0 ]; then
+            unformatted="$(gofmt -l "${files[@]}")"
             if [ -n "$unformatted" ]; then
               printf 'Go files need gofmt:\n%s\n' "$unformatted"
               exit 1
