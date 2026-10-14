@@ -333,7 +333,7 @@ type IcebergSnapshot struct {
 	ParentSnapshotID *int64                 `json:"parent-snapshot-id,omitempty"`
 	TimestampMs      int64                  `json:"timestamp-ms"`
 	Summary          IcebergSnapshotSummary `json:"summary"`
-	_manifests       []string               `json:"manifests,omitempty"`
+	Manifests        []string               `json:"manifests,omitempty"`
 }
 
 // IcebergSnapshotSummary contains snapshot summary information

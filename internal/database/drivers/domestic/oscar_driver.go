@@ -255,13 +255,13 @@ func (d *OscarDriver) ApplyBatchPagination(sql string, batchSize, offset int64) 
 	sqlUpper := strings.ToUpper(sql)
 	if strings.Contains(sqlUpper, " LIMIT ") || strings.Contains(sqlUpper, " OFFSET ") {
 		// For complex queries with existing pagination, add a subquery wrapper
-		return fmt.Sprintf("SELECT * FROM (%%s) AS batch_query LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+		return fmt.Sprintf("SELECT * FROM (%s) AS batch_query LIMIT %d OFFSET %d", sql, batchSize, offset), nil
 	}
 	// Use standard LIMIT/OFFSET for PostgreSQL-compatible databases
 	if offset > 0 {
-		return fmt.Sprintf("%%s LIMIT %%d OFFSET %%d", sql, batchSize, offset), nil
+		return fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset), nil
 	}
-	return fmt.Sprintf("%%s LIMIT %%d", sql, batchSize), nil
+	return fmt.Sprintf("%s LIMIT %d", sql, batchSize), nil
 }
 
 // GetTablePartitionInfo retrieves partition information
