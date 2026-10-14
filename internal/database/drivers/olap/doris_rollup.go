@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 // DorisRollupManager handles Doris rollup features
@@ -20,7 +21,7 @@ func NewDorisRollupManager(driver *DorisDriver) *DorisRollupManager {
 
 // CreateRollup creates a rollup index
 func (m *DorisRollupManager) CreateRollup(ctx context.Context, db *sql.DB, tableName, rollupName string, columns []string) error {
-	columnsStr := fmt.Sprintf("(`%s`)", fmt.Sprintf("`,`", columns))
+	columnsStr := "(`" + strings.Join(columns, "`,`") + "`)"
 	sql := fmt.Sprintf("ALTER TABLE %s ADD ROLLUP %s %s", tableName, rollupName, columnsStr)
 	_, err := db.ExecContext(ctx, sql)
 	if err != nil {

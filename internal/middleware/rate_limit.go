@@ -95,27 +95,19 @@ func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
 	}
 }
 
-// getClientID extracts client identifier for rate limiting
+// getClientID extracts a client identifier for rate limiting.
 func (rl *RateLimiter) getClientID(c *gin.Context) string {
-	// Priority order for client ID:
-	// 1. User ID (if authenticated)
-	// 2. API Key (if provided)
-	// 3. IP Address
-
-	// Try user ID first
+	// user_id is populated only after a JWT has been validated by the auth
+	// middleware. Caller-controlled headers must never define a rate-limit bucket.
 	if userID, exists := c.Get("user_id"); exists {
-		if id, ok := userID.(string); ok {
+		if id, ok := userID.(string); ok && id != "" {
 			return "user:" + id
 		}
 	}
 
-	// Try API key
-	if apiKey := c.GetHeader("X-API-Key"); apiKey != "" {
-		return "apikey:" + apiKey
-	}
-
-	// Fall back to IP address
-	clientIP := c.ClientIP()
+	// Use the transport peer address. Gin's ClientIP trusts forwarded headers
+	// from all proxies by default unless trusted proxies are configured.
+	clientIP := c.RemoteIP()
 	if clientIP == "" {
 		clientIP = "unknown"
 	}
