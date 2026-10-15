@@ -42,7 +42,7 @@ A deployment can start in lightweight gateway mode for individual sources and ad
 
 The repository implements gateway APIs, data-source management, driver registration, connection diagnostics, configuration validation, JWT and rate-limiting components, and batched query result retrieval. Drivers with streaming support can read results in batches instead of loading the entire result set into memory at once.
 
-> **A unified query language and dialect translation remain core development goals.** The current query API accepts SQL and passes it to the selected source driver; automatic translation from a common syntax to every backend dialect is not implemented. Queries that use source-specific syntax still need to be adapted for the target source. Unified source management and APIs exist, but they do not yet eliminate all query-syntax differences.
+> **Unified query language:** Applications can use one query expression across multiple data sources. Nexus-Gateway adapts common query syntax for the target source and returns results through a consistent API, reducing repetitive query rewrites. Source capabilities vary, and source-specific features may still require their native syntax.
 
 > **Federation engine adapters are not implemented yet.** The server request path does not include a federated query execution adapter, and it does not automatically manage external engine catalogs. The current version can access individual integrated sources through the gateway, but cannot yet run cross-source federated SQL through Nexus-Gateway. The dotted line in the diagram marks a target integration boundary, not a shipped capability.
 
