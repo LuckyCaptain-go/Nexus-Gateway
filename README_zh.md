@@ -132,6 +132,10 @@ go run ./cmd/server
 - [贡献指南](docs/contributing.md)
 - [English README](README_en.md)
 
+## 参与开源共建
+
+如果 Nexus-Gateway 对你有帮助，欢迎在 GitHub 为项目点亮 Star。也欢迎通过 Issue、Pull Request 和文档改进参与开源共建。
+
 ## 跨源查询引擎扩展
 
 后续将面向多种跨源查询引擎提供统一、无缝的接入能力，例如 Trino、Presto、OpenLooKeng 等。上述引擎是后续适配方向，当前仓库尚未交付相应的联邦查询适配器。

@@ -132,6 +132,10 @@ See the [API usage guide](docs/api_usage.md) for request fields, response struct
 - [Contributing Guide](docs/contributing.md)
 - [中文 README](README_zh.md)
 
+## Contributing
+
+If Nexus-Gateway is useful to you, please star the repository. You are also welcome to contribute through issues, pull requests, and documentation improvements.
+
 ## Federation Engine Integrations
 
 The project aims to provide a common, seamless integration path for multiple cross-source query engines, including Trino, Presto, and OpenLooKeng. These are future adapter targets; the current repository does not yet ship a federated query adapter.
