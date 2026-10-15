@@ -20,9 +20,9 @@ type FetchQueryRequest struct {
 	DataSourceID  string `json:"dataSourceId" validate:"required,uuid4"`
 	SQL           string `json:"sql" validate:"required"`
 	SourceDialect string `json:"sourceDialect,omitempty"` // Source SQL dialect for translation (e.g., mysql, trino, postgres)
-	Type          int    `json:"type"`                 // 1-同步查询 2-流式查询
-	BatchSize     int    `json:"batch_size,omitempty"` // 当前批次数据的预期条数，范围：1-10000，默认10000
-	Timeout       int    `json:"timeout,omitempty"`    // 获取第一批数据的预期时间，单位：秒，范围：1-1800，流式查询生效
+	Type          int    `json:"type"`                    // 1-同步查询 2-流式查询
+	BatchSize     int    `json:"batch_size,omitempty"`    // 当前批次数据的预期条数，范围：1-10000，默认10000
+	Timeout       int    `json:"timeout,omitempty"`       // 获取第一批数据的预期时间，单位：秒，范围：1-1800，流式查询生效
 }
 
 // FetchQueryResponse represents the response for a fetch query
