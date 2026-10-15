@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - Replaced expired calendar phases with a stage-based roadmap and observable completion gates.
 - Documented current release automation and the container packaging limitation.
 
+### Fixed
+- Preserve application error codes and HTTP statuses when errors are wrapped with additional context.
+
 ### Streaming Query Updates
 
 #### Changed
