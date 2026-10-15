@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a reproducible problem
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Search existing issues first. Never include passwords, tokens, or private customer data."
+  - type: input
+    id: version
+    attributes:
+      label: Nexus-Gateway version or commit
+      placeholder: "v1.2.0 or commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "Operating system, Go version, database or connector involved."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: "Provide the smallest reproducible example. Redact secrets."
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or error
+      description: "Remove credentials, tokens, personal information, and customer data."
+      render: text
+    validations:
+      required: false

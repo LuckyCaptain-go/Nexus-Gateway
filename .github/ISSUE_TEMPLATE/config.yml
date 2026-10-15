@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions
+    about: Ask usage questions or discuss ideas with the community.
+  - name: Security vulnerability
+    url: https://github.com/LuckyCaptain-go/Nexus-Gateway/security/advisories/new
+    about: Report security issues privately. Do not open a public issue.
+  - name: Documentation
+    url: https://github.com/LuckyCaptain-go/Nexus-Gateway/tree/master/docs
+    about: Check the guides before opening a documentation request.

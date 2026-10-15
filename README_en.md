@@ -7,6 +7,7 @@
   <p>
     <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
+    <a href="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml"><img src="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
 </div>
 
@@ -141,6 +142,10 @@ If Nexus-Gateway is useful to you, please star the repository. You are also welc
 ## Federation Engine Integrations
 
 The project aims to provide a common, seamless integration path for multiple cross-source query engines, including Trino, Presto, and OpenLooKeng. These are future adapter targets; the current repository does not yet ship a federated query adapter.
+
+## Community and Releases
+
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Release process](docs/releasing.md) · [GitHub Releases](https://github.com/LuckyCaptain-go/Nexus-Gateway/releases)
 
 ## License
 
