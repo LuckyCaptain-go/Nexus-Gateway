@@ -13,6 +13,7 @@ type Config struct {
 	Security SecurityConfig `mapstructure:"security"`
 	Logging  LoggingConfig  `mapstructure:"logging"`
 	Query    QueryConfig    `mapstructure:"query"`
+	MCP      MCPConfig      `mapstructure:"mcp"`
 }
 
 type ServerConfig struct {
@@ -102,6 +103,15 @@ func setDefaults() {
 	// Query defaults
 	viper.SetDefault("query.prefer_streaming", true)
 	viper.SetDefault("query.execution_mode", "auto") // auto, streaming, pagination
+
+	// MCP currently supports stdio transport.
+	viper.SetDefault("mcp.enabled", false)
+	viper.SetDefault("mcp.transport", "stdio")
+}
+
+type MCPConfig struct {
+	Enabled   bool   `mapstructure:"enabled"`
+	Transport string `mapstructure:"transport"`
 }
 
 // QueryConfig holds settings related to query execution
