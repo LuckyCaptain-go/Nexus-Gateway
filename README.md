@@ -2,8 +2,8 @@
 
 <div align="center">
   <img src="assets/nexus-gateway-icon.png" alt="Nexus-Gateway 图标" width="160">
-  <h2>轻量的数据访问网关；需要跨源联邦时，再由 Trino 扩展</h2>
-  <p>Nexus 统一应用侧接入；Trino 负责跨源 SQL 的规划与执行</p>
+  <h2>轻量的数据访问网关，统一接入异构数据源</h2>
+  <p>面向应用的统一数据接入、连接管理与查询入口</p>
   <p><a href="README_zh.md">完整中文介绍</a> · <a href="README_en.md">English</a></p>
   <p>
     <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
@@ -15,11 +15,11 @@ Nexus-Gateway 面向 AI、RAG、BI 和业务应用，是一个轻量的数据访
 
 ## 我们的生态位
 
-Nexus-Gateway 位于应用与数据系统之间：**Nexus 管应用侧接入和数据源连接生命周期；Trino 管跨源 SQL 的规划与分布式执行；原始数据仍由各自的数据系统管理。**
+Nexus-Gateway 位于应用与数据系统之间：**它负责应用侧统一接入、数据源连接生命周期和网关控制；跨源查询能力可通过查询引擎适配扩展；原始数据仍由各自的数据系统管理。**
 
-- **轻量接入模式：**单源访问可由网关驱动直接完成，不要求部署 Trino。运行服务仍需要按配置准备元数据数据库。
-- **联邦查询扩展：**当应用需要跨 catalog 关联查询时，产品目标是将查询交给 Trino；无需先把所有数据全量复制进中心数据库，但查询时仍会产生网络传输和中间结果交换。
-- **明确的产品边界：**Nexus-Gateway 不是 Trino 的替代品，也不是另一个数据库、数仓、ETL 或数据复制平台。它提供应用侧统一入口，不重新实现分布式 SQL 引擎。
+- **轻量接入模式：**单源访问可由网关驱动直接完成，不需要额外部署跨源查询引擎。运行服务仍需要按配置准备元数据数据库。
+- **按需扩展跨源查询：**需要跨数据源关联查询时，可通过查询引擎适配层扩展联邦能力；查询时仍会产生网络传输和中间结果交换。
+- **明确的产品边界：**Nexus-Gateway 聚焦应用侧统一入口、数据源连接管理和访问控制，不是数据库、数仓、ETL 或数据复制平台，也不重新实现分布式 SQL 引擎。
 
 产品主打轻量、低资源占用和快速部署；当前仓库没有公开的资源或性能基准，因此不承诺具体的内存、CPU 或启动时间数字。
 
@@ -27,15 +27,15 @@ Nexus-Gateway 位于应用与数据系统之间：**Nexus 管应用侧接入和�
 
 当前仓库包含数据源管理、驱动注册、连接诊断、配置校验、JWT 与限流组件，以及查询结果分批获取；兼容的驱动可使用流式游标。具体驱动能力以服务端类型接口和实现为准。
 
-**Trino 集成尚未交付：**服务请求链路中还没有 Trino 执行适配器，也没有将网关数据源自动同步为 Trino catalogs 的能力。因此当前版本可以通过已接入的驱动访问单个数据源，但还不能经 Nexus-Gateway 执行跨源联邦 SQL。使用单源网关能力不需要 Trino；联邦能力需要未来完成适配层并部署 Trino。
+**跨源查询引擎适配尚未交付：**当前服务请求链路尚未接入联邦查询执行适配器，也没有跨源引擎连接配置的自动管理能力。因此，当前版本可以通过已接入的驱动访问单个数据源，但还不能经 Nexus-Gateway 执行跨源联邦 SQL。图中的虚线表示目标集成边界，不代表已交付能力。
 
 ~~~mermaid
 flowchart LR
     App[AI / RAG / BI / 业务应用] --> Gateway[Nexus-Gateway<br/>应用侧 API 与数据源管理]
     Gateway --> Drivers[当前：驱动与单源访问]
     Drivers --> Sources[数据库 / 数仓 / 湖仓 / 对象存储 / 文件]
-    Gateway -. 目标集成：联邦查询适配器 .-> Trino[Trino 查询引擎]
-    Trino -.-> Catalogs[Trino catalogs 与连接器]
+    Gateway -. 目标集成：联邦查询适配器 .-> Engine[跨源查询引擎]
+    Engine -.-> Catalogs[Catalogs 与连接器]
     Catalogs -.-> Sources
 ~~~
 
@@ -57,5 +57,9 @@ go run ./cmd/server
 健康检查路径为 /health。当前配置文件中的凭据是示例值；启动代码仍使用固定的凭据加密主密钥，生产部署前必须替换并迁移到安全的外部密钥管理方式。
 
 更多信息参见 [API 使用指南](docs/api_usage.md)、[架构设计](docs/architecture.md)、[配置指南](docs/configuration.md)、[开发指南](docs/development.md) 和 [中文完整说明](README_zh.md)。
+
+## 跨源查询引擎扩展
+
+后续将面向多种跨源查询引擎提供统一、无缝的接入能力，例如 Trino、Presto、OpenLooKeng 等。上述引擎是后续适配方向，当前仓库尚未交付相应的联邦查询适配器。
 
 本项目采用 Apache License 2.0，详见 [LICENSE](LICENSE)。
