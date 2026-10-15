@@ -1,124 +1,61 @@
 # Nexus-Gateway
 
 <div align="center">
-
-**Universal Multi-Database Gateway for Unified Data Access**
-
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org/)
-[![Gin](https://img.shields.io/badge/Gin-Web-Framework-green?style=flat)](https://gin-gonic.com/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat)](LICENSE)
-[![Drivers](https://img.shields.io/badge/Database_Drivers-90+-brightgreen?style=flat)]()
-
+  <img src="assets/nexus-gateway-icon.png" alt="Nexus-Gateway 图标" width="160">
+  <h2>轻量的数据访问网关；需要跨源联邦时，再由 Trino 扩展</h2>
+  <p>Nexus 统一应用侧接入；Trino 负责跨源 SQL 的规划与执行</p>
+  <p><a href="README_zh.md">完整中文介绍</a> · <a href="README_en.md">English</a></p>
+  <p>
+    <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
+    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
+  </p>
 </div>
 
-## 🌐 Language Versions / 语言版本
+Nexus-Gateway 面向 AI、RAG、BI 和业务应用，是一个轻量的数据访问与连接管理入口。它把应用反复处理的驱动接入、连接配置、查询调用和结果分页收敛到统一 API，降低应用连接异构数据的集成成本。
 
-- [English Version](README_en.md)
-- [中文版本](README_zh.md)
+## 我们的生态位
 
-## Overview
+Nexus-Gateway 位于应用与数据系统之间：**Nexus 管应用侧接入和数据源连接生命周期；Trino 管跨源 SQL 的规划与分布式执行；原始数据仍由各自的数据系统管理。**
 
-**Nexus-Gateway** is an enterprise-grade universal data gateway that serves as the foundational data access layer for AI agents, RAG systems, BI reports, and data scientists. It provides secure, unified SQL access to 90+ data sources with smart routing and extensible architecture for diverse analytical needs.
+- **轻量接入模式：**单源访问可由网关驱动直接完成，不要求部署 Trino。运行服务仍需要按配置准备元数据数据库。
+- **联邦查询扩展：**当应用需要跨 catalog 关联查询时，产品目标是将查询交给 Trino；无需先把所有数据全量复制进中心数据库，但查询时仍会产生网络传输和中间结果交换。
+- **明确的产品边界：**Nexus-Gateway 不是 Trino 的替代品，也不是另一个数据库、数仓、ETL 或数据复制平台。它提供应用侧统一入口，不重新实现分布式 SQL 引擎。
 
-## Key Features
+产品主打轻量、低资源占用和快速部署；当前仓库没有公开的资源或性能基准，因此不承诺具体的内存、CPU 或启动时间数字。
 
-- **🚀 Universal Data Access** - Support for 90+ database drivers including:
-  - **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
-  - **Data Lake Tables**: Apache Iceberg, Delta Lake, Apache Hudi
-  - **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
-  - **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob Storage
-  - **File Systems**: HDFS, Apache Ozone
-  - **File Formats**: Parquet, ORC, Avro, CSV, JSON, XML, Text
-  - **Domestic Databases**: OceanBase, TiDB, TDSQL, GaussDB, DaMeng, KingbaseES, GBase, Oscar, OpenGauss
-- **🔒 Security First** - SQL injection prevention, JWT authentication, rate limiting, read-only query enforcement
-- **⚡ High Performance** - Connection pooling, query optimization, streaming support for large datasets
-- **🌊 Time Travel Support** - Query historical data in Iceberg, Delta Lake, and Hudi
-- **📊 Schema Discovery** - Automatic schema detection for file formats and databases
-- **🐳 Docker & Kubernetes Ready** - Multi-stage Dockerfile and K8s manifests included
-- **📖 Comprehensive API** - RESTful API with Swagger documentation
-- **🔧 Extensible Architecture** - Easy to add new database drivers via plugin system
+## 当前能力与集成状态
 
-## Quick Start
+当前仓库包含数据源管理、驱动注册、连接诊断、配置校验、JWT 与限流组件，以及查询结果分批获取；兼容的驱动可使用流式游标。具体驱动能力以服务端类型接口和实现为准。
 
-### Prerequisites
+**Trino 集成尚未交付：**服务请求链路中还没有 Trino 执行适配器，也没有将网关数据源自动同步为 Trino catalogs 的能力。因此当前版本可以通过已接入的驱动访问单个数据源，但还不能经 Nexus-Gateway 执行跨源联邦 SQL。使用单源网关能力不需要 Trino；联邦能力需要未来完成适配层并部署 Trino。
 
-- Go 1.25 or higher
-- Docker (optional)
+~~~mermaid
+flowchart LR
+    App[AI / RAG / BI / 业务应用] --> Gateway[Nexus-Gateway<br/>应用侧 API 与数据源管理]
+    Gateway --> Drivers[当前：驱动与单源访问]
+    Drivers --> Sources[数据库 / 数仓 / 湖仓 / 对象存储 / 文件]
+    Gateway -. 目标集成：联邦查询适配器 .-> Trino[Trino 查询引擎]
+    Trino -.-> Catalogs[Trino catalogs 与连接器]
+    Catalogs -.-> Sources
+~~~
 
-### Installation
+## 数据源范围
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
-   cd Nexus-Gateway
-   ```
+代码库中定义的代表性类型包括 MySQL、PostgreSQL、Oracle、SQL Server、OceanBase、TiDB、达梦、KingbaseES、ClickHouse、Doris、StarRocks、Snowflake、BigQuery、Iceberg、Delta Lake、Hudi，以及 S3、MinIO、OSS、COS、Azure Blob、HDFS、Ozone 和常见文件格式。类型是否在当前构建中启用、认证方式及高级能力因驱动而异，可通过服务端数据源类型接口和对应实现确认。
 
-2. **Install dependencies**
-   ```bash
-   go mod download
-   ```
+## 快速开始
 
-3. **Configure the application**
-   ```bash
-   cp configs/config.yaml.example configs/config.yaml
-   # Edit configs/config.yaml with your settings
-   ```
+需要 Go 1.25.1 或更高版本，以及按配置准备的元数据数据库。先检查 [配置说明](docs/configuration.md) 中的端口、数据库和安全选项，再获取代码：
 
-4. **Run the application**
-   ```bash
-   go run cmd/server/main.go
-   ```
+~~~bash
+git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
+cd Nexus-Gateway
+go mod download
+go run ./cmd/server
+~~~
 
-The server will start on `http://localhost:8099`
+健康检查路径为 /health。当前配置文件中的凭据是示例值；启动代码仍使用固定的凭据加密主密钥，生产部署前必须替换并迁移到安全的外部密钥管理方式。
 
-### Docker Deployment
+更多信息参见 [API 使用指南](docs/api_usage.md)、[架构设计](docs/architecture.md)、[配置指南](docs/configuration.md)、[开发指南](docs/development.md) 和 [中文完整说明](README_zh.md)。
 
-```bash
-# Build the image
-docker build -t nexus-gateway:latest .
-
-# Run the container
-docker run -d \
-  --name nexus-gateway \
-  -p 8099:8099 \
-  -v $(pwd)/configs:/app/configs \
-  nexus-gateway:latest
-```
-
-## Roadmap
-
-### ✅ Phase 1: Enhanced Single-Source Capabilities (COMPLETED)
-
-#### Data Lakes & Warehouses ✅
-- [x] **Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi
-- [x] **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
-- [x] **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid
-
-#### Object Storage & File Systems ✅
-- [x] **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob
-- [x] **Distributed Storage**: HDFS, Apache Ozone
-- [x] **File Formats**: Parquet, ORC, Avro, CSV, JSON, XML, Text (with compression)
-
-#### Domestic Database Support (China) ✅
-- [x] **Distributed Databases**: OceanBase, TiDB, Tencent TDSQL, GaussDB
-- [x] **Traditional Databases**: DaMeng (DM), KingbaseES, GBase, Oscar, OpenGauss
-
-### 🔄 Phase 2: Compute Engine Integration (IN PROGRESS)
-- [ ] **Trino Integration**: Distributed SQL query engine federation
-- [ ] **Spark Integration**: Batch and streaming data processing
-- [ ] **Flink Integration**: Real-time stream processing
-- [ ] **Compute Engine Orchestration**: Intelligent routing to optimal engine
-
-### 📋 Phase 3-5: See [Roadmap Details](docs/roadmap.md)
-
-## Support
-
-- Documentation: [Full Docs](https://LuckyCaptain-go.github.io/Nexus-Gateway)
-- Issues: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
-- Discussions: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
-
----
-
-<div align="center">
-Made with ❤️ by the Nexus-Gateway team
-</div>
+本项目采用 Apache License 2.0，详见 [LICENSE](LICENSE)。

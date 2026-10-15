@@ -1,179 +1,137 @@
-哦显示# Nexus-Gateway - Enterprise-Grade Universal Data Access Platform
+# Nexus-Gateway: A Lightweight Data Access Gateway with Trino Federation
 
 <div align="center">
-
-**Empowering Data-Driven Decision Making and AI Applications with Universal Data Gateway**
-
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org/)
-[![Gin](https://img.shields.io/badge/Gin-Web-Framework-green?style=flat)](https://gin-gonic.com/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat)](LICENSE)
-[![Drivers](https://img.shields.io/badge/Database_Drivers-90+-brightgreen?style=flat)]()
-
+  <img src="assets/nexus-gateway-icon.png" alt="Nexus-Gateway icon" width="176">
+  <p><strong>Connect data sources lightly; add Trino when cross-source federation is needed</strong></p>
+  <p><a href="README.md">Project home</a> · <a href="README_zh.md">中文介绍</a></p>
+  <p>
+    <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
+    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
+  </p>
 </div>
 
-## 🌟 Core Advantages
+Nexus-Gateway is for AI agents, RAG systems, BI tools, and business applications that need heterogeneous data access. It addresses repeated integration work: each application should not have to maintain separate drivers, connection settings, query calls, and result pagination for every database, warehouse, data lake, object store, or file system.
 
-Nexus-Gateway is an enterprise-grade multi-database proxy gateway designed to address challenges in modern complex data environments. We are committed to providing a unified, secure, and high-performance data access solution that helps enterprises achieve data-driven transformation in heterogeneous data source environments. Also serves as the foundational data access layer for AI agents and RAG systems, enabling unified data retrieval for LLMs and intelligent applications.
+The gateway brings those application-facing tasks behind one data access API. Applications manage connections, inspect sources, and retrieve query results through Nexus. When they need SQL across multiple systems, Trino can provide the federated query execution layer.
 
-### 🚀 Unparalleled Data Source Coverage
-- **90+ Data Sources Supported**: From traditional relational databases to modern cloud data warehouses, from data lake table formats to domestic Chinese databases, comprehensive coverage
-- **One-Stop Data Access**: Whether your data is stored in Snowflake, Databricks, ClickHouse, HDFS, S3, or domestic databases like OceanBase, TiDB, DaMeng, etc., Nexus-Gateway provides a unified SQL interface
-- **Continuous Expansion Capability**: Plugin-based driver architecture, easy to support new data sources
+## Product Niche
 
-### 🔒 Enterprise-Grade Security Assurance
-- **Zero Trust Security Model**: JWT authentication, SQL injection protection, read-only query enforcement
-- **Fine-Grained Permission Control**: Role-based access control, ensuring data security and compliance
-- **Rate Limiting and Monitoring**: Prevents resource exhaustion by individual users or applications
-- **Credential Encryption Storage**: Sensitive information encrypted with AES-256-GCM, secure and worry-free
+**Nexus-Gateway is a lightweight data access entry point between applications and data systems.** It handles application-facing APIs, source connection lifecycle, and gateway controls. Trino is an optional federation engine for planning and distributing SQL across catalogs. The original data systems continue to own and store their data.
 
-### ⚡ Outstanding Performance
-- **Smart Connection Pool**: Optimized connection management for each data source, significantly reducing connection overhead
-- **Streaming Query Processing**: Supports streaming transmission of large datasets, avoiding memory overflow
-- **Batch Pagination Optimization**: Efficiently handles large-scale data queries
-- **Caching Mechanism**: Smart caching reduces repeated queries, improves response speed
+| Component | Responsibility |
+| --- | --- |
+| Nexus-Gateway | Application-facing API, source connection management, diagnostics, single-source result retrieval, and gateway controls |
+| Trino | Access multiple systems through catalogs and connectors, then plan and execute cross-source SQL |
+| Source systems | Store and manage the actual data |
 
-### 🌊 Advanced Data Features
-- **Time Travel Query**: Supports time-point queries for data lakes like Iceberg, Delta Lake, Hudi
-- **Automatic Schema Discovery**: Intelligently detects data structures, simplifies data exploration
-- **Parameterized Queries**: Prevents SQL injection, ensures query security
-- **Distributed Query Support**: Handles complex queries across shards and partitions
+### Why Lightweight
 
-## 💼 Business Value
+- **Trino is not required for single-source access:** the current gateway can use integrated drivers to access individual sources without deploying a federation engine for a simple connectivity need.
+- **Add federation when needed:** cross-catalog joins require Trino and its connectors only when the application needs them.
+- **Reduce repeated integration work:** applications use a consistent API instead of implementing connection and pagination logic for every source.
+- **Avoid copying all data:** federated queries can leave data in their source systems, though query execution still involves network traffic and intermediate result exchange.
+- **Lightweight deployment is a product goal:** the project targets a small gateway service, low idle resource use, and a short deployment path. The repository does not publish resource or performance benchmarks, so it makes no numeric guarantees for memory, CPU, or startup time.
 
-### Reduces Technical Complexity
-- **Single Interface**: No need to learn different APIs and SDKs for each data source
-- **Standardized Development**: Unified data access patterns, reduces development workload
-- **Simplified Operations**: Centralized data connection management, reduces operational costs
+### Nexus and Trino Have Different Roles
 
-### Accelerates Data-Driven Decision Making
-- **Real-Time Data Access**: Quickly obtain cross-system data, supports real-time analysis
-- **Flexible Data Integration**: Easily integrates data from different systems
-- **Self-Service Analytics**: Provides convenient data access channels for business users
+Nexus-Gateway is not another distributed SQL engine and does not replace Trino. Nexus faces applications and focuses on connectivity, a consistent access API, source lifecycle, and the application entry point. Trino faces query execution and focuses on SQL planning, cross-source scheduling, and computation. Nexus-Gateway is also not a database, warehouse, ETL, or data-copy platform.
 
-### Supports Enterprise Digital Transformation
-- **Eliminates Data Silos**: Breaks down data barriers between different systems
-- **Data Governance Foundation**: Unified data access layer, facilitates data governance implementation
-- **Compliance Assurance**: Comprehensive audit logs and access controls
+A deployment can start in lightweight gateway mode for individual sources and add Trino only when cross-source SQL becomes necessary. Whether Trino is deployed depends on the application's federation needs.
 
-## 🛠 Technical Architecture
+## Current Implementation Status
 
-Nexus-Gateway adopts a modular, extensible architecture design:
+The repository implements gateway APIs, data-source management, driver registration, connection diagnostics, configuration validation, JWT and rate-limiting components, and batched query result retrieval. Drivers with streaming support can read results in batches instead of loading the entire result set into memory at once.
 
-- **API Layer**: RESTful interfaces, supporting standard HTTP protocol
-- **Security Layer**: Authentication, authorization, rate limiting, auditing
-- **Service Layer**: Query processing, connection management, caching services
-- **Driver Layer**: 90+ data source drivers, supporting expansion
-- **Data Layer**: Various data sources
+> **The Trino adapter is not implemented yet.** The server request path does not include a Trino execution adapter, and gateway data sources are not automatically synchronized to Trino catalogs. The current version can access individual integrated sources through the gateway, but cannot yet run cross-source federated SQL through Nexus-Gateway. The dotted line in the diagram marks a target integration boundary, not a shipped capability.
 
-## 🚀 Quick Start
+~~~mermaid
+flowchart LR
+    App[AI Agent / RAG / BI / Application] --> Gateway[Nexus-Gateway<br/>Application API · Source Management]
+    Gateway --> Drivers[Current: Drivers and Single-Source Access]
+    Drivers --> Sources[Databases / Warehouses / Lakehouses / Object Storage / Files]
+    Gateway -. Target: Federation Adapter .-> Trino[Trino<br/>SQL Planning and Distributed Execution]
+    Trino -.-> Catalogs[Catalogs and Connectors]
+    Catalogs -.-> Sources
+~~~
 
-### Environment Requirements
-- Go 1.25 or higher
-- Docker (optional)
+Solid arrows represent gateway and single-source paths in the current repository. The dotted arrow is the target Trino integration boundary. The adapter will need to define the application query protocol, catalog lifecycle, identity propagation, query cancellation, timeouts, and result flow.
 
-### Deployment Options
+## Gateway Capabilities
 
-**Local Deployment:**
-```bash
-# Clone project
+- **Data-source management:** Create, inspect, update, activate, deactivate, and delete data sources.
+- **Driver extension:** Add source types through the common driver interface and registry.
+- **Connection diagnostics:** Test connections, validate configuration, and inspect connection statistics and health.
+- **Query results:** Retrieve data through the gateway query API and fetch subsequent result batches; streaming-capable drivers can reduce memory use for large results.
+- **Source-type discovery:** Inspect the source types recognized by the running service.
+- **Gateway controls:** The codebase includes JWT, request rate limiting, configuration validation, and health-check components. Actual authentication coverage depends on deployment configuration and route groups.
+
+## Data Source Categories
+
+The following are representative source types defined in the repository. Driver completeness, authentication methods, available features, and whether a driver is enabled in a given build may vary. Check the running service's type endpoint and the driver implementation.
+
+| Category | Representative types |
+| --- | --- |
+| Relational and compatible databases | MySQL, MariaDB, PostgreSQL, Oracle, SQL Server |
+| Domestic databases | OceanBase, TiDB, TDSQL, GaussDB, DaMeng, KingbaseES, GBase, Oscar, OpenGauss |
+| Analytical databases | ClickHouse, Doris, StarRocks, Druid, Hologres |
+| Cloud warehouses and big-data platforms | Snowflake, Databricks, Redshift, BigQuery, Hive, MaxCompute |
+| Lakehouse table formats | Apache Iceberg, Delta Lake, Apache Hudi |
+| Object storage and file systems | S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob, HDFS, Apache Ozone |
+| File formats | Parquet, ORC, Avro, CSV, JSON, XML, text |
+
+## Quick Start
+
+### Requirements
+
+- Go 1.25.1 or newer.
+- A metadata database configured for the service and reachable data sources.
+- Trino is not required for single-source gateway mode. Federated queries require the Trino adapter and a deployed Trino service.
+
+### Get the Code and Start
+
+~~~bash
 git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
 cd Nexus-Gateway
-
-# Install dependencies
 go mod download
+~~~
 
-# Configure application
-cp configs/config.yaml.example configs/config.yaml
+Review the service port, metadata database, and security settings in configs/config.yaml, then start the server:
 
-# Start service
-go run cmd/server/main.go
-```
+~~~bash
+go run ./cmd/server
+~~~
 
-**Docker Deployment:**
-```bash
-# Build image
-docker build -t nexus-gateway:latest .
+The health-check path is /health. See the [configuration guide](docs/configuration.md) for defaults and deployment options.
 
-# Run container
-docker run -d \
-  --name nexus-gateway \
-  -p 8099:8099 \
-  -v $(pwd)/configs:/app/configs \
-  nexus-gateway:latest
-```
+> The checked-in credentials are examples. The server bootstrap currently uses a fixed credential-encryption master key; replace it with secure external secret management before production, and verify that authentication covers the routes that need protection.
 
-The service will run on `http://localhost:8099`.
+## API Overview
 
-## 📚 Learning Resources
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | /health | Service health check |
+| GET | /api/v1/database/types | List source types recognized by the service |
+| GET | /api/v1/database/compatibility | Inspect database compatibility information |
+| GET / POST | /api/v1/datasources | List or create data sources |
+| GET / PUT / DELETE | /api/v1/datasources/:id | Inspect, update, or delete a data source |
+| POST | /api/v1/datasources/:id/activate | Activate a data source |
+| POST | /api/v1/datasources/:id/deactivate | Deactivate a data source |
+| POST | /api/v1/database/test-connection | Test a data-source connection |
+| POST | /api/v1/database/validate-config | Validate data-source configuration |
+| POST | /api/v1/fetch | Execute a batch query and fetch its first result batch |
+| GET | /api/v1/fetch/:query_id/:slug/:token | Fetch a subsequent result batch |
 
-- [API Usage Guide](docs/api_usage.md) - Detailed API usage instructions and examples
-- [Architecture Design](docs/architecture.md) - System architecture and technical details
-- [Configuration Reference](docs/configuration.md) - Complete configuration options
-- [Development Guide](docs/development.md) - Extension and customization guidance
-- [Contributing Guide](docs/contributing.md) - How to contribute to the project
+See the [API usage guide](docs/api_usage.md) for request fields, response structures, and authentication behavior.
 
-## 🛣 Development Roadmap
+## Documentation
 
-### ✅ Phase 1: Enhanced Single-Source Capabilities (COMPLETED - Dec 2025)
+- [API Usage Guide](docs/api_usage.md)
+- [Architecture Guide](docs/architecture.md)
+- [Configuration Guide](docs/configuration.md)
+- [Development Guide](docs/development.md)
+- [Contributing Guide](docs/contributing.md)
+- [中文 README](README_zh.md)
 
-#### Data Lakes & Warehouses ✅
-- [x] **Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi with schema evolution and partition management
-- [x] **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery with advanced authentication and query optimization
-- [x] **OLAP Engines**: ClickHouse, Apache Doris, StarRocks, Apache Druid with high-performance query capabilities
+## License
 
-#### Object Storage & File Systems ✅
-- [x] **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob with advanced query capabilities via S3 Select and similar technologies
-- [x] **Distributed Storage**: HDFS, Apache Ozone with Kerberos authentication and high availability
-- [x] **File Formats**: Parquet, ORC, Avro, CSV, JSON, XML, Text (with compression) with schema inference and projection pushdown
-
-#### Domestic Database Support (China) ✅
-- [x] **Distributed Databases**: OceanBase (MySQL/Oracle compatibility modes), TiDB, Tencent TDSQL, Huawei GaussDB
-- [x] **Traditional Databases**: DaMeng (DM), KingbaseES, GBase, OSCAR, OpenGauss with Chinese character encoding support
-
-### 🔄 Phase 2: Compute Engine Integration (IN PROGRESS - Jan-May 2026)
-- [ ] **Trino Integration**: Distributed SQL query engine federation with cross-data source joins
-- [ ] **Spark Integration**: Batch and streaming data processing with Spark SQL connector
-- [ ] **Flink Integration**: Real-time stream processing with CDC capabilities
-- [ ] **Compute Engine Orchestration**: Intelligent routing to optimal engine based on query characteristics
-- [ ] **Cost-Based Optimization**: Query planner with cost estimation across compute engines
-- [ ] **Resource Management**: Dynamic allocation and scheduling of compute resources
-
-### 🚧 Phase 3: Advanced Analytics & ML Integration (Q2-Q3 2026)
-- [ ] **Machine Learning Pipeline Integration**: Direct access to ML model predictions from queries
-- [ ] **Advanced Analytics Functions**: Statistical and predictive analytics built into the gateway
-- [ ] **Data Quality Monitoring**: Automated anomaly detection and data quality scoring
-- [ ] **Predictive Query Optimization**: ML-powered query plan optimization
-- [ ] **Auto-scaling**: Intelligent scaling based on workload patterns
-- [ ] **Multi-Model Database Support**: Graph, document, and vector database integration
-
-### 🚀 Phase 4: Intelligence & Automation (Q3-Q4 2026)
-- [ ] **AI-Powered Query Assistant**: Natural language to SQL conversion
-- [ ] **Automated Schema Evolution**: Self-adapting to changing data schemas
-- [ ] **Intelligent Data Placement**: Automatic data tiering and placement optimization
-- [ ] **Anomaly Detection**: Proactive identification of unusual query patterns or performance issues
-- [ ] **Predictive Maintenance**: Automated health checks and maintenance scheduling
-- [ ] **Self-Healing Infrastructure**: Automatic recovery from failures
-
-### 🌐 Phase 5: Ecosystem & Federation (2027)
-- [ ] **Cross-Cloud Federation**: Seamless access across multiple cloud providers
-- [ ] **Edge Computing Support**: Local data processing capabilities for edge scenarios
-- [ ] **Blockchain Integration**: Immutable data provenance and audit trails
-- [ ] **Advanced Security**: Zero-knowledge proofs and homomorphic encryption support
-- [ ] **Industry-Specific Connectors**: Tailored solutions for healthcare, finance, and government
-- [ ] **Global Data Mesh**: Distributed data architecture support
-
-## 🤝 Community & Support
-
-- **Documentation Center**: [Complete Documentation](https://LuckyCaptain-go.github.io/Nexus-Gateway)
-- **Issue Reporting**: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
-- **Community Discussion**: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
-
-## 📄 License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
----
-
-<div align="center">
-Made with ❤️ by the Nexus-Gateway Team
-</div>
+This project is licensed under Apache License 2.0. See [LICENSE](LICENSE).
