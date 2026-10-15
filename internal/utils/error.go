@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -248,7 +249,8 @@ func NewAuthorizationError(message string) *AppError {
 
 // IsErrorType checks if an error matches a specific error code
 func IsErrorType(err error, code string) bool {
-	if appErr, ok := err.(*AppError); ok {
+	var appErr *AppError
+	if errors.As(err, &appErr) {
 		return appErr.Code == code
 	}
 	return false
@@ -256,7 +258,8 @@ func IsErrorType(err error, code string) bool {
 
 // GetErrorStatus returns the HTTP status code for an error
 func GetErrorStatus(err error) int {
-	if appErr, ok := err.(*AppError); ok {
+	var appErr *AppError
+	if errors.As(err, &appErr) {
 		if status, exists := HTTPStatus[appErr.Code]; exists {
 			return status
 		}
