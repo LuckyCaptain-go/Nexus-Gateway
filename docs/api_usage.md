@@ -105,7 +105,7 @@ Notes:
 
 ### Overview
 
-The Fetch API provides high-performance segmented data query functionality supporting bulk retrieval of large amounts of data, similar to the gateway data query pattern.
+The Fetch API provides high-performance segmented data query functionality supporting bulk retrieval of large amounts of data, using a common batched query pattern.
 
 ### Main Features
 
@@ -197,36 +197,6 @@ Fetches next batch of data.
 ```bash
 curl -X GET "http://localhost:8080/api/v1/fetch/550e8400-e29b-41d4-a716-446655440000/a1b2c3d4/e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0?batch_size=2000" \
   -H "Authorization: Bearer your-token"
-```
-
-### Internal Fetch API (Compatible with gateway)
-
-#### POST /api/internal/v2/fetch
-Internal query interface requiring account headers.
-
-**Request Example:**
-```bash
-curl -X POST "http://localhost:8080/api/internal/v2/fetch" \
-  -H "Content-Type: application/json" \
-  -H "x-account-id": "account-123456" \
-  -H "x-account-type": "production" \
-  -d '{
-    "dataSourceId": "12345678-1234-1234-1234-123456789012",
-    "sql": "SELECT * FROM large_table WHERE created_at > \"2024-01-01\"",
-    "type": 1,
-    "batch_size": 1000,
-    "timeout": 120
-  }'
-```
-
-#### GET /api/internal/v2/fetch/{query_id}/{slug}/{token}
-Internal next batch fetch.
-
-**Request Example:**
-```bash
-curl -X GET "http://localhost:8080/api/internal/v2/fetch/550e8400-e29b-41d4-a716-446655440000/a1b2c3d4/e5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0?batch_size=2000" \
-  -H "x-account-id": "account-123456" \
-  -H "x-account-type": "production"
 ```
 
 ### Parameter Specifications

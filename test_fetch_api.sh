@@ -29,28 +29,4 @@ curl -X GET "$BASE_URL/api/v1/fetch/test-query-id/test-slug/test-token?batch_siz
 
 echo -e "\n\n"
 
-# Test 3: Internal fetch API with account headers
-echo "3. Testing internal fetch API POST /api/internal/v2/fetch"
-curl -X POST "$BASE_URL/api/internal/v2/fetch" \
-  -H "Content-Type: application/json" \
-  -H "x-account-id: test-account-123" \
-  -H "x-account-type: internal" \
-  -d '{
-    "dataSourceId": "12345678-1234-1234-1234-123456789012",
-    "sql": "SELECT * FROM test_table LIMIT 1000",
-    "type": 1,
-    "batch_size": 100,
-    "timeout": 60
-  }'
-
-echo -e "\n\n"
-
-# Test 4: Internal fetch API GET next batch
-echo "4. Testing internal fetch API GET /api/internal/v2/fetch/{query_id}/{slug}/{token}"
-curl -X GET "$BASE_URL/api/internal/v2/fetch/test-query-id/test-slug/test-token?batch_size=50" \
-  -H "x-account-id: test-account-123" \
-  -H "x-account-type: internal"
-
-echo -e "\n\n"
-
 echo "=== Test completed ==="

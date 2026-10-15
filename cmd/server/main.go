@@ -158,19 +158,6 @@ func main() {
 		}
 	}
 
-	// Internal API v2 group (for gateway compatibility)
-	internalAPI := router.Group("/api/internal/v2")
-
-	// Internal fetch endpoints
-	internalFetch := internalAPI.Group("/fetch")
-	{
-		// Internal fetch query endpoint (requires account headers)
-		internalFetch.POST("", queryController.InternalFetchQuery)
-
-		// Internal fetch next batch endpoint (requires account headers)
-		internalFetch.GET("/:query_id/:slug/:token", queryController.InternalFetchNextBatch)
-	}
-
 	// Start server
 	log.Printf("Starting server on port %s", cfg.Server.Port)
 	log.Printf("Health check available at: http://localhost:%s/health", cfg.Server.Port)
