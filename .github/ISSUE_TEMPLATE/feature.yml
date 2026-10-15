@@ -1,0 +1,35 @@
+name: Feature request
+description: Propose a focused improvement
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Search existing issues first. Describe the user problem before suggesting an implementation."
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: "Who is affected, and what task is difficult today?"
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: "Describe the smallest useful change and how a user would observe it."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: "List observable conditions that would make this request complete."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and trade-offs
+    validations:
+      required: false
