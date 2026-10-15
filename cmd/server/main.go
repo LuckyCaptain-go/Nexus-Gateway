@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/RhinoLink-Tech/data-fabric/internal/config"
 	"github.com/RhinoLink-Tech/data-fabric/internal/controller"
 	"github.com/RhinoLink-Tech/data-fabric/internal/database"
+	"github.com/RhinoLink-Tech/data-fabric/internal/mcp"
 	"github.com/RhinoLink-Tech/data-fabric/internal/middleware"
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
@@ -25,6 +27,23 @@ func main() {
 		log.Fatal("Failed to load configuration:", err)
 	}
 
+	// Check if MCP server mode is enabled
+	if cfg.MCP.Enabled {
+		if cfg.MCP.Transport != "" && cfg.MCP.Transport != "stdio" {
+			log.Fatalf("unsupported MCP transport %q: only stdio is currently implemented", cfg.MCP.Transport)
+		}
+		log.Println("Starting Data Fabric as MCP Server...")
+		if err := startMCPServer(cfg); err != nil {
+			log.Fatal("Failed to start MCP server:", err)
+		}
+		return
+	}
+
+	// Normal HTTP server mode
+	startHTTPServer(cfg)
+}
+
+func startHTTPServer(cfg *config.Config) {
 	// Set Gin mode
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -87,6 +106,7 @@ func main() {
 	queryController := controller.NewQueryController(queryService)
 	databaseController := controller.NewDatabaseController(datasourceRepo, healthChecker)
 	healthController := controller.NewHealthController(db)
+	sqlTranslationController := controller.NewSQLTranslationController() // Added SQL translation controller
 
 	// Create Gin router
 	router := gin.New()
@@ -120,6 +140,14 @@ func main() {
 		public.GET("/health", healthController.HealthCheck)
 		public.GET("/database/types", databaseController.GetDatabaseTypes)
 		public.GET("/database/compatibility", databaseController.GetDatabaseCompatibility)
+	}
+
+	// SQL translation endpoints (no authentication required)
+	sqlGroup := api.Group("/sql")
+	{
+		sqlGroup.POST("/translate", sqlTranslationController.TranslateSQL)
+		sqlGroup.GET("/dialects", sqlTranslationController.GetSupportedDialects)
+		sqlGroup.POST("/validate", sqlTranslationController.ValidateSQL)
 	}
 
 	// Auth endpoints (authentication required)
@@ -166,4 +194,32 @@ func main() {
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
+}
+
+func startMCPServer(cfg *config.Config) error {
+	db, err := config.InitDatabase(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to initialize database: %w", err)
+	}
+
+	if err := db.AutoMigrate(&model.DataSource{}); err != nil {
+		log.Printf("Warning: Database migration failed: %v", err)
+		log.Println("Continuing with existing database schema...")
+	}
+
+	datasourceRepo := repository.NewDataSourceRepository(db)
+	masterKey := []byte("12345678901234567890123456789012")
+	vault, err := security.NewCredentialVault(masterKey)
+	if err != nil {
+		return fmt.Errorf("failed to create credential vault: %w", err)
+	}
+
+	connPool := database.NewConnectionPool(security.NewTokenManager(vault), vault)
+	streamingService := service.NewStreamingService(datasourceRepo, connPool)
+	paginationService := service.NewQueryService(datasourceRepo, connPool, cfg.Query.PreferStreaming)
+	queryService := unifiedservice.NewUnifiedQueryService(paginationService, streamingService, cfg)
+	mcpServer := mcp.NewMCPServer(queryService, datasourceRepo)
+
+	log.Printf("Starting MCP server with transport: %s", cfg.MCP.Transport)
+	return mcpServer.StartStdio()
 }
