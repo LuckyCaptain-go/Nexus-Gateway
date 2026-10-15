@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Root-level contribution, conduct, security, and support guides, plus structured issue and pull request templates.
+- A maintainer release checklist and CI status badges across the README editions.
+
+### Changed
+- Replaced expired calendar phases with a stage-based roadmap and observable completion gates.
+- Documented current release automation and the container packaging limitation.
+
+### Streaming Query Updates
+
+#### Changed
+- `ExecuteQuery` now prefers establishing a backend streaming cursor when supported. Returns the first batch of rows and a `nextUri` to continue the stream.
+- Added `/fetch` POST and `/fetch/{query_id}/{slug}/{token}` GET endpoints for explicit batch/streaming retrieval.
+- `QueryResponse` and `FetchQueryResponse` now include `nextUri` to indicate continuation URIs for streaming sessions.
+- Added server-side `QuerySession` management to hold streaming cursors (`Rows`) and cancellation handles.
+- OpenAPI spec updated: `specs/001-phase1-enhanced-single-source/contracts/openapi.yaml` now documents `/fetch` endpoints and `FetchQueryRequest`/`FetchQueryResponse` schemas.
+- README updated with streaming usage examples and new `query.prefer_streaming` configuration documentation.
+- `FETCH_API_USAGE.md` updated: example requests now use `batch_size` (snake_case) to match API model.
+- `test_fetch_api.sh` updated to use `batch_size` in JSON payloads.
+
+#### Added
+- `CHANGELOG.md` (this file).
+
+#### Notes
+- The streaming behavior is configurable via `query.prefer_streaming` (default `true`). When `prefer_streaming` is `true` and the backend does not support streaming, queries will fail; set it to `false` to allow automatic fallback to LIMIT/OFFSET continuation.
+- Sessions have a default TTL and are subject to server-side cleanup; clients should exhaust or explicitly complete streams when possible.
+
 ## [v1.0.0] - 2025-12-23 - Initial Release
 
 ### Added
@@ -60,22 +89,3 @@ All notable changes to this project will be documented in this file.
   - `DRIVER_FRAMEWORK.md` - Content migrated to `docs/development.md`
   - `FETCH_API_USAGE.md` - Content migrated to `docs/api_usage.md`
   - `PROJECT_STRUCTURE_ANALYSIS.md` - Content migrated to `docs/refactoring_guide.md`
-
-## [Unreleased] - Streaming Query Updates
-
-### Changed
-- `ExecuteQuery` now prefers establishing a backend streaming cursor when supported. Returns the first batch of rows and a `nextUri` to continue the stream.
-- Added `/fetch` POST and `/fetch/{query_id}/{slug}/{token}` GET endpoints for explicit batch/streaming retrieval.
-- `QueryResponse` and `FetchQueryResponse` now include `nextUri` to indicate continuation URIs for streaming sessions.
-- Added server-side `QuerySession` management to hold streaming cursors (`Rows`) and cancellation handles.
-- OpenAPI spec updated: `specs/001-phase1-enhanced-single-source/contracts/openapi.yaml` now documents `/fetch` endpoints and `FetchQueryRequest`/`FetchQueryResponse` schemas.
-- README updated with streaming usage examples and new `query.prefer_streaming` configuration documentation.
-- `FETCH_API_USAGE.md` updated: example requests now use `batch_size` (snake_case) to match API model.
-- `test_fetch_api.sh` updated to use `batch_size` in JSON payloads.
-
-### Added
-- `CHANGELOG.md` (this file).
-
-### Notes
-- The streaming behavior is configurable via `query.prefer_streaming` (default `true`). When `prefer_streaming` is `true` and the backend does not support streaming, queries will fail; set it to `false` to allow automatic fallback to LIMIT/OFFSET continuation.
-- Sessions have a default TTL and are subject to server-side cleanup; clients should exhaust or explicitly complete streams when possible.

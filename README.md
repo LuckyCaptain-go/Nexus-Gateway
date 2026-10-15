@@ -8,6 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
+    <a href="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml"><img src="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
 </div>
 
@@ -65,3 +66,7 @@ go run ./cmd/server
 后续将面向多种跨源查询引擎提供统一、无缝的接入能力，例如 Trino、Presto、OpenLooKeng 等。上述引擎是后续适配方向，当前仓库尚未交付相应的联邦查询适配器。
 
 本项目采用 Apache License 2.0，详见 [LICENSE](LICENSE)。
+
+## 项目与社区
+
+[贡献指南](CONTRIBUTING.md) · [安全政策](SECURITY.md) · [获取帮助](SUPPORT.md) · [发布流程](docs/releasing.md) · [GitHub Releases](https://github.com/LuckyCaptain-go/Nexus-Gateway/releases)
