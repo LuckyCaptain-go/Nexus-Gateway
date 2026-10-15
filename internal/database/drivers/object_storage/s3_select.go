@@ -114,7 +114,7 @@ func (h *S3SelectHandler) Query(ctx context.Context, query *SelectQuery) (*Selec
 
 	// Read response from event stream
 	eventStream := result.GetStream()
-	
+
 	// Use the Events channel to receive events
 	for event := range eventStream.Events() {
 		switch v := event.(type) {

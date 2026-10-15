@@ -72,13 +72,13 @@ func (c *COSClient) ListObjects(ctx context.Context, prefix string, maxKeys int)
 
 	objects := make([]COSObject, 0, len(resp.Contents))
 	for _, obj := range resp.Contents {
-				parsedTime, _ := time.Parse(time.RFC3339, obj.LastModified)
-			objects = append(objects, COSObject{
-				Key:          obj.Key,
-				Size:         int64(obj.Size),
-				LastModified: parsedTime,
-				ETag:         obj.ETag,
-			})
+		parsedTime, _ := time.Parse(time.RFC3339, obj.LastModified)
+		objects = append(objects, COSObject{
+			Key:          obj.Key,
+			Size:         int64(obj.Size),
+			LastModified: parsedTime,
+			ETag:         obj.ETag,
+		})
 	}
 
 	return objects, nil

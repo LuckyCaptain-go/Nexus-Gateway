@@ -286,4 +286,3 @@ func BuildIAMDSNFromConfig(config map[string]string) (string, error) {
 
 	return auth.GetDSNWithIAMToken(context.Background())
 }
-

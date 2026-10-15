@@ -40,7 +40,7 @@ func (h *AzureSASTokenHandler) GenerateSASToken(blobName string, permissions str
 		return "", fmt.Errorf("failed to create credential: %w", err)
 	}
 
-		// Create permissions from string
+	// Create permissions from string
 	pBlobPermissions := createBlobPermissionsFromString(permissions)
 
 	// Build SAS URL

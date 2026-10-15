@@ -80,13 +80,13 @@ const (
 	DatabaseTypeOpenGauss       DatabaseType = "opengauss"
 
 	// Big Data Warehouses
-	DatabaseTypeApacheHive    DatabaseType = "hive"
+	DatabaseTypeApacheHive DatabaseType = "hive"
 
 	// Traditional databases
-	DatabaseTypeSQLServer  DatabaseType = "sqlserver"
+	DatabaseTypeSQLServer DatabaseType = "sqlserver"
 
 	// NoSQL databases
-	DatabaseTypeMongoDB    DatabaseType = "mongodb"
+	DatabaseTypeMongoDB DatabaseType = "mongodb"
 
 	// Big Data Processing Platforms
 	DatabaseTypeMaxCompute DatabaseType = "maxcompute"

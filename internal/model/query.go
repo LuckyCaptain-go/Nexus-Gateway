@@ -49,10 +49,10 @@ type QueryResponse struct {
 
 // ColumnInfo represents column information in the result set
 type ColumnInfo struct {
-	Name         string             `json:"name"`
-	Type         StandardizedType   `json:"type"`
-	Nullable     bool               `json:"nullable"`
-	NestedFields []ColumnInfo       `json:"nestedFields,omitempty"` // For nested structures like structs/records
+	Name         string           `json:"name"`
+	Type         StandardizedType `json:"type"`
+	Nullable     bool             `json:"nullable"`
+	NestedFields []ColumnInfo     `json:"nestedFields,omitempty"` // For nested structures like structs/records
 }
 
 // QueryMetadata contains metadata about the query execution
@@ -100,9 +100,9 @@ type StandardizedType string
 const (
 	TypeInteger   StandardizedType = "integer"
 	TypeBigInt    StandardizedType = "bigint"
-	TypeInt64     StandardizedType = "int64"     // Added for compatibility
+	TypeInt64     StandardizedType = "int64" // Added for compatibility
 	TypeFloat     StandardizedType = "float"
-	TypeFloat64   StandardizedType = "float64"   // Added for compatibility
+	TypeFloat64   StandardizedType = "float64" // Added for compatibility
 	TypeDouble    StandardizedType = "double"
 	TypeDecimal   StandardizedType = "decimal"
 	TypeString    StandardizedType = "string"
@@ -126,9 +126,9 @@ const (
 	StandardizedTypeString    StandardizedType = TypeString
 	StandardizedTypeInteger   StandardizedType = TypeInteger
 	StandardizedTypeBigInt    StandardizedType = TypeBigInt
-	StandardizedTypeInt64     StandardizedType = TypeInt64     // Added alias
+	StandardizedTypeInt64     StandardizedType = TypeInt64 // Added alias
 	StandardizedTypeFloat     StandardizedType = TypeFloat
-	StandardizedTypeFloat64   StandardizedType = TypeFloat64   // Added alias
+	StandardizedTypeFloat64   StandardizedType = TypeFloat64 // Added alias
 	StandardizedTypeDouble    StandardizedType = TypeDouble
 	StandardizedTypeDecimal   StandardizedType = TypeDecimal
 	StandardizedTypeText      StandardizedType = TypeText
@@ -148,13 +148,13 @@ const (
 
 // TableSchema represents the schema of a single table
 type TableSchema struct {
-	Name        string         `json:"name"`
-	Schema      string         `json:"schema,omitempty"` // Database/schema name
-	Type        string         `json:"type,omitempty"`   // TABLE, VIEW, etc.
-	Columns     []ColumnInfo   `json:"columns"`
-	PrimaryKey  []string       `json:"primaryKey,omitempty"`
-	Indexes     []IndexSchema  `json:"indexes,omitempty"`
-	ForeignKeys []ForeignKeySchema `json:"foreignKeys,omitempty"`
+	Name        string                 `json:"name"`
+	Schema      string                 `json:"schema,omitempty"` // Database/schema name
+	Type        string                 `json:"type,omitempty"`   // TABLE, VIEW, etc.
+	Columns     []ColumnInfo           `json:"columns"`
+	PrimaryKey  []string               `json:"primaryKey,omitempty"`
+	Indexes     []IndexSchema          `json:"indexes,omitempty"`
+	ForeignKeys []ForeignKeySchema     `json:"foreignKeys,omitempty"`
 	Properties  map[string]interface{} `json:"properties,omitempty"` // Table-specific properties
 }
 
