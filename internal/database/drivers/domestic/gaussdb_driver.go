@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	_ "github.com/lib/pq"
 )
@@ -265,4 +265,3 @@ func (d *GaussDBDriver) ApplyBatchPagination(sql string, batchSize, offset int64
 	}
 	return fmt.Sprintf("%s LIMIT %d", sql, batchSize), nil
 }
-

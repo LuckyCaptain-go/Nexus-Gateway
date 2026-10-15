@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // BigQueryTypeMapper handles BigQuery-specific type mappings

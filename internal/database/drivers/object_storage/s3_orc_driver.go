@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // S3ORCDriver implements Driver interface for querying ORC files on S3
@@ -136,5 +136,3 @@ func (d *S3ORCDriver) ApplyBatchPagination(sql string, batchSize, offset int64) 
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-
-

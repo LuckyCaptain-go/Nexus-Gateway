@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	_ "github.com/lib/pq" // PostgreSQL driver for Hologres (Hologres is PostgreSQL-compatible)
 )

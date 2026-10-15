@@ -2,13 +2,13 @@
 
 **Feature**: Phase 1 Enhanced Single-Source Capabilities
 **Date**: 2025-12-24
-**Purpose**: Get started with querying 30+ data source types through Nexus Gateway
+**Purpose**: Get started with querying 30+ data source types through Data Fabric
 
 ---
 
 ## Overview
 
-Nexus Gateway Phase 1 extends support beyond traditional relational databases to include:
+Data Fabric Phase 1 extends support beyond traditional relational databases to include:
 - **Data Lake Table Formats**: Apache Iceberg, Delta Lake, Apache Hudi
 - **Cloud Data Warehouses**: Snowflake, Databricks, Redshift, BigQuery
 - **Object Storage**: AWS S3, MinIO, Alibaba OSS, Tencent COS, Azure Blob
@@ -20,8 +20,8 @@ Nexus Gateway Phase 1 extends support beyond traditional relational databases to
 
 ## Prerequisites
 
-- Nexus Gateway v1.1+ installed
-- JWT authentication token (obtain from your Nexus Gateway administrator)
+- Data Fabric v1.1+ installed
+- JWT authentication token (obtain from your Data Fabric administrator)
 - Access to at least one supported data source
 - `curl` or equivalent HTTP client for testing
 
@@ -34,10 +34,10 @@ Nexus Gateway Phase 1 extends support beyond traditional relational databases to
 ```bash
 # Using Docker
 docker run -d \
-  --name nexus-gateway \
+  --name data-fabric \
   -p 8099:8099 \
   -v $(pwd)/configs:/app/configs \
-  nexus-gateway:1.1.0
+  data-fabric:1.1.0
 
 # Or run locally
 go run cmd/server/main.go
@@ -46,7 +46,7 @@ go run cmd/server/main.go
 ### Step 2: Set Your Authentication Token
 
 ```bash
-export NEXUS_TOKEN="your-jwt-token-here"
+export DATA_FABRIC_TOKEN="your-jwt-token-here"
 ```
 
 ### Step 3: Create a Data Source
@@ -54,7 +54,7 @@ export NEXUS_TOKEN="your-jwt-token-here"
 ```bash
 curl -X POST http://localhost:8099/api/v1/datasources \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $NEXUS_TOKEN" \
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN" \
   -d '{
     "name": "My Snowflake Warehouse",
     "type": "snowflake",
@@ -90,7 +90,7 @@ curl -X POST http://localhost:8099/api/v1/datasources \
 ```bash
 curl -X POST http://localhost:8099/api/v1/query \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $NEXUS_TOKEN" \
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN" \
   -d '{
     "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
     "sql": "SELECT * FROM users LIMIT 10",
@@ -580,7 +580,7 @@ SELECT * FROM s3object WHERE column1 = 'value' LIMIT 100
 ```bash
 curl -X POST http://localhost:8099/api/v1/query \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $NEXUS_TOKEN" \
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN" \
   -d '{
     "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
     "sql": "SELECT * FROM users WHERE status = ? AND created_at > ?",
@@ -594,7 +594,7 @@ curl -X POST http://localhost:8099/api/v1/query \
 ```bash
 curl -X POST http://localhost:8099/api/v1/query \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $NEXUS_TOKEN" \
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN" \
   -d '{
     "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
     "sql": "SELECT * FROM large_table",
@@ -608,7 +608,7 @@ curl -X POST http://localhost:8099/api/v1/query \
 ```bash
 curl -X POST http://localhost:8099/api/v1/query/validate \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $NEXUS_TOKEN" \
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN" \
   -d '{
     "dataSourceId": "550e8400-e29b-41d4-a716-446655440000",
     "sql": "SELECT * FROM users WHERE id = ?"
@@ -629,7 +629,7 @@ curl -X POST http://localhost:8099/api/v1/query/validate \
 
 ```bash
 curl -X POST http://localhost:8099/api/v1/datasources/550e8400-e29b-41d4-a716-446655440000/test \
-  -H "Authorization: Bearer $NEXUS_TOKEN"
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN"
 ```
 
 **Response**:
@@ -651,7 +651,7 @@ curl -X POST http://localhost:8099/api/v1/datasources/550e8400-e29b-41d4-a716-44
 ```bash
 # List all active Snowflake data sources
 curl -X GET "http://localhost:8099/api/v1/datasources?type=snowflake&status=active&page=1&limit=20" \
-  -H "Authorization: Bearer $NEXUS_TOKEN"
+  -H "Authorization: Bearer $DATA_FABRIC_TOKEN"
 ```
 
 ---
@@ -672,7 +672,7 @@ SELECT * FROM orders FOR SYSTEM_VERSION AS OF 1234567890 WHERE status = 'complet
 
 ### Pattern 2: Schema Evolution Handling
 
-Data lake tables evolve. Nexus Gateway automatically handles added columns:
+Data lake tables evolve. Data Fabric automatically handles added columns:
 
 ```sql
 -- Query after column added works without error
@@ -681,7 +681,7 @@ SELECT id, name, email, new_column FROM users WHERE id = 1
 
 ### Pattern 3: Partition Pruning (Performance Optimization)
 
-Nexus Gateway automatically prunes partitions for Iceberg, Delta Lake, and Hudi:
+Data Fabric automatically prunes partitions for Iceberg, Delta Lake, and Hudi:
 
 ```sql
 -- Only reads partition=2025-12-24
@@ -728,7 +728,7 @@ SELECT * FROM large_table /* tag=cost_center_123 */
 **Solution**:
 ```bash
 # Refresh your JWT token
-export NEXUS_TOKEN="new-jwt-token"
+export DATA_FABRIC_TOKEN="new-jwt-token"
 
 # For cloud services, check auth configuration
 # Snowflake: Verify account, username, password
@@ -761,7 +761,7 @@ export NEXUS_TOKEN="new-jwt-token"
 **Problem**: Table schema changed (schema evolution).
 
 **Solution**:
-- Nexus Gateway auto-handles added columns
+- Data Fabric auto-handles added columns
 - For type changes, recreate data source with updated schema
 - Check schema cache freshness
 
@@ -788,7 +788,7 @@ export NEXUS_TOKEN="new-jwt-token"
 1. **Use Read-Only Users**: Always connect with read-only database accounts
 2. **Enable SSL/TLS**: Set `"ssl": true` for production connections
 3. **Rotate Credentials**: Use IAM roles instead of long-lived access keys
-4. **Encrypt at Rest**: Credentials are encrypted automatically in Nexus Gateway
+4. **Encrypt at Rest**: Credentials are encrypted automatically in Data Fabric
 
 ### Performance
 
@@ -817,12 +817,12 @@ export NEXUS_TOKEN="new-jwt-token"
 
 ## Support
 
-- **Documentation**: [Full Docs](https://LuckyCaptain-go.github.io/Nexus-Gateway)
-- **Issues**: [GitHub Issues](https://github.com/LuckyCaptain-go/Nexus-Gateway/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions)
+- **Documentation**: [Full Docs](https://github.com/RhinoLink-Tech/data-fabric/tree/master/docs)
+- **Issues**: [GitHub Issues](https://github.com/RhinoLink-Tech/data-fabric/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/RhinoLink-Tech/data-fabric/discussions)
 
 ---
 
 **Quickstart Completed!** 🎉
 
-You're now ready to query 30+ data source types through Nexus Gateway Phase 1.
+You're now ready to query 30+ data source types through Data Fabric Phase 1.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // SnowflakeTypeMapper handles Snowflake-specific type mappings
@@ -155,7 +155,7 @@ func (m *SnowflakeTypeMapper) ConvertSnowflakeValue(value interface{}, snowflake
 			}
 			return v, nil
 		default:
-			return value, nil  // Use the original value instead of v
+			return value, nil // Use the original value instead of v
 		}
 	default:
 		return value, nil

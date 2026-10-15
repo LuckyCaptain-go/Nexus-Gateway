@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/service"
-	"nexus-gateway/internal/utils"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/service"
+	"github.com/RhinoLink-Tech/data-fabric/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

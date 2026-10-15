@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"sync"
 	"time"
 
-	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/security"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/security"
 )
 
 var (

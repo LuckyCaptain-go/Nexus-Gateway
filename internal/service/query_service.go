@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/repository"
-	"nexus-gateway/internal/security"
-	"nexus-gateway/internal/utils"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
+	"github.com/RhinoLink-Tech/data-fabric/internal/security"
+	"github.com/RhinoLink-Tech/data-fabric/internal/utils"
 
 	"github.com/google/uuid"
 )

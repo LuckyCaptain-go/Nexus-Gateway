@@ -6,7 +6,7 @@ Security fixes are made against the current development branch and the latest pu
 
 ## Reporting a vulnerability
 
-Use [GitHub's private vulnerability reporting form](https://github.com/LuckyCaptain-go/Nexus-Gateway/security/advisories/new). Do not report exploitable vulnerabilities in a public issue or discussion.
+Use [GitHub's private vulnerability reporting form](https://github.com/RhinoLink-Tech/data-fabric/security/advisories/new). Do not report exploitable vulnerabilities in a public issue or discussion.
 
 Include the affected version or commit, impact, reproduction steps, and any safe mitigation. Remove passwords, tokens, customer data, and other secrets from reports and logs.
 

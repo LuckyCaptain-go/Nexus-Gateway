@@ -2,22 +2,22 @@ package traditional
 
 import (
 	"testing"
-	
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 func TestSQLServerDriverCreation(t *testing.T) {
 	driver := NewSQLServerDriver()
-	
+
 	if driver == nil {
 		t.Fatal("Expected SQLServerDriver instance, got nil")
 	}
-	
+
 	if driver.GetDatabaseTypeName() != string(model.DatabaseTypeSQLServer) {
 		t.Errorf("Expected database type %s, got %s", model.DatabaseTypeSQLServer, driver.GetDatabaseTypeName())
 	}
-	
+
 	expectedCategory := drivers.CategoryRelational
 	if driver.GetCategory() != expectedCategory {
 		t.Errorf("Expected category %s, got %s", expectedCategory, driver.GetCategory())
@@ -27,27 +27,27 @@ func TestSQLServerDriverCreation(t *testing.T) {
 func TestSQLServerDriverCapabilities(t *testing.T) {
 	driver := NewSQLServerDriver()
 	caps := driver.GetCapabilities()
-	
+
 	if !caps.SupportsSQL {
 		t.Error("Expected SQL Server driver to support SQL")
 	}
-	
+
 	if !caps.SupportsTransaction {
 		t.Error("Expected SQL Server driver to support transactions")
 	}
-	
+
 	if !caps.SupportsSchemaDiscovery {
 		t.Error("Expected SQL Server driver to support schema discovery")
 	}
-	
+
 	if caps.SupportsTimeTravel {
 		t.Error("Expected SQL Server driver to not support time travel")
 	}
-	
+
 	if caps.RequiresTokenRotation {
 		t.Error("Expected SQL Server driver to not require token rotation")
 	}
-	
+
 	if !caps.SupportsStreaming {
 		t.Error("Expected SQL Server driver to support streaming")
 	}
@@ -55,10 +55,10 @@ func TestSQLServerDriverCapabilities(t *testing.T) {
 
 func TestSQLServerDriverDefaultPort(t *testing.T) {
 	driver := NewSQLServerDriver()
-	
+
 	defaultPort := driver.GetDefaultPort()
 	expectedPort := 1433 // Default SQL Server port
-	
+
 	if defaultPort != expectedPort {
 		t.Errorf("Expected default port %d, got %d", expectedPort, defaultPort)
 	}

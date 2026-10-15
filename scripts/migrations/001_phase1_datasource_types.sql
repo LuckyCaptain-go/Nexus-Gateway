@@ -1,7 +1,7 @@
 -- Migration 001: Phase 1 Enhanced Single-Source Capabilities
 -- Extends data_sources table to support 30+ new data source types
 -- Date: 2025-12-24
--- Author: Nexus Gateway Team
+-- Author: Data Fabric Team
 
 -- ============================================================================
 -- SECTION 1: EXTEND data_sources.type ENUM

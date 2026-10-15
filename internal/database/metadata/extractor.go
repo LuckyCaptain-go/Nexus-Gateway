@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MetadataExtractor extracts schema metadata from data sources

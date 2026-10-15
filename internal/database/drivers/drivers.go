@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // DriverCategory categorizes drivers by their type

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // HDFSORCDriver implements Driver interface for HDFS ORC files
@@ -139,4 +139,3 @@ type HDFSORCResult struct {
 }
 
 // RegisterHDFSORCDriver registers the HDFS ORC driver globally
-

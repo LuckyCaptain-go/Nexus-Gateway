@@ -1,27 +1,27 @@
-# Nexus-Gateway: A Lightweight Gateway for Unified Multi-Source Data Access
+# Data Fabric: A Lightweight Gateway for Unified Multi-Source Data Access
 
 <div align="center">
-  <img src="assets/nexus-gateway-icon.png" alt="Nexus-Gateway icon" width="176">
+  <img src="assets/data-fabric-icon.png" alt="Data Fabric icon" width="176">
   <p><strong>Manage diverse data sources together; aim to query them through one language</strong></p>
   <p><a href="README.md">Project home</a> · <a href="README_zh.md">中文介绍</a></p>
   <p>
     <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
-    <a href="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml"><img src="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
+    <a href="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml"><img src="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
 </div>
 
-Nexus-Gateway is for AI agents, RAG systems, BI tools, and business applications that need heterogeneous data access. It addresses repeated integration work: each application should not have to maintain separate drivers, connection settings, query calls, and result pagination for every database, warehouse, data lake, object store, or file system.
+Data Fabric is for AI agents, RAG systems, BI tools, and business applications that need heterogeneous data access. It addresses repeated integration work: each application should not have to maintain separate drivers, connection settings, query calls, and result pagination for every database, warehouse, data lake, object store, or file system.
 
-Nexus-Gateway brings databases, warehouses, lakehouses, object stores, and file sources in enterprise and cluster environments under one data-source management entry point. It centralizes connection settings, diagnostics, and access APIs. Its core goal is to let applications use one query language and a consistent API, reducing the need to adapt separately to each source's connection model and SQL syntax. A query-engine adapter can extend this access with federated execution.
+Data Fabric brings databases, warehouses, lakehouses, object stores, and file sources in enterprise and cluster environments under one data-source management entry point. It centralizes connection settings, diagnostics, and access APIs. Its core goal is to let applications use one query language and a consistent API, reducing the need to adapt separately to each source's connection model and SQL syntax. A query-engine adapter can extend this access with federated execution.
 
 ## Product Niche
 
-**Nexus-Gateway is a lightweight unified entry point between applications and heterogeneous data systems.** It targets enterprises and clusters with many sources, centralizing their connections, configuration, diagnostics, and access. The product goal is one query language and API for applications, reducing repeated work to adapt connection behavior and SQL dialects for each source. Federation engines can be connected through adapters when needed; the source systems continue to own and store their data.
+**Data Fabric is a lightweight unified entry point between applications and heterogeneous data systems.** It targets enterprises and clusters with many sources, centralizing their connections, configuration, diagnostics, and access. The product goal is one query language and API for applications, reducing repeated work to adapt connection behavior and SQL dialects for each source. Federation engines can be connected through adapters when needed; the source systems continue to own and store their data.
 
 | Component | Responsibility |
 | --- | --- |
-| Nexus-Gateway | Application-facing API, source connection management, diagnostics, single-source result retrieval, and gateway controls |
+| Data Fabric | Application-facing API, source connection management, diagnostics, single-source result retrieval, and gateway controls |
 | Federation engine | Access multiple systems through catalogs and connectors, then plan and execute cross-source SQL |
 | Source systems | Store and manage the actual data |
 
@@ -33,9 +33,9 @@ Nexus-Gateway brings databases, warehouses, lakehouses, object stores, and file 
 - **Avoid copying all data:** federated queries can leave data in their source systems, though query execution still involves network traffic and intermediate result exchange.
 - **Lightweight deployment is a product goal:** the project targets a small gateway service, low idle resource use, and a short deployment path. The repository does not publish resource or performance benchmarks, so it makes no numeric guarantees for memory, CPU, or startup time.
 
-### Nexus-Gateway Responsibilities
+### Data Fabric Responsibilities
 
-Nexus-Gateway focuses on application-facing connectivity, a consistent access API, source lifecycle, and the request entry point. It is not another distributed SQL engine, database, warehouse, ETL, or data-copy platform.
+Data Fabric focuses on application-facing connectivity, a consistent access API, source lifecycle, and the request entry point. It is not another distributed SQL engine, database, warehouse, ETL, or data-copy platform.
 
 A deployment can start in lightweight gateway mode for individual sources and add federated execution when cross-source SQL becomes necessary. Whether a query engine is deployed depends on the application's federation needs.
 
@@ -43,13 +43,13 @@ A deployment can start in lightweight gateway mode for individual sources and ad
 
 The repository implements gateway APIs, data-source management, driver registration, connection diagnostics, configuration validation, JWT and rate-limiting components, and batched query result retrieval. Drivers with streaming support can read results in batches instead of loading the entire result set into memory at once.
 
-> **Unified query language:** Applications can use one query expression across multiple data sources. Nexus-Gateway adapts common query syntax for the target source and returns results through a consistent API, reducing repetitive query rewrites. Source capabilities vary, and source-specific features may still require their native syntax.
+> **Unified query language:** Applications can use one query expression across multiple data sources. Data Fabric adapts common query syntax for the target source and returns results through a consistent API, reducing repetitive query rewrites. Source capabilities vary, and source-specific features may still require their native syntax.
 
-> **Federation engine adapters are not implemented yet.** The server request path does not include a federated query execution adapter, and it does not automatically manage external engine catalogs. The current version can access individual integrated sources through the gateway, but cannot yet run cross-source federated SQL through Nexus-Gateway. The dotted line in the diagram marks a target integration boundary, not a shipped capability.
+> **Federation engine adapters are not implemented yet.** The server request path does not include a federated query execution adapter, and it does not automatically manage external engine catalogs. The current version can access individual integrated sources through the gateway, but cannot yet run cross-source federated SQL through Data Fabric. The dotted line in the diagram marks a target integration boundary, not a shipped capability.
 
 ~~~mermaid
 flowchart LR
-    App[AI Agent / RAG / BI / Application] --> Gateway[Nexus-Gateway<br/>Application API · Source Management]
+    App[AI Agent / RAG / BI / Application] --> Gateway[Data Fabric<br/>Application API · Source Management]
     Gateway --> Drivers[Current: Drivers and Single-Source Access]
     Drivers --> Sources[Databases / Warehouses / Lakehouses / Object Storage / Files]
     Gateway -. Target: Federation Adapter .-> Engine[Cross-Source Query Engine<br/>SQL Planning and Distributed Execution]
@@ -93,8 +93,8 @@ The following are representative source types defined in the repository. Driver 
 ### Get the Code and Start
 
 ~~~bash
-git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
-cd Nexus-Gateway
+git clone https://github.com/RhinoLink-Tech/data-fabric.git
+cd data-fabric
 go mod download
 ~~~
 
@@ -137,7 +137,7 @@ See the [API usage guide](docs/api_usage.md) for request fields, response struct
 
 ## Contributing
 
-If Nexus-Gateway is useful to you, please star the repository. You are also welcome to contribute through issues, pull requests, and documentation improvements.
+If Data Fabric is useful to you, please star the repository. You are also welcome to contribute through issues, pull requests, and documentation improvements.
 
 ## Federation Engine Integrations
 
@@ -145,7 +145,7 @@ The project aims to provide a common, seamless integration path for multiple cro
 
 ## Community and Releases
 
-[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Release process](docs/releasing.md) · [GitHub Releases](https://github.com/LuckyCaptain-go/Nexus-Gateway/releases)
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Release process](docs/releasing.md) · [GitHub Releases](https://github.com/RhinoLink-Tech/data-fabric/releases)
 
 ## License
 

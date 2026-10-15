@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // DatabricksDriver implements Driver interface for Databricks
@@ -229,8 +229,6 @@ func (d *DatabricksDriver) QueryDeltaTimeTravel(ctx context.Context, table, vers
 	sql := fmt.Sprintf("SELECT * FROM %s VERSION AS OF %s", table, versionOrTimestamp)
 	return d.ExecuteQuery(ctx, sql)
 }
-
-
 
 // GetClusterInfo retrieves cluster information
 func (d *DatabricksDriver) GetClusterInfo(ctx context.Context, clusterID string) (*DatabricksClusterInfo, error) {

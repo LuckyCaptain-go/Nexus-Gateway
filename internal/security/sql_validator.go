@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	"vitess.io/vitess/go/vt/sqlparser"
 )

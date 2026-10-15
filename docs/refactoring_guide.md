@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides guidance for refactoring the Nexus-Gateway project based on structural analysis and improvement recommendations. It outlines current issues, suggested improvements, and implementation steps.
+This document provides guidance for refactoring the Data Fabric project based on structural analysis and improvement recommendations. It outlines current issues, suggested improvements, and implementation steps.
 
 ## Current Structure Analysis
 
@@ -223,7 +223,7 @@ type DriverFactory interface {
 
 ## Summary
 
-While the current structure of the Nexus-Gateway project is functionally complete, there are improvement opportunities in code organization and maintainability. The suggested refactoring approach can:
+While the current structure of the Data Fabric project is functionally complete, there are improvement opportunities in code organization and maintainability. The suggested refactoring approach can:
 
 1. Improve code maintainability and readability
 2. Reduce code duplication and increase reusability

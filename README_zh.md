@@ -1,27 +1,27 @@
-# Nexus-Gateway：轻量多源数据统一管理与查询网关
+# Data Fabric：轻量多源数据统一管理与查询网关
 
 <div align="center">
-  <img src="assets/nexus-gateway-icon.png" alt="Nexus-Gateway 图标" width="176">
+  <img src="assets/data-fabric-icon.png" alt="Data Fabric 图标" width="176">
   <p><strong>统一纳管多种数据源，目标是以一套查询语言访问和处理数据</strong></p>
   <p><a href="README.md">项目主页</a> · <a href="README_en.md">English</a></p>
   <p>
     <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
-    <a href="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml"><img src="https://github.com/LuckyCaptain-go/Nexus-Gateway/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
+    <a href="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml"><img src="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
 </div>
 
-Nexus-Gateway 面向 AI Agent、RAG 系统、BI 工具和业务应用，解决一个常见问题：每个应用都要重复接入数据库、数仓、数据湖、对象存储和文件系统，分别维护驱动、连接参数、查询调用及结果分页。
+Data Fabric 面向 AI Agent、RAG 系统、BI 工具和业务应用，解决一个常见问题：每个应用都要重复接入数据库、数仓、数据湖、对象存储和文件系统，分别维护驱动、连接参数、查询调用及结果分页。
 
-Nexus-Gateway 将企业和集群中的数据库、数仓、湖仓、对象存储及文件源纳入统一的数据源管理入口，集中管理连接配置、连接诊断和访问 API。产品核心目标是让应用面向一套查询语言和统一 API，尽量屏蔽不同数据源的接入方式与查询语法差异，实现统一提交和获取查询结果；跨源执行能力可通过查询引擎适配扩展。
+Data Fabric 将企业和集群中的数据库、数仓、湖仓、对象存储及文件源纳入统一的数据源管理入口，集中管理连接配置、连接诊断和访问 API。产品核心目标是让应用面向一套查询语言和统一 API，尽量屏蔽不同数据源的接入方式与查询语法差异，实现统一提交和获取查询结果；跨源执行能力可通过查询引擎适配扩展。
 
 ## 产品生态位
 
-**Nexus-Gateway 是应用与多种数据系统之间的轻量统一入口。**它面向企业和集群的多数据源环境，集中管理数据源连接、配置、诊断与访问；产品目标是让应用使用一套查询语言和统一 API，减少针对不同数据源重复适配连接和 SQL 方言的工作。跨源查询引擎可按需通过适配层接入，原始数据仍由各自系统保存和管理。
+**Data Fabric 是应用与多种数据系统之间的轻量统一入口。**它面向企业和集群的多数据源环境，集中管理数据源连接、配置、诊断与访问；产品目标是让应用使用一套查询语言和统一 API，减少针对不同数据源重复适配连接和 SQL 方言的工作。跨源查询引擎可按需通过适配层接入，原始数据仍由各自系统保存和管理。
 
 | 组成部分 | 负责什么 |
 | --- | --- |
-| Nexus-Gateway | 应用侧统一 API、数据源连接管理、连接诊断、单源查询结果获取和网关控制 |
+| Data Fabric | 应用侧统一 API、数据源连接管理、连接诊断、单源查询结果获取和网关控制 |
 | 跨源查询引擎 | 通过 catalogs 和连接器访问多个数据系统，规划并执行跨源 SQL |
 | 原始数据系统 | 保存和管理实际数据 |
 
@@ -33,9 +33,9 @@ Nexus-Gateway 将企业和集群中的数据库、数仓、湖仓、对象存储
 - **不复制全部数据：**联邦查询可以让数据继续留在各自系统中；查询执行仍可能产生网络传输和中间结果交换。
 - **轻量和快速部署是产品主打：**项目以较小的网关服务形态、低常驻资源占用和缩短部署链路为目标。仓库尚无公开的资源占用或性能基准，因此不对内存、CPU 或启动时长作量化承诺。
 
-### Nexus-Gateway 的职责边界
+### Data Fabric 的职责边界
 
-Nexus-Gateway 聚焦应用侧连接管理、统一访问 API 和请求入口，不试图成为另一套分布式 SQL 引擎。跨源查询引擎负责 SQL 规划、跨源调度和结果计算；Nexus-Gateway 也不是数据仓库、ETL 或数据复制平台。
+Data Fabric 聚焦应用侧连接管理、统一访问 API 和请求入口，不试图成为另一套分布式 SQL 引擎。跨源查询引擎负责 SQL 规划、跨源调度和结果计算；Data Fabric 也不是数据仓库、ETL 或数据复制平台。
 
 系统可以先以轻量网关模式接入单个数据源，再在真正需要跨源查询时扩展联邦执行能力。是否部署查询引擎取决于应用是否需要联邦 SQL。
 
@@ -43,13 +43,13 @@ Nexus-Gateway 聚焦应用侧连接管理、统一访问 API 和请求入口，�
 
 当前仓库已实现网关 API、数据源管理、驱动注册、连接诊断、配置校验、JWT 与限流组件，以及分批查询结果获取。对支持流式读取的驱动，服务可以按批次读取结果，避免一次性将全部结果载入内存。
 
-> **统一查询语言：**应用通过一套查询表达访问多种数据源，Nexus-Gateway 会根据目标数据源适配常见查询语法，并通过统一 API 返回结果，减少重复改写查询的工作。各数据源支持的能力范围不同；涉及源端专有功能时，仍可能需要使用对应语法。
+> **统一查询语言：**应用通过一套查询表达访问多种数据源，Data Fabric 会根据目标数据源适配常见查询语法，并通过统一 API 返回结果，减少重复改写查询的工作。各数据源支持的能力范围不同；涉及源端专有功能时，仍可能需要使用对应语法。
 
-> **跨源查询引擎适配层尚未实现。** 当前服务请求链路没有联邦查询执行适配器，也不会自动管理外部引擎的 catalogs。因此，本仓库当前版本支持通过已接入驱动访问单个数据源，但尚不能经 Nexus-Gateway 执行跨源联邦 SQL。图中的虚线表示目标集成边界，不代表已交付能力。
+> **跨源查询引擎适配层尚未实现。** 当前服务请求链路没有联邦查询执行适配器，也不会自动管理外部引擎的 catalogs。因此，本仓库当前版本支持通过已接入驱动访问单个数据源，但尚不能经 Data Fabric 执行跨源联邦 SQL。图中的虚线表示目标集成边界，不代表已交付能力。
 
 ~~~mermaid
 flowchart LR
-    App[AI Agent / RAG / BI / 业务应用] --> Gateway[Nexus-Gateway<br/>应用侧 API · 数据源管理]
+    App[AI Agent / RAG / BI / 业务应用] --> Gateway[Data Fabric<br/>应用侧 API · 数据源管理]
     Gateway --> Drivers[当前：驱动与单源访问]
     Drivers --> Sources[数据库 / 数仓 / 湖仓 / 对象存储 / 文件]
     Gateway -. 目标：联邦查询适配器 .-> Engine[跨源查询引擎<br/>SQL 规划与分布式执行]
@@ -93,8 +93,8 @@ flowchart LR
 ### 获取代码并启动
 
 ~~~bash
-git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
-cd Nexus-Gateway
+git clone https://github.com/RhinoLink-Tech/data-fabric.git
+cd data-fabric
 go mod download
 ~~~
 
@@ -137,7 +137,7 @@ go run ./cmd/server
 
 ## 参与开源共建
 
-如果 Nexus-Gateway 对你有帮助，欢迎在 GitHub 为项目点亮 Star。也欢迎通过 Issue、Pull Request 和文档改进参与开源共建。
+如果 Data Fabric 对你有帮助，欢迎在 GitHub 为项目点亮 Star。也欢迎通过 Issue、Pull Request 和文档改进参与开源共建。
 
 ## 跨源查询引擎扩展
 
@@ -145,7 +145,7 @@ go run ./cmd/server
 
 ## 社区与发布
 
-[贡献指南](CONTRIBUTING.md) · [安全政策](SECURITY.md) · [获取帮助](SUPPORT.md) · [发布流程](docs/releasing.md) · [版本列表](https://github.com/LuckyCaptain-go/Nexus-Gateway/releases)
+[贡献指南](CONTRIBUTING.md) · [安全政策](SECURITY.md) · [获取帮助](SUPPORT.md) · [发布流程](docs/releasing.md) · [版本列表](https://github.com/RhinoLink-Tech/data-fabric/releases)
 
 ## 许可证
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	"github.com/aws/aws-sdk-go-v2/service/rdsdata"
 )
@@ -139,7 +139,6 @@ func (d *RedshiftDriver) GetSchema(ctx context.Context, db *sql.DB, schemaName s
 
 	return schema, nil
 }
-
 
 // GetClusterStatus retrieves cluster status
 func (d *RedshiftDriver) GetClusterStatus(ctx context.Context) (*RedshiftClusterStatus, error) {

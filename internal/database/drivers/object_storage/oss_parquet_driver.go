@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // OSSParquetDriver implements Driver interface for querying Parquet files on Alibaba Cloud OSS
@@ -180,4 +180,3 @@ func (d *OSSParquetDriver) ApplyBatchPagination(sql string, batchSize, offset in
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-

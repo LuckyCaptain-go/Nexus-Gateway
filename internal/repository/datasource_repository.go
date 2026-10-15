@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 	"gorm.io/gorm"
-	"nexus-gateway/internal/model"
 )
 
 type dataSourceRepository struct {

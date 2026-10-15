@@ -13,7 +13,7 @@ Templates requiring updates:
 Follow-up TODOs: None
 -->
 
-# Nexus Gateway Constitution
+# Data Fabric Constitution
 
 ## Core Principles
 

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Nexus-Gateway welcomes contributors with different backgrounds and experience levels. Keep project spaces respectful, constructive, and focused on the work.
+Data Fabric welcomes contributors with different backgrounds and experience levels. Keep project spaces respectful, constructive, and focused on the work.
 
 ## Expected behavior
 

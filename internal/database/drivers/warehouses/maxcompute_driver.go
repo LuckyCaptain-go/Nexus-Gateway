@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"strings"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	"github.com/aliyun/aliyun-odps-go-sdk/odps"
 	"github.com/aliyun/aliyun-odps-go-sdk/odps/account"
@@ -114,11 +114,11 @@ func (md *MaxComputeDriver) BuildDSN(config *model.DataSourceConfig) string {
 	// Build MaxCompute connection string
 	// Format: maxcompute://accessId:accessKey@endpoint/api?project=projectName
 	dsn := fmt.Sprintf("maxcompute://%s:%s@%s:%d?project=%s",
-		config.Username,   // Access ID
+		config.Username,                  // Access ID
 		url.QueryEscape(config.Password), // Access Key
-		config.Host,       // Endpoint
-		config.Port,       // Port
-		config.Database,   // Project name
+		config.Host,                      // Endpoint
+		config.Port,                      // Port
+		config.Database,                  // Project name
 	)
 
 	// Add additional properties

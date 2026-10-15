@@ -2,25 +2,25 @@ package database
 
 import (
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/database/drivers/domestic"
-	"nexus-gateway/internal/database/drivers/file_system"
-	"nexus-gateway/internal/database/drivers/nosql"
-	"nexus-gateway/internal/database/drivers/object_storage"
-	"nexus-gateway/internal/database/drivers/olap"
-	"nexus-gateway/internal/database/drivers/table_formats"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/domestic"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/file_system"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/nosql"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/object_storage"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/olap"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/table_formats"
 
-	//"nexus-gateway/internal/database/drivers/olap"
+	//"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/olap"
 
-	//"nexus-gateway/internal/database/drivers/domestic"
-	//"nexus-gateway/internal/database/drivers/olap"
-	//"nexus-gateway/internal/database/drivers/table_formats"
-	"nexus-gateway/internal/database/drivers/traditional"
-	"nexus-gateway/internal/database/drivers/warehouses"
+	//"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/domestic"
+	//"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/olap"
+	//"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/table_formats"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/traditional"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/warehouses"
 
 	"sync"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // DriverRegistry manages driver instances and creation

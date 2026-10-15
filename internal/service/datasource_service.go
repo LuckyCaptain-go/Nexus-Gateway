@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
 	"github.com/google/uuid"
-	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/repository"
 )
 
 type DataSourceService interface {

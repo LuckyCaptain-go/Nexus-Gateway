@@ -3,7 +3,7 @@ package table_formats
 import (
 	"encoding/json"
 	"fmt"
-	"nexus-gateway/internal/database/drivers/common"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/common"
 	"time"
 )
 

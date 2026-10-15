@@ -3,11 +3,11 @@ package controller
 import (
 	"net/http"
 
+	"github.com/RhinoLink-Tech/data-fabric/internal/database"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
+	"github.com/RhinoLink-Tech/data-fabric/pkg/response"
 	"github.com/gin-gonic/gin"
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/model"
-	"nexus-gateway/internal/repository"
-	"nexus-gateway/pkg/response"
 )
 
 type DatabaseController struct {

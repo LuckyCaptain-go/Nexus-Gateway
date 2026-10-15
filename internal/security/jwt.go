@@ -39,7 +39,7 @@ func (j *JWTManager) GenerateToken(userID, username string, roles []string) (str
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.tokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "nexus-gateway",
+			Issuer:    "data-fabric",
 			Subject:   userID,
 		},
 	}
@@ -86,7 +86,7 @@ func (j *JWTManager) RefreshToken(claims *Claims) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.tokenDuration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "nexus-gateway",
+			Issuer:    "data-fabric",
 			Subject:   claims.UserID,
 		},
 	}

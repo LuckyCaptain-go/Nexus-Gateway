@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // COSDeltaDriver implements Driver interface for Tencent COS Delta Lake tables
@@ -104,4 +104,3 @@ func (d *COSDeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int6
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-

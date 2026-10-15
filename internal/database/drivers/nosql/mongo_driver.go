@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/connstring"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MongoDriver implements the Driver interface for MongoDB
@@ -42,7 +42,7 @@ func (md *MongoDriver) ApplyBatchPagination(sql string, batchSize, offset int64)
 func (md *MongoDriver) Open(dsn string) (*sql.DB, error) {
 	// Create a custom driver that will handle MongoDB operations
 	mongoDriver := &MongoSQLDriver{dsn: dsn}
-	
+
 	// Register the driver temporarily with a unique name
 	driverName := fmt.Sprintf("mongo_%d", time.Now().UnixNano())
 	sql.Register(driverName, mongoDriver)

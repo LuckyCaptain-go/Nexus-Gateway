@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/database/drivers/common"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/common"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // Iceberg-specific types (these can remain as they are table-format specific)

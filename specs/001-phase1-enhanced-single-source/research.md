@@ -627,9 +627,9 @@ This document consolidates research findings for 6 categories of data sources, c
 
 **Implementation**:
 - Use `github.com/prometheus/client_golang` for metrics
-- Metrics: `nexus_query_duration_seconds`, `nexus_query_errors_total`
+- Metrics: `data_fabric_query_duration_seconds`, `data_fabric_query_errors_total`
 - Labels: data_source_type, data_source_id, query_status
-- Health check metrics: `nexus_datasource_health_status`
+- Health check metrics: `data_fabric_datasource_health_status`
 
 ---
 

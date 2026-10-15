@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Nexus Gateway API - Phase 1 Enhanced Single-Source Capabilities
+  title: Data Fabric API - Phase 1 Enhanced Single-Source Capabilities
   description: |
     Multi-database proxy gateway REST API with support for 30+ data source types including
     data lake table formats (Iceberg, Delta Lake, Hudi), cloud warehouses (Snowflake, Databricks,
@@ -9,17 +9,15 @@ info:
     file systems (HDFS, Ozone).
   version: 1.1.0
   contact:
-    name: Nexus Gateway Team
-    email: support@nexus-gateway.io
+    name: RhinoLink Tech
+    url: https://github.com/RhinoLink-Tech/data-fabric/discussions
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://localhost:8099/api/v1
-    description: Local development server
-  - url: https://api.nexus-gateway.io/api/v1
-    description: Production server
+  - url: http://localhost:8080/api/v1
+    description: Local server using the default configuration
 
 tags:
   - name: Health

@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	_ "github.com/denisenkom/go-mssqldb"
 )
@@ -49,22 +49,22 @@ func (sd *SQLServerDriver) ValidateDSN(dsn string) error {
 	if err != nil {
 		return fmt.Errorf("invalid DSN format: %v", err)
 	}
-	
+
 	// Check if it's using sqlserver scheme
 	scheme := strings.ToLower(parsedURL.Scheme)
 	if scheme != "sqlserver" && scheme != "mssql" {
 		return fmt.Errorf("invalid scheme in DSN: %s, expected 'sqlserver' or 'mssql'", scheme)
 	}
-	
+
 	if parsedURL.Host == "" {
 		return fmt.Errorf("missing host in DSN")
 	}
-	
+
 	// Check for authentication parameters
 	if parsedURL.User == nil && !strings.Contains(dsn, "user id=") && !strings.Contains(dsn, "user id=") {
 		return fmt.Errorf("missing username in DSN")
 	}
-	
+
 	return nil
 }
 
@@ -95,7 +95,7 @@ func (sd *SQLServerDriver) BuildDSN(config *model.DataSourceConfig) string {
 			config.Database,
 		)
 	}
-	
+
 	// Add additional properties
 	if config.AdditionalProps != nil {
 		params := url.Values{}
@@ -107,7 +107,7 @@ func (sd *SQLServerDriver) BuildDSN(config *model.DataSourceConfig) string {
 			dsn += "&" + params.Encode()
 		}
 	}
-	
+
 	return dsn
 }
 
@@ -126,11 +126,11 @@ func (sd *SQLServerDriver) TestConnection(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute test query: %v", err)
 	}
-	
+
 	if result != 1 {
 		return fmt.Errorf("unexpected result from test query: %d", result)
 	}
-	
+
 	return nil
 }
 
@@ -161,6 +161,6 @@ func (sd *SQLServerDriver) ConfigureAuth(authConfig interface{}) error {
 	// SQL Server supports various authentication methods like SQL Server Authentication, Windows Authentication, etc.
 	// Implementation would depend on specific authConfig provided
 	// This is a placeholder for future extension
-	
+
 	return nil
 }

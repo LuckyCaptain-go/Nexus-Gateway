@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RhinoLink-Tech/data-fabric/internal/security"
 	"github.com/gin-gonic/gin"
-	"nexus-gateway/internal/security"
 )
 
 func TestGetClientIDUsesVerifiedUserAndPeerIP(t *testing.T) {

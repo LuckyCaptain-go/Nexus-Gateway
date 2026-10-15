@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"strings"
 
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	_ "sqlflow.org/gohive"
 )
@@ -48,30 +48,30 @@ func (hd *HiveDriver) ValidateDSN(dsn string) error {
 	if err != nil {
 		return fmt.Errorf("invalid DSN format: %v", err)
 	}
-	
+
 	// Check if it's using hive or hiveserver2 scheme
 	scheme := strings.ToLower(parsedURL.Scheme)
 	if scheme != "hive" && scheme != "hiveserver2" {
 		return fmt.Errorf("invalid scheme in DSN: %s, expected 'hive' or 'hiveserver2'", scheme)
 	}
-	
+
 	if parsedURL.Host == "" {
 		return fmt.Errorf("missing host in DSN")
 	}
-	
+
 	if parsedURL.User == nil {
 		return fmt.Errorf("missing username in DSN")
 	}
-	
+
 	password, ok := parsedURL.User.Password()
 	if !ok {
 		return fmt.Errorf("missing password in DSN")
 	}
-	
+
 	if password == "" {
 		return fmt.Errorf("empty password in DSN")
 	}
-	
+
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (hd *HiveDriver) BuildDSN(config *model.DataSourceConfig) string {
 		config.Port,
 		config.Database,
 	)
-	
+
 	// 添加额外的配置参数
 	if config.AdditionalProps != nil {
 		params := url.Values{}
@@ -102,7 +102,7 @@ func (hd *HiveDriver) BuildDSN(config *model.DataSourceConfig) string {
 			dsn += "?" + params.Encode()
 		}
 	}
-	
+
 	return dsn
 }
 
@@ -121,11 +121,11 @@ func (hd *HiveDriver) TestConnection(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute test query: %v", err)
 	}
-	
+
 	if result != 1 {
 		return fmt.Errorf("unexpected result from test query: %d", result)
 	}
-	
+
 	return nil
 }
 
@@ -156,6 +156,6 @@ func (hd *HiveDriver) ConfigureAuth(authConfig interface{}) error {
 	// Hive supports various authentication methods like LDAP, Kerberos, etc.
 	// Implementation would depend on specific authConfig provided
 	// This is a placeholder for future extension
-	
+
 	return nil
 }

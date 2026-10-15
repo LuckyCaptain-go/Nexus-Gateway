@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MetricsCollector collects and aggregates query execution metrics

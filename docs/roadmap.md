@@ -1,10 +1,10 @@
-# Nexus-Gateway Roadmap
+# Data Fabric Roadmap
 
 **Last reviewed: 2026-10-15**
 
 ## Product direction
 
-Nexus-Gateway is a lightweight, self-hosted entry point for managing heterogeneous data-source connections and giving applications a consistent query API. It aims to reduce per-source integration and SQL-dialect work while keeping deployment and resource requirements small.
+Data Fabric is a lightweight, self-hosted entry point for managing heterogeneous data-source connections and giving applications a consistent query API. It aims to reduce per-source integration and SQL-dialect work while keeping deployment and resource requirements small.
 
 Federated cross-source execution is an extension direction. The current request path does not yet provide a federated query adapter. Roadmap items are plans, not claims of shipped capability or date commitments.
 
@@ -14,7 +14,7 @@ GitHub milestones are the source of truth for open work and issue status. Dates 
 
 ## Stage 1 — Stabilize the gateway
 
-**Status: in progress.** Tracked in [Core: Security and Reliability](https://github.com/LuckyCaptain-go/Nexus-Gateway/milestone/1).
+**Status: in progress.** Tracked in [Core: Security and Reliability](https://github.com/RhinoLink-Tech/data-fabric/milestone/1).
 
 Focus on security, query correctness, connector behavior, configuration, streaming lifecycle, observability, and deployment reliability.
 
@@ -28,7 +28,7 @@ Exit conditions:
 
 ## Stage 2 — Add federated query-engine adapters
 
-**Status: planned.** Tracked in [Phase 2: Compute Engine Integration](https://github.com/LuckyCaptain-go/Nexus-Gateway/milestone/2).
+**Status: planned.** Tracked in [Phase 2: Compute Engine Integration](https://github.com/RhinoLink-Tech/data-fabric/milestone/2).
 
 Define a small adapter contract, then prove the path from gateway configuration through engine connection, catalog selection, query execution, result retrieval, cancellation, and error handling. Start with one end-to-end verified engine before expanding to others.
 
@@ -41,7 +41,7 @@ Exit conditions:
 
 ## Stage 3 — Operational readiness and ecosystem
 
-**Status: candidate work; sequencing depends on Stages 1 and 2.** Related issues are grouped in [Phase 3](https://github.com/LuckyCaptain-go/Nexus-Gateway/milestone/3), [Phase 4](https://github.com/LuckyCaptain-go/Nexus-Gateway/milestone/4), and [Phase 5](https://github.com/LuckyCaptain-go/Nexus-Gateway/milestone/5).
+**Status: candidate work; sequencing depends on Stages 1 and 2.** Related issues are grouped in [Phase 3](https://github.com/RhinoLink-Tech/data-fabric/milestone/3), [Phase 4](https://github.com/RhinoLink-Tech/data-fabric/milestone/4), and [Phase 5](https://github.com/RhinoLink-Tech/data-fabric/milestone/5).
 
 Candidate areas include tenant and resource controls, metrics and auditability, verified connector coverage, deployment options, and community integrations. Analytics, ML, AI, and multi-cloud work should be added only for concrete user needs and a maintainable plan.
 

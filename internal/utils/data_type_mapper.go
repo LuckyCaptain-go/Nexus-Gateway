@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // DataTypeMapper maps database-specific types to standardized types

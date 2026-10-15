@@ -2,9 +2,9 @@ package unifiedservice
 
 import (
 	"context"
-	"nexus-gateway/internal/config"
-	"nexus-gateway/internal/model"
-	service "nexus-gateway/internal/service"
+	"github.com/RhinoLink-Tech/data-fabric/internal/config"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	service "github.com/RhinoLink-Tech/data-fabric/internal/service"
 )
 
 type UnifiedQueryService interface {

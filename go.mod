@@ -1,4 +1,4 @@
-module nexus-gateway
+module github.com/RhinoLink-Tech/data-fabric
 
 go 1.25.1
 

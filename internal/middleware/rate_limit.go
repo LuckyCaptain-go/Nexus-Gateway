@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/RhinoLink-Tech/data-fabric/pkg/response"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
-	"nexus-gateway/pkg/response"
 )
 
 // RateLimiterConfig configuration for rate limiting

@@ -3,8 +3,8 @@ package security
 import (
 	"net/http"
 
+	"github.com/RhinoLink-Tech/data-fabric/pkg/response"
 	"github.com/gin-gonic/gin"
-	"nexus-gateway/pkg/response"
 )
 
 // AuthMiddleware provides JWT authentication middleware

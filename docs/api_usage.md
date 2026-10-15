@@ -2,7 +2,7 @@
 
 ## Overview
 
-Nexus-Gateway provides a comprehensive API for querying 90+ data sources through a unified interface. This guide covers the main API endpoints and usage patterns.
+Data Fabric provides a comprehensive API for querying 90+ data sources through a unified interface. This guide covers the main API endpoints and usage patterns.
 
 ## Basic Query API
 

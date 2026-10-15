@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // S3DeltaDriver implements Driver interface for S3 Delta Lake tables
@@ -144,4 +144,3 @@ func (d *S3DeltaDriver) ApplyBatchPagination(sql string, batchSize, offset int64
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-

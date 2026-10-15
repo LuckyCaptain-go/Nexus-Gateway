@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"io"
-	"nexus-gateway/internal/database/drivers"
 	"strconv"
 	"strings"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MinIOCSVDriver implements Driver interface for querying CSV files on MinIO

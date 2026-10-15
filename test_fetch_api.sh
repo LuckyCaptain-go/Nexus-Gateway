@@ -2,7 +2,7 @@
 
 # Test script for fetch API endpoints
 
-echo "=== Testing Nexus-Gateway Fetch API ==="
+echo "=== Testing Data Fabric Fetch API ==="
 echo ""
 
 BASE_URL="http://localhost:8080"

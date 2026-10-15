@@ -3,7 +3,7 @@ package response
 import (
 	"time"
 
-	"nexus-gateway/internal/utils"
+	"github.com/RhinoLink-Tech/data-fabric/internal/utils"
 )
 
 // StandardResponse represents a standardized API response

@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // HDFSXMLDriver implements Driver interface for HDFS XML files
@@ -141,4 +141,3 @@ type HDFSXMLResult struct {
 }
 
 // RegisterHDFSXMLDriver registers the HDFS XML driver globally
-

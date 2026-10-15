@@ -2,7 +2,7 @@
 
 ## Overview
 
-Nexus-Gateway is configured primarily through a YAML configuration file located at `configs/config.yaml`. This document explains all available configuration options and their purposes.
+Data Fabric is configured primarily through a YAML configuration file located at `configs/config.yaml`. This document explains all available configuration options and their purposes.
 
 ## Main Configuration File
 
@@ -17,9 +17,9 @@ server:
 database:
   host: "localhost"
   port: 3306
-  username: "nexus"
+  username: "data_fabric"
   password: "your_password"
-  database: "nexus_gateway"
+  database: "data_fabric"
 
 security:
   jwt:
@@ -83,9 +83,9 @@ query:
 |-------|------|-------------|---------|
 | `database.host` | String | Hostname of the internal database | localhost |
 | `database.port` | Integer | Port of the internal database | 3306 |
-| `database.username` | String | Username for internal database | nexus |
+| `database.username` | String | Username for internal database | data_fabric |
 | `database.password` | String | Password for internal database | your_password |
-| `database.database` | String | Database name for internal database | nexus_gateway |
+| `database.database` | String | Database name for internal database | data_fabric |
 
 ### Security Configuration
 

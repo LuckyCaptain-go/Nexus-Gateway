@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // S3ParquetDriver implements Driver interface for querying Parquet files on S3
@@ -273,14 +273,14 @@ func (d *S3ParquetDriver) ApplyBatchPagination(sql string, batchSize, offset int
 	// For S3 Parquet files, we don't support SQL pagination directly
 	// Instead, we'll return the original SQL and let the application handle pagination
 	// since Parquet files are read as complete datasets and then processed in memory
-	
+
 	// If S3 Select API is enabled, we can use LIMIT and OFFSET clauses
 	if d.config.EnableSelectAPI {
 		// Add LIMIT and OFFSET to the SQL query
 		paginatedSQL := fmt.Sprintf("%s LIMIT %d OFFSET %d", sql, batchSize, offset)
 		return paginatedSQL, nil
 	}
-	
+
 	// For direct Parquet reading, return original SQL and handle pagination in memory
 	return sql, nil
 }

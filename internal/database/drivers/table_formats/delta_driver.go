@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/database/drivers/common"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers/common"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // Local schema types to avoid circular import
@@ -215,7 +215,7 @@ func (d *DeltaDriver) GetPartitioningStrategy(ctx context.Context, catalog, sche
 	// Delta partition info would be in table properties
 	// Look for partition-related properties
 	partitionCols := make([]string, 0)
-	
+
 	// Check if there are partition-related properties
 	if partitionBy, exists := details.Properties["partitionBy"]; exists {
 		// If partitionBy exists in properties, parse it

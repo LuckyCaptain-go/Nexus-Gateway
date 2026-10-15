@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"time"
 
-	// "nexus-gateway/internal/database/metadata"  // 移除metadata包引用以防止循环依赖
-	"nexus-gateway/internal/model"
+	// "github.com/RhinoLink-Tech/data-fabric/internal/database/metadata"  // 移除metadata包引用以防止循环依赖
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // SnowflakeDriver implements Driver interface for Snowflake data warehouse

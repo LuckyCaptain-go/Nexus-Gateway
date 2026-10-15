@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MinIODeltaDriver implements Driver interface for MinIO Delta Lake tables
@@ -104,4 +104,3 @@ func (d *MinIODeltaDriver) ApplyBatchPagination(sql string, batchSize, offset in
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-

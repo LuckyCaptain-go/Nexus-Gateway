@@ -37,7 +37,7 @@ func (hc *HealthController) HealthCheck(c *gin.Context) {
 	response := HealthResponse{
 		Status:      "healthy",
 		Timestamp:   time.Now(),
-		Service:     "nexus-gateway",
+		Service:     "data-fabric",
 		Version:     "1.0.0",
 		Connections: make(map[string]string),
 	}

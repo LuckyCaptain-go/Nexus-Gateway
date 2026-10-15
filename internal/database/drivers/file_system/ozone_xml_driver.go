@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // OzoneXMLDriver implements Driver interface for Ozone XML files
@@ -128,4 +128,3 @@ type OzoneXMLResult struct {
 	Key       string
 	XPath     string
 }
-

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // DataSourceRepository defines the interface for data source data operations

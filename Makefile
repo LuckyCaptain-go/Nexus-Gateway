@@ -2,7 +2,7 @@
 
 # Build the application
 build:
-	go build -o bin/nexus-gateway cmd/server/main.go
+	go build -o bin/data-fabric cmd/server/main.go
 
 # Run the application
 run:
@@ -24,15 +24,15 @@ clean:
 
 # Build Docker image
 docker-build:
-	docker build -t nexus-gateway:latest .
+	docker build -t data-fabric:latest .
 
 # Run Docker container
 docker-run:
-	docker run -p 8080:8080 nexus-gateway:latest
+	docker run -p 8080:8080 data-fabric:latest
 
 # Run Docker with config volume
 docker-run-with-config:
-	docker run -p 8080:8080 -v $(PWD)/configs:/root/configs nexus-gateway:latest
+	docker run -p 8080:8080 -v $(PWD)/configs:/root/configs data-fabric:latest
 
 # Format code
 fmt:

@@ -13,7 +13,7 @@
 
 ### Implementation Tasks
 
-- [X] T001 Initialize Go module with `go mod init nexus-gateway`
+- [X] T001 Initialize Go module with `go mod init github.com/RhinoLink-Tech/data-fabric`
 - [X] T002 Create project directory structure as defined in plan.md
 - [X] T003 Set up basic main.go with Gin server
 - [X] T004 [P] Add core dependencies to go.mod (Gin, GORM, Viper)

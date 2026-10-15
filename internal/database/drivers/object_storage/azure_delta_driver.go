@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // AzureDeltaDriver implements Driver interface for Azure Blob Delta Lake tables
@@ -104,5 +104,3 @@ func (d *AzureDeltaDriver) ApplyBatchPagination(sql string, batchSize, offset in
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-
-

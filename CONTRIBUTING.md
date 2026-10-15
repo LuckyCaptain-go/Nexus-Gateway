@@ -1,4 +1,4 @@
-# Contributing to Nexus-Gateway
+# Contributing to Data Fabric
 
 Issues and pull requests in English or Chinese are welcome.
 
@@ -6,7 +6,7 @@ Issues and pull requests in English or Chinese are welcome.
 
 - Search existing issues and check the [documentation](README.md).
 - Use the Bug report or Feature request form to provide reproducible details.
-- Use [Discussions](https://github.com/LuckyCaptain-go/Nexus-Gateway/discussions) for questions and ideas.
+- Use [Discussions](https://github.com/RhinoLink-Tech/data-fabric/discussions) for questions and ideas.
 - Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md). Never post credentials, personal data, or exploitable details publicly.
 
 ## Development

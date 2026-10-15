@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"nexus-gateway/internal/model"
-	unifiedservice "nexus-gateway/internal/unified_service"
-	"nexus-gateway/pkg/response"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	unifiedservice "github.com/RhinoLink-Tech/data-fabric/internal/unified_service"
+	"github.com/RhinoLink-Tech/data-fabric/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

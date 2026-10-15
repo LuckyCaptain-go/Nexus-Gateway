@@ -114,7 +114,7 @@ multi-database-proxy-gateway/
 
 ### Core Dependencies (go.mod)
 ```go
-module nexus-gateway
+module github.com/RhinoLink-Tech/data-fabric
 
 go 1.21
 

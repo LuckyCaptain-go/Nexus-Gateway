@@ -2,14 +2,14 @@
 
 ## Overview
 
-This guide provides information for developers looking to contribute to Nexus-Gateway or extend its functionality. It covers the project structure, coding standards, and extension mechanisms.
+This guide provides information for developers looking to contribute to Data Fabric or extend its functionality. It covers the project structure, coding standards, and extension mechanisms.
 
 ## Project Structure
 
 Understanding the project structure is crucial for effective development:
 
 ```
-Nexus-Gateway/
+data-fabric/
 ├── cmd/
 │   └── server/
 │       └── main.go              # Application entry point
@@ -175,8 +175,8 @@ const (
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/LuckyCaptain-go/Nexus-Gateway.git
-   cd Nexus-Gateway
+   git clone https://github.com/RhinoLink-Tech/data-fabric.git
+   cd data-fabric
    ```
 
 2. Install dependencies:
@@ -240,8 +240,8 @@ package warehouses
 
 import (
     "database/sql"
-    "nexus-gateway/internal/database/drivers"
-    "nexus-gateway/internal/model"
+    "github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+    "github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 type ExampleDriver struct{}
@@ -305,7 +305,7 @@ func (d *ExampleDriver) ConfigureAuth(authConfig interface{}) error {
    - Add the import to the registry file
    - Register the driver in the `registerDrivers` function
 
-4. **Add the database type constant** to the [model/datasource.go](file:///D:/opensource/Nexus-Gateway/internal/model/datasource.go) file
+4. **Add the database type constant** to the [model/datasource.go](file:///D:/opensource/data-fabric/internal/model/datasource.go) file
 
 5. **Update documentation** to include the new driver
 

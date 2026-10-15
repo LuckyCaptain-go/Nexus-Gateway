@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // MinIOIcebergDriver implements Driver interface for MinIO Iceberg tables
@@ -104,4 +104,3 @@ func (d *MinIOIcebergDriver) ApplyBatchPagination(sql string, batchSize, offset 
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-

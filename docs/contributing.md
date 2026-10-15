@@ -2,7 +2,7 @@
 
 ## Overview
 
-Thank you for your interest in contributing to Nexus-Gateway! We welcome contributions from the community and appreciate your efforts to improve the project. This guide outlines the process for contributing to the project.
+Thank you for your interest in contributing to Data Fabric! We welcome contributions from the community and appreciate your efforts to improve the project. This guide outlines the process for contributing to the project.
 
 ## How to Contribute
 
@@ -49,8 +49,8 @@ We welcome pull requests for bug fixes, new features, and documentation improvem
 
 1. Fork and clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Nexus-Gateway.git
-   cd Nexus-Gateway
+   git clone https://github.com/YOUR_USERNAME/data-fabric.git
+   cd data-fabric
    ```
 
 2. Install dependencies:
@@ -230,4 +230,4 @@ If you need help with your contribution:
 
 All contributors are recognized in our acknowledgments. Major contributors may be invited to join the maintainer team.
 
-Thank you for contributing to Nexus-Gateway!
+Thank you for contributing to Data Fabric!

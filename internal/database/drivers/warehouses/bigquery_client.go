@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // BigQueryRESTClient provides REST API wrapper for BigQuery

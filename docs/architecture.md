@@ -2,13 +2,13 @@
 
 ## Overview
 
-Nexus-Gateway follows a clean, modular architecture designed for extensibility and maintainability. The system is built around a core gateway that routes queries to appropriate database drivers based on data source configuration.
+Data Fabric follows a clean, modular architecture designed for extensibility and maintainability. The system is built around a core gateway that routes queries to appropriate database drivers based on data source configuration.
 
 ## High-Level Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐
-│   Client Apps   │───▶│  Nexus-Gateway   │───▶│  Data Sources       │
+│   Client Apps   │───▶│  Data Fabric   │───▶│  Data Sources       │
 │                 │    │                  │    │                     │
 │ - BI Tools      │    │ - Query Routing  │    │ - Cloud Warehouses  │
 │ - Dashboards    │    │ - Auth/Z          │    │ - Data Lakes        │
@@ -24,7 +24,7 @@ Nexus-Gateway follows a clean, modular architecture designed for extensibility a
 ### Core Components
 
 ```
-Nexus-Gateway/
+data-fabric/
 ├── cmd/server/                    # Application entry point
 ├── internal/
 │   ├── controller/               # HTTP request handlers

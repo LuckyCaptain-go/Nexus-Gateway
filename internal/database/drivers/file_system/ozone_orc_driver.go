@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // OzoneORCDriver implements Driver interface for Ozone ORC files
@@ -126,4 +126,3 @@ type OzoneORCResult struct {
 	BytesRead int64
 	Key       string
 }
-

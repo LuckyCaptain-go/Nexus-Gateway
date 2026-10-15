@@ -4,14 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
 	"io"
-	"nexus-gateway/internal/repository"
 	"strings"
 	"sync"
 	"time"
 
-	"nexus-gateway/internal/database"
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 
 	"github.com/google/uuid"
 )
@@ -748,7 +748,7 @@ func (ss *streamingService) mapGenericDatabaseTypeToStandard(dbTypeName string, 
 		return model.StandardizedTypeDouble
 	case strings.Contains(upperTypeName, "DECIMAL"), strings.Contains(upperTypeName, "NUMERIC"):
 		return model.StandardizedTypeDecimal
-	case strings.Contains(upperTypeName, "VARCHAR"), strings.Contains(upperTypeName, "CHAR"), 
+	case strings.Contains(upperTypeName, "VARCHAR"), strings.Contains(upperTypeName, "CHAR"),
 		strings.Contains(upperTypeName, "TEXT"), strings.Contains(upperTypeName, "CLOB"):
 		return model.StandardizedTypeString
 	case strings.Contains(upperTypeName, "DATE"):

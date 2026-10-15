@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 	"io"
-	"nexus-gateway/internal/database/drivers"
-	"nexus-gateway/internal/model"
 	"time"
 )
 

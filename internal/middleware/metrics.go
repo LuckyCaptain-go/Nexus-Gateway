@@ -52,14 +52,14 @@ func InitMetrics() {
 		// HTTP request metrics
 		HttpRequestsTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_http_requests_total",
+				Name: "data_fabric_http_requests_total",
 				Help: "Total number of HTTP requests",
 			},
 			[]string{"method", "endpoint", "status"},
 		),
 		HttpRequestDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_http_request_duration_seconds",
+				Name:    "data_fabric_http_request_duration_seconds",
 				Help:    "HTTP request latency in seconds",
 				Buckets: prometheus.DefBuckets,
 			},
@@ -67,7 +67,7 @@ func InitMetrics() {
 		),
 		HttpRequestSize: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_http_request_size_bytes",
+				Name:    "data_fabric_http_request_size_bytes",
 				Help:    "HTTP request size in bytes",
 				Buckets: []float64{100, 1000, 10000, 100000, 1000000},
 			},
@@ -75,7 +75,7 @@ func InitMetrics() {
 		),
 		HttpResponseSize: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_http_response_size_bytes",
+				Name:    "data_fabric_http_response_size_bytes",
 				Help:    "HTTP response size in bytes",
 				Buckets: []float64{100, 1000, 10000, 100000, 1000000},
 			},
@@ -85,14 +85,14 @@ func InitMetrics() {
 		// Database query metrics
 		QueryTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_query_total",
+				Name: "data_fabric_query_total",
 				Help: "Total number of database queries",
 			},
 			[]string{"datasource_id", "database_type", "status"},
 		),
 		QueryDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_query_duration_seconds",
+				Name:    "data_fabric_query_duration_seconds",
 				Help:    "Database query execution time in seconds",
 				Buckets: prometheus.DefBuckets,
 			},
@@ -100,14 +100,14 @@ func InitMetrics() {
 		),
 		QueryRowsRead: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_query_rows_read_total",
+				Name: "data_fabric_query_rows_read_total",
 				Help: "Total number of rows read from queries",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		QueryErrors: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_query_errors_total",
+				Name: "data_fabric_query_errors_total",
 				Help: "Total number of query errors",
 			},
 			[]string{"datasource_id", "database_type", "error_type"},
@@ -116,21 +116,21 @@ func InitMetrics() {
 		// Connection pool metrics
 		ConnectionPoolActive: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "nexus_connection_pool_active",
+				Name: "data_fabric_connection_pool_active",
 				Help: "Number of active connections in the pool",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		ConnectionPoolIdle: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "nexus_connection_pool_idle",
+				Name: "data_fabric_connection_pool_idle",
 				Help: "Number of idle connections in the pool",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		ConnectionPoolWait: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_connection_pool_wait_seconds",
+				Name:    "data_fabric_connection_pool_wait_seconds",
 				Help:    "Time spent waiting for a connection from the pool",
 				Buckets: prometheus.DefBuckets,
 			},
@@ -140,14 +140,14 @@ func InitMetrics() {
 		// Data source health metrics
 		DataSourceHealth: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "nexus_datasource_health",
+				Name: "data_fabric_datasource_health",
 				Help: "Data source health status (1=healthy, 0=unhealthy)",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		DataSourceUp: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "nexus_datasource_up",
+				Name: "data_fabric_datasource_up",
 				Help: "Whether the data source is up (1=up, 0=down)",
 			},
 			[]string{"datasource_id", "database_type"},
@@ -156,21 +156,21 @@ func InitMetrics() {
 		// Streaming metrics
 		ActiveStreams: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "nexus_streaming_active",
+				Name: "data_fabric_streaming_active",
 				Help: "Number of active streaming queries",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		StreamRowsSent: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_streaming_rows_sent_total",
+				Name: "data_fabric_streaming_rows_sent_total",
 				Help: "Total number of rows sent via streaming",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		StreamDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "nexus_streaming_duration_seconds",
+				Name:    "data_fabric_streaming_duration_seconds",
 				Help:    "Streaming query duration in seconds",
 				Buckets: prometheus.DefBuckets,
 			},
@@ -180,14 +180,14 @@ func InitMetrics() {
 		// Token rotation metrics
 		TokenRotations: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_token_rotations_total",
+				Name: "data_fabric_token_rotations_total",
 				Help: "Total number of token rotations",
 			},
 			[]string{"datasource_id", "database_type"},
 		),
 		TokenRotationErrors: promauto.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "nexus_token_rotation_errors_total",
+				Name: "data_fabric_token_rotation_errors_total",
 				Help: "Total number of token rotation errors",
 			},
 			[]string{"datasource_id", "database_type"},

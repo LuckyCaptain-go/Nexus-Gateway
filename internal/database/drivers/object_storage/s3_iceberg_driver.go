@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"nexus-gateway/internal/database/drivers"
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 
-	"nexus-gateway/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
 
 // S3IcebergDriver implements Driver interface for S3 Iceberg tables
@@ -144,4 +144,3 @@ func (d *S3IcebergDriver) ApplyBatchPagination(sql string, batchSize, offset int
 	// The pagination is usually handled at the application level
 	return sql, nil
 }
-
