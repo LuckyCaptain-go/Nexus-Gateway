@@ -18,16 +18,18 @@ type SQLTranslator interface {
 type Dialect string
 
 const (
-	MySQL      Dialect = "mysql"
-	PostgreSQL Dialect = "postgres"
-	Trino      Dialect = "trino"
-	Spark      Dialect = "spark"
-	Oracle     Dialect = "oracle"
-	SQLServer  Dialect = "sqlserver"
-	Snowflake  Dialect = "snowflake"
-	SQLite     Dialect = "sqlite"
-	DuckDB     Dialect = "duckdb"
-	Redshift   Dialect = "redshift"
+	MySQL       Dialect = "mysql"
+	PostgreSQL  Dialect = "postgres"
+	Trino       Dialect = "trino"
+	Presto      Dialect = "presto"
+	OpenLooKeng Dialect = "openlookeng"
+	Spark       Dialect = "spark"
+	Oracle      Dialect = "oracle"
+	SQLServer   Dialect = "sqlserver"
+	Snowflake   Dialect = "snowflake"
+	SQLite      Dialect = "sqlite"
+	DuckDB      Dialect = "duckdb"
+	Redshift    Dialect = "redshift"
 )
 
 // ValidationError represents an error when SQL validation fails

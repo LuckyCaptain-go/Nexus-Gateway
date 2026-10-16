@@ -27,10 +27,9 @@ def translate_sql(sql, source_dialect, target_dialect):
             unsupported_level=sqlglot.ErrorLevel.RAISE,
         )
 
-        if result:
-            return result[0]  # transpile returns a list, take the first element
-        else:
-            return sql  # If no translation occurred, return original
+        if len(result) != 1:
+            raise ValueError("expected exactly one SQL statement, got " + str(len(result)))
+        return result[0]
     except Exception as e:
         # Return error as part of JSON response
         return f"ERROR: {str(e)}"
@@ -51,6 +50,8 @@ def map_dialect(dialect):
         'kingbasees': 'postgres',
         'gaussdb_postgres': 'postgres',
         'trino': 'trino',
+        'presto': 'presto',
+        'openlookeng': 'presto',
         'spark': 'spark',
         'oracle': 'oracle',
         'oceanbase_oracle': 'oracle',

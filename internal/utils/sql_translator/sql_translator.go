@@ -19,7 +19,7 @@ type ExternalSQLTranslator struct {
 func NewExternalSQLTranslator(useExternalLib bool) *ExternalSQLTranslator {
 	return &ExternalSQLTranslator{
 		supportedDialects: []string{
-			string(MySQL), string(PostgreSQL), string(Trino), string(Spark),
+			string(MySQL), string(PostgreSQL), string(Trino), string(Presto), string(OpenLooKeng), string(Spark),
 			string(Oracle), string(SQLServer), string(Snowflake), string(SQLite),
 			string(DuckDB), string(Redshift),
 		},
