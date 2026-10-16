@@ -1,1 +1,1 @@
-sqlglot
+sqlglot==30.23.0

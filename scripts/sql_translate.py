@@ -23,7 +23,8 @@ def translate_sql(sql, source_dialect, target_dialect):
             sql,
             read=sqlglot_source,
             write=sqlglot_target,
-            pretty=True
+            pretty=True,
+            unsupported_level=sqlglot.ErrorLevel.RAISE,
         )
 
         if result:
