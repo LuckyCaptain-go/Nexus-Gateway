@@ -26,19 +26,26 @@ Data Fabric 位于应用与数据系统之间：**它负责集中管理多种数
 
 ## 当前能力与集成状态
 
-当前仓库包含数据源管理、驱动注册、连接诊断、配置校验、JWT 与限流组件，以及查询结果分批获取；兼容的驱动可使用流式游标。具体驱动能力以服务端类型接口和实现为准。
+当前仓库提供统一的数据源管理和查询 API，包括驱动注册、连接诊断、配置校验、JWT 与限流组件，以及查询结果分批获取。支持流式读取的驱动可以逐批返回结果，减少大结果集一次性占用的内存。
 
-**统一查询能力：**应用通过统一查询语言提交查询，Data Fabric 会根据目标数据源适配查询语法，并通过统一 API 返回结果，减少为每种数据源重复改写常见查询的工作。不同数据源支持的能力范围存在差异，使用特定数据源专有功能时仍可能需要对应语法。**跨源查询引擎适配尚未交付：**当前服务请求链路尚未接入联邦查询执行适配器，也没有跨源引擎连接配置的自动管理能力；目前还不能经 Data Fabric 执行跨源联邦 SQL。图中的虚线表示目标集成边界，不代表已交付能力。
+**统一查询入口：**应用使用统一 API 访问已登记的数据源。指定 sourceDialect 后，Data Fabric 可在 SQL v1 兼容范围内将常见查询语法转换为目标方言；省略时按目标数据源或查询引擎的原生 SQL 执行。方言转换范围、兼容矩阵和错误行为见 [统一 SQL v1 说明](SQL_TRANSLATION_FEATURES.md)。
+
+**跨源联邦查询：**Data Fabric 提供统一的查询引擎连接适配，可将兼容的外部联邦查询引擎登记为数据源。应用仍通过统一查询 API 提交 SQL；联邦引擎通过自身配置的 catalogs 和 connectors 访问不同数据系统，负责跨目录规划和执行，Data Fabric 负责连接、请求路由、结果归一化及查询生命周期管理。
+
+联邦查询是可选扩展：简单的单源访问直接使用网关驱动；需要跨源关联时，再连接外部查询引擎。引擎版本、catalog 权限和 connector 能力由对应部署决定。
 
 ~~~mermaid
 flowchart LR
-    App[AI / RAG / BI / 业务应用] --> Gateway[Data Fabric<br/>应用侧 API 与数据源管理]
-    Gateway --> Drivers[当前：驱动与单源访问]
+    App[AI / RAG / BI / 业务应用] --> Gateway[Data Fabric<br/>统一 API 与数据源管理]
+    Gateway --> Drivers[单源数据源驱动]
     Drivers --> Sources[数据库 / 数仓 / 湖仓 / 对象存储 / 文件]
-    Gateway -. 目标集成：联邦查询适配器 .-> Engine[跨源查询引擎]
-    Engine -.-> Catalogs[Catalogs 与连接器]
-    Catalogs -.-> Sources
+    Gateway --> Adapter[查询引擎连接适配]
+    Adapter --> Engine[外部联邦查询引擎]
+    Engine --> Catalogs[引擎 catalogs 与 connectors]
+    Catalogs --> Sources
 ~~~
+
+图中展示两种接入方式：应用可以经网关驱动访问单个数据源，也可以将 SQL 发往外部联邦查询引擎，由引擎访问其已配置的 catalogs。
 
 ## 数据源范围
 
@@ -63,11 +70,9 @@ go run ./cmd/server
 
 如果这个项目对你有帮助，欢迎点亮 GitHub Star，也欢迎通过 Issue、Pull Request 参与开源共建。
 
-## 跨源查询引擎扩展
+## 跨源查询引擎接入
 
-后续将面向多种跨源查询引擎提供统一、无缝的接入能力，例如 Trino、Presto、OpenLooKeng 等。上述引擎是后续适配方向，当前仓库尚未交付相应的联邦查询适配器。
-
-本项目采用 Apache License 2.0，详见 [LICENSE](LICENSE)。
+Data Fabric 通过统一的连接适配接入 Trino、Presto 和 OpenLooKeng 查询引擎。管理员将协调器配置为一个数据源后，应用即可通过 Data Fabric 查询 API 使用引擎 SQL；跨 catalog 查询由协调器及其 connectors 执行。配置示例见 [API 使用指南](docs/api_usage.md)，查询语言边界见 [统一 SQL v1 说明](SQL_TRANSLATION_FEATURES.md)。
 
 ## 项目与社区
 

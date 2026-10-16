@@ -1,12 +1,10 @@
 # Data Fabric Roadmap
 
-**Last reviewed: 2026-10-15**
+**Last reviewed: 2026-10-16**
 
 ## Product direction
 
-Data Fabric is a lightweight, self-hosted entry point for managing heterogeneous data-source connections and giving applications a consistent query API. It aims to reduce per-source integration and SQL-dialect work while keeping deployment and resource requirements small.
-
-Federated cross-source execution is an extension direction. The current request path does not yet provide a federated query adapter. Roadmap items are plans, not claims of shipped capability or date commitments.
+Data Fabric is a lightweight, self-hosted entry point for managing heterogeneous data-source connections and giving applications a consistent query API. It supports direct single-source access through gateway drivers and optional federated execution through external query-engine adapters. The product focuses on a small deployment footprint, unified source management, and a bounded, testable SQL compatibility contract.
 
 ## How to read this roadmap
 
@@ -26,22 +24,26 @@ Exit conditions:
 - CI passes, and documented build and deployment paths are reproducible.
 - Operators can diagnose health and connection failures without exposing credentials.
 
-## Stage 2 — Add federated query-engine adapters
+## Stage 2 — Federated query-engine adapter
 
-**Status: planned.** Tracked in [Phase 2: Compute Engine Integration](https://github.com/RhinoLink-Tech/data-fabric/milestone/2).
+**Adapter track status: delivered and protocol-level regression verified.** Tracked in [Phase 2: Compute Engine Integration](https://github.com/RhinoLink-Tech/data-fabric/milestone/2). The milestone also contains separate compute and operations work.
 
-Define a small adapter contract, then prove the path from gateway configuration through engine connection, catalog selection, query execution, result retrieval, cancellation, and error handling. Start with one end-to-end verified engine before expanding to others.
+Data Fabric can register a Trino, Presto, or OpenLooKeng coordinator as a managed data source and route SQL through the shared query-engine adapter. The external engine owns catalog configuration, connector access, cross-catalog planning, and execution.
 
-Exit conditions:
+Delivered work:
 
-- Engine configuration and credentials are validated and stored safely.
-- An integration test demonstrates a cross-source query through the gateway.
-- Cancellation, timeouts, authorization, errors, and result streaming behave consistently.
-- The README distinguishes shipped adapters from future targets.
+- [#160](https://github.com/RhinoLink-Tech/data-fabric/issues/160): Go-compatible federation adapter contract.
+- [#161](https://github.com/RhinoLink-Tech/data-fabric/issues/161): endpoint configuration and validation.
+- [#162](https://github.com/RhinoLink-Tech/data-fabric/issues/162): query routing through the adapter and normalized results.
+- [#163](https://github.com/RhinoLink-Tech/data-fabric/issues/163): timeout and cancellation propagation.
+- [#164](https://github.com/RhinoLink-Tech/data-fabric/issues/164): simulated-coordinator integration coverage for a query referencing multiple catalogs, request routing, and returned columns and rows.
+- [#165](https://github.com/RhinoLink-Tech/data-fabric/issues/165): SQL v1 dialect regression coverage.
+
+The protocol-level integration suite uses a deterministic simulated coordinator so it runs in regular CI without external services. It verifies the gateway-to-engine request and result path. Engine-side catalog behavior, connector support, permissions, and version-specific SQL remain determined by the deployed engine.
 
 ## Stage 3 — Operational readiness and ecosystem
 
-**Status: candidate work; sequencing depends on Stages 1 and 2.** Related issues are grouped in [Phase 3](https://github.com/RhinoLink-Tech/data-fabric/milestone/3), [Phase 4](https://github.com/RhinoLink-Tech/data-fabric/milestone/4), and [Phase 5](https://github.com/RhinoLink-Tech/data-fabric/milestone/5).
+**Status: candidate work; sequencing depends on Stage 1 and Stage 2.** Related issues are grouped in [Phase 3](https://github.com/RhinoLink-Tech/data-fabric/milestone/3), [Phase 4](https://github.com/RhinoLink-Tech/data-fabric/milestone/4), and [Phase 5](https://github.com/RhinoLink-Tech/data-fabric/milestone/5).
 
 Candidate areas include tenant and resource controls, metrics and auditability, verified connector coverage, deployment options, and community integrations. Analytics, ML, AI, and multi-cloud work should be added only for concrete user needs and a maintainable plan.
 

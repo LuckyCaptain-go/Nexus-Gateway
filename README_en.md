@@ -39,25 +39,28 @@ Data Fabric focuses on application-facing connectivity, a consistent access API,
 
 A deployment can start in lightweight gateway mode for individual sources and add federated execution when cross-source SQL becomes necessary. Whether a query engine is deployed depends on the application's federation needs.
 
-## Current Implementation Status
+## Current Implementation
 
-The repository implements gateway APIs, data-source management, driver registration, connection diagnostics, configuration validation, JWT and rate-limiting components, and batched query result retrieval. Drivers with streaming support can read results in batches instead of loading the entire result set into memory at once.
+Data Fabric provides data-source management, driver registration, connection diagnostics, configuration validation, a unified query API, JWT and rate-limiting components, and batched result retrieval. Drivers that support streaming can return results in batches to reduce peak memory use for large result sets.
 
-> **Unified query language:** Applications can use one query expression across multiple data sources. Data Fabric adapts common query syntax for the target source and returns results through a consistent API, reducing repetitive query rewrites. Source capabilities vary, and source-specific features may still require their native syntax.
+**Unified query entry point:** Applications access registered sources through one API. When sourceDialect is provided, Data Fabric translates common query syntax within the SQL v1 compatibility scope. Without it, SQL is sent in the target source or query engine's native dialect. See the [SQL v1 contract](SQL_TRANSLATION_FEATURES.md) for the compatibility matrix and error behavior.
 
-> **Federation engine adapters are not implemented yet.** The server request path does not include a federated query execution adapter, and it does not automatically manage external engine catalogs. The current version can access individual integrated sources through the gateway, but cannot yet run cross-source federated SQL through Data Fabric. The dotted line in the diagram marks a target integration boundary, not a shipped capability.
+**Federated queries:** Data Fabric provides a shared connection adapter for registering compatible external federation engines as data sources. Applications submit SQL through the same Data Fabric query API. The external engine uses its configured catalogs and connectors to access different systems and execute cross-catalog queries; Data Fabric manages the connection, request routing, result normalization, and query lifecycle.
+
+Federation is optional: use gateway drivers for straightforward single-source access and connect an external query engine when cross-source joins are needed. Engine version, catalog permissions, and connector capabilities depend on the deployment.
 
 ~~~mermaid
 flowchart LR
-    App[AI Agent / RAG / BI / Application] --> Gateway[Data Fabric<br/>Application API · Source Management]
-    Gateway --> Drivers[Current: Drivers and Single-Source Access]
+    App[AI Agent / RAG / BI / Application] --> Gateway[Data Fabric<br/>Unified API and Source Management]
+    Gateway --> Drivers[Single-Source Drivers]
     Drivers --> Sources[Databases / Warehouses / Lakehouses / Object Storage / Files]
-    Gateway -. Target: Federation Adapter .-> Engine[Cross-Source Query Engine<br/>SQL Planning and Distributed Execution]
-    Engine -.-> Catalogs[Catalogs and Connectors]
-    Catalogs -.-> Sources
+    Gateway --> Adapter[Query Engine Adapter]
+    Adapter --> Engine[External Federation Engine]
+    Engine --> Catalogs[Engine Catalogs and Connectors]
+    Catalogs --> Sources
 ~~~
 
-Solid arrows represent gateway and single-source paths in the current repository. The dotted arrow is the target federation-engine integration boundary. An adapter will need to define the application query protocol, catalog lifecycle, identity propagation, query cancellation, timeouts, and result flow.
+The diagram shows both access paths: applications can use gateway drivers for an individual source or send SQL to an external federation engine for its configured catalogs.
 
 ## Gateway Capabilities
 
@@ -143,7 +146,7 @@ If Data Fabric is useful to you, please star the repository. You are also welcom
 
 ## Federation Engine Integrations
 
-The project aims to provide a common, seamless integration path for multiple cross-source query engines, including Trino, Presto, and OpenLooKeng. These are future adapter targets; the current repository does not yet ship a federated query adapter.
+Data Fabric connects to Trino, Presto, and OpenLooKeng through a shared connection adapter. Register a coordinator as a data source, then use the Data Fabric query API to submit engine SQL. Cross-catalog planning and execution are handled by the coordinator and its connectors. See the [API usage guide](docs/api_usage.md) for configuration and the [SQL v1 contract](SQL_TRANSLATION_FEATURES.md) for query-language boundaries.
 
 ## Community and Releases
 

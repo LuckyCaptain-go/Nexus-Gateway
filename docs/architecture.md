@@ -6,18 +6,27 @@ Data Fabric follows a clean, modular architecture designed for extensibility and
 
 ## High-Level Architecture
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────────┐
-│   Client Apps   │───▶│  Data Fabric   │───▶│  Data Sources       │
-│                 │    │                  │    │                     │
-│ - BI Tools      │    │ - Query Routing  │    │ - Cloud Warehouses  │
-│ - Dashboards    │    │ - Auth/Z          │    │ - Data Lakes        │
-│ - Scripts       │    │ - Connection Pool│    │ - OLAP Engines      │
-│ - etc.          │    │ - Security       │    │ - Object Storage    │
-└─────────────────┘    │ - Monitoring     │    │ - File Systems      │
-                       └──────────────────┘    │ - Domestic DBs      │
-                                               └─────────────────────┘
-```
+~~~text
+Application
+    |
+    v
+Data Fabric API --- source ID ---> Connection and Query Services
+                                      |                 |
+                                      v                 v
+                                Source Drivers    Query Engine Adapter
+                                      |                 |
+                                      v                 v
+                              Individual Sources   Trino / Presto /
+                                                   OpenLooKeng
+                                                        |
+                                                        v
+                                             Engine Catalogs and Connectors
+                                                        |
+                                                        v
+                                                Data Systems
+~~~
+
+The gateway supports direct access to an individual source and an optional federated path through an external query engine. In the federated path, Data Fabric manages the coordinator connection and query request; the engine owns catalogs, connectors, planning, and cross-catalog execution.
 
 ## Internal Architecture
 
@@ -106,13 +115,18 @@ Each data source maintains its own connection pool to optimize resource usage:
 - Reuse of existing connections
 
 #### 3. Query Routing
-The system routes queries based on data source UUID:
 
-1. Receive query with dataSourceId
-2. Look up data source configuration
-3. Validate query (only SELECT statements)
-4. Route to appropriate driver
-5. Execute query and return results
+The same query API routes through the selected data source driver:
+
+1. Resolve the requested data source and verify that it is active.
+2. Validate the query as a single read-only statement.
+3. If sourceDialect is provided, translate SQL within the supported dialect contract.
+4. Select the driver from the data source type and open or reuse its pooled connection.
+5. For Trino, Presto, or OpenLooKeng data sources, the shared protocol adapter submits the statement to the configured coordinator. The coordinator resolves catalog-qualified table names using its own catalogs and connectors.
+6. Normalize result columns and values, then return results using the query or streaming API.
+7. Propagate request deadlines and cancellation to the active query and release result resources.
+
+For direct database sources, the selected source driver executes the query itself. For federated SQL, Data Fabric is the application-facing gateway; it does not embed a second planner or duplicate the engine catalog configuration.
 
 ## Security Architecture
 

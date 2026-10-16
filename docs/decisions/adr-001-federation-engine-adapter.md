@@ -45,4 +45,4 @@ SQL dialect translation remains a separate layer. The adapter sends the SQL prov
 - The gateway adds no embedded planner or coordinator and can use connectors configured in the engine for cross-catalog execution.
 - Standard `database/sql` behavior keeps query execution and result handling consistent with the rest of the gateway.
 - Engine-specific functions, type mappings, authentication, TLS behavior, and SQL compatibility still need targeted verification.
-- Endpoint registration/health-check API wiring, query routing, cancellation, and real cross-catalog integration are handled by follow-up issues #161-#164; dialect regression coverage is handled by #165.
+- Endpoint registration and validation, query routing, cancellation, SQL regression coverage, and simulated-coordinator integration coverage are implemented in #161-#165.

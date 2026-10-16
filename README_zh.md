@@ -41,23 +41,26 @@ Data Fabric 聚焦应用侧连接管理、统一访问 API 和请求入口，不
 
 ## 当前实现状态
 
-当前仓库已实现网关 API、数据源管理、驱动注册、连接诊断、配置校验、JWT 与限流组件，以及分批查询结果获取。对支持流式读取的驱动，服务可以按批次读取结果，避免一次性将全部结果载入内存。
+Data Fabric 已提供数据源管理、驱动注册、连接诊断、配置校验、统一查询 API、JWT 与限流组件，以及分批查询结果获取。支持流式读取的驱动可逐批返回结果，降低大结果集的一次性内存占用。
 
-> **统一查询语言：**应用通过一套查询表达访问多种数据源，Data Fabric 会根据目标数据源适配常见查询语法，并通过统一 API 返回结果，减少重复改写查询的工作。各数据源支持的能力范围不同；涉及源端专有功能时，仍可能需要使用对应语法。
+**统一查询入口：**应用通过统一 API 访问已登记的数据源。指定 sourceDialect 后，Data Fabric 可在 SQL v1 兼容范围内转换常见查询语法；未指定时按目标数据源或查询引擎的原生 SQL 执行。兼容范围和失败行为见 [统一 SQL v1 说明](SQL_TRANSLATION_FEATURES.md)。
 
-> **跨源查询引擎适配层尚未实现。** 当前服务请求链路没有联邦查询执行适配器，也不会自动管理外部引擎的 catalogs。因此，本仓库当前版本支持通过已接入驱动访问单个数据源，但尚不能经 Data Fabric 执行跨源联邦 SQL。图中的虚线表示目标集成边界，不代表已交付能力。
+**跨源联邦查询：**Data Fabric 提供统一的查询引擎连接适配，支持将兼容的外部联邦查询引擎登记为数据源。应用通过统一查询 API 提交 SQL；外部引擎使用其配置的 catalogs 和 connectors 访问多个数据系统并执行跨目录查询。Data Fabric 负责统一连接入口、查询路由、结果归一化和查询生命周期管理。
+
+单源访问可直接使用网关驱动；需要跨源关联时，可连接外部查询引擎。引擎版本、目录权限、连接器和 SQL 扩展由对应引擎部署决定。
 
 ~~~mermaid
 flowchart LR
-    App[AI Agent / RAG / BI / 业务应用] --> Gateway[Data Fabric<br/>应用侧 API · 数据源管理]
-    Gateway --> Drivers[当前：驱动与单源访问]
+    App[AI Agent / RAG / BI / 业务应用] --> Gateway[Data Fabric<br/>统一 API · 数据源管理]
+    Gateway --> Drivers[单源数据源驱动]
     Drivers --> Sources[数据库 / 数仓 / 湖仓 / 对象存储 / 文件]
-    Gateway -. 目标：联邦查询适配器 .-> Engine[跨源查询引擎<br/>SQL 规划与分布式执行]
-    Engine -.-> Catalogs[Catalogs 与连接器]
-    Catalogs -.-> Sources
+    Gateway --> Adapter[查询引擎连接适配]
+    Adapter --> Engine[外部联邦查询引擎]
+    Engine --> Catalogs[引擎 catalogs 与 connectors]
+    Catalogs --> Sources
 ~~~
 
-实线表示仓库当前提供的网关及单源访问链路；虚线表示待实现的跨源查询引擎集成。适配层需要明确应用侧查询协议、catalog 生命周期、身份传递、查询取消、超时和结果流转等边界。
+应用可以通过网关驱动访问单个数据源，也可以使用联邦引擎跨多个 catalog 查询。
 
 ## 网关能力
 
@@ -141,9 +144,9 @@ go run ./cmd/server
 
 如果 Data Fabric 对你有帮助，欢迎在 GitHub 为项目点亮 Star。也欢迎通过 Issue、Pull Request 和文档改进参与开源共建。
 
-## 跨源查询引擎扩展
+## 跨源查询引擎接入
 
-后续将面向多种跨源查询引擎提供统一、无缝的接入能力，例如 Trino、Presto、OpenLooKeng 等。上述引擎是后续适配方向，当前仓库尚未交付相应的联邦查询适配器。
+Data Fabric 通过统一连接适配接入 Trino、Presto 和 OpenLooKeng。将协调器登记为数据源后，应用即可通过 Data Fabric 查询 API 使用引擎 SQL；跨 catalog 的规划和执行由协调器及其 connectors 负责。配置示例见 [API 使用指南](docs/api_usage.md)，SQL 兼容范围见 [统一 SQL v1 说明](SQL_TRANSLATION_FEATURES.md)。
 
 ## 社区与发布
 
