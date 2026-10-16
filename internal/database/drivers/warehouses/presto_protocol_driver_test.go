@@ -1,8 +1,15 @@
 package warehouses
 
 import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
@@ -91,5 +98,95 @@ func TestTrinoDriverMetadata(t *testing.T) {
 	}
 	if driver.GetCategory() != drivers.CategoryQueryEngine {
 		t.Fatalf("unexpected driver category: %s", driver.GetCategory())
+	}
+}
+
+func TestProtocolQueryCancellationSendsDeleteOnlyToCoordinator(t *testing.T) {
+	tests := []struct {
+		name        string
+		nextURIKind string
+		wantDelete  bool
+	}{
+		{name: "active coordinator query", nextURIKind: "local", wantDelete: true},
+		{name: "external next uri is rejected", nextURIKind: "external"},
+		{name: "finished query", nextURIKind: "finished"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			deleteReceived := make(chan struct{}, 1)
+			var server *httptest.Server
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodPost:
+					nextURI := ""
+					switch tt.nextURIKind {
+					case "local":
+						nextURI = server.URL + "/v1/next/query"
+					case "external":
+						nextURI = "http://example.invalid/v1/next/query"
+					}
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]string{"id": "query-1", "nextUri": nextURI})
+				case http.MethodDelete:
+					if got := r.Header.Get("X-Trino-User"); got != "cancel-test" {
+						t.Errorf("DELETE X-Trino-User = %q", got)
+					}
+					deleteReceived <- struct{}{}
+					w.WriteHeader(http.StatusNoContent)
+				default:
+					http.Error(w, "unexpected request", http.StatusMethodNotAllowed)
+				}
+			}))
+			defer server.Close()
+
+			endpoint, err := url.Parse(server.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			base := &protocolRoundTripper{next: http.DefaultTransport, forceHTTPS: false}
+			client := &http.Client{Transport: newQueryCancellationRoundTripper(base, endpoint)}
+			ctx, cancel := context.WithCancel(context.Background())
+			request, err := http.NewRequestWithContext(ctx, http.MethodPost, server.URL+"/v1/statement", strings.NewReader("SELECT 1"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			request.Header.Set("X-Trino-User", "cancel-test")
+			response, err := client.Do(request)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, _ = io.Copy(io.Discard, response.Body)
+			_ = response.Body.Close()
+			cancel()
+
+			if tt.wantDelete {
+				select {
+				case <-deleteReceived:
+				case <-time.After(2 * time.Second):
+					t.Fatal("coordinator did not receive query cancellation DELETE")
+				}
+			} else {
+				select {
+				case <-deleteReceived:
+					t.Fatal("sent a cancellation DELETE without a same-coordinator nextUri")
+				case <-time.After(50 * time.Millisecond):
+				}
+			}
+		})
+	}
+}
+
+func TestDecodeNextURIUsesTopLevelProtocolField(t *testing.T) {
+	nested := `{"nextUri":"http://example.invalid/untrusted"}`
+	body, err := json.Marshal(map[string]interface{}{
+		"data":    [][]string{{nested}},
+		"nextUri": "http://coordinator.example/v1/next/query",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := decodeNextURI(body); !ok || got != "http://coordinator.example/v1/next/query" {
+		t.Fatalf("decodeNextURI() = %q, %v", got, ok)
 	}
 }

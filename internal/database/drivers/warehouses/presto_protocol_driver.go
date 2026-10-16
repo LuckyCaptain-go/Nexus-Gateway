@@ -218,10 +218,10 @@ func newProtocolHTTPClient(endpoint *url.URL) (*http.Client, error) {
 		transport.TLSClientConfig = tlsConfig
 	}
 	return &http.Client{
-		Transport: &protocolRoundTripper{
+		Transport: newQueryCancellationRoundTripper(&protocolRoundTripper{
 			next:       transport,
 			forceHTTPS: endpointUsesTLS(endpoint),
-		},
+		}, endpoint),
 		CheckRedirect: func(*http.Request, []*http.Request) error {
 			return http.ErrUseLastResponse
 		},

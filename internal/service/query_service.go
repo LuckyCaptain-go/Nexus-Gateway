@@ -199,8 +199,11 @@ func (qs *queryService) executeQueryWithConnection(ctx context.Context, db *sql.
 	// Prepare the query with LIMIT and OFFSET if not already present
 	finalSQL := qs.applyPagination(sqlToExecute, req.Limit, req.Offset, dbType)
 
+	queryCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// Execute query
-	rows, err := db.QueryContext(ctx, finalSQL, req.Parameters...)
+	rows, err := db.QueryContext(queryCtx, finalSQL, req.Parameters...)
 	if err != nil {
 		return nil, fmt.Errorf("query execution failed: %w", err)
 	}
@@ -411,6 +414,9 @@ func (qs *queryService) recordQueryStats(dataSourceID string, success bool, dura
 
 // FetchQuery executes a fetch query and returns the first batch of data
 func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error) {
+	ctx, cancel := withQueryTimeout(ctx, req.Timeout)
+	defer cancel()
+
 	// Get data source
 	datasource, err := qs.datasourceRepo.GetByID(ctx, req.DataSourceID)
 	if err != nil {
@@ -488,6 +494,9 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 
 // FetchNextBatch fetches the next batch of data for a query session
 func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error) {
+	ctx, cancel := withQueryTimeout(ctx, defaultQueryTimeoutSeconds)
+	defer cancel()
+
 	// Get session
 	session, err := qs.sessionManager.Get(queryID)
 	if err != nil {
@@ -619,9 +628,15 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, dbType model.Data
 
 	// Apply pagination to the SQL query
 	paginatedSQL, err := qs.connPool.ApplyBatchPagination(dbType, query, batchSize, offset)
+	if err != nil {
+		return nil, nil, 0, fmt.Errorf("failed to apply query pagination: %w", err)
+	}
+
+	queryCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	// Execute the query
-	rows, err := db.QueryContext(ctx, paginatedSQL)
+	rows, err := db.QueryContext(queryCtx, paginatedSQL)
 	if err != nil {
 		return nil, nil, 0, fmt.Errorf("failed to execute query: %w", err)
 	}
@@ -710,6 +725,9 @@ func (qs *queryService) scanBatchRow(rows *sql.Rows, columnCount int) ([]interfa
 
 // getRowCount gets the total row count for the query
 func (qs *queryService) getRowCount(ctx context.Context, db *sql.DB, sql string) (int64, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// Remove ORDER BY clauses for count query as they don't affect the count
 	// Use case-insensitive regex to preserve original case of identifiers
 	countSQL := removeOrderByClause(sql)
