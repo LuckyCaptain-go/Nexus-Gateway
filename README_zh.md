@@ -101,12 +101,14 @@ go mod download
 先检查 configs/config.yaml 中的服务端口、元数据数据库和安全参数，再启动：
 
 ~~~bash
+export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=dev-v1
+export DATA_FABRIC_CREDENTIAL_KEYS='{"dev-v1":"<base64-encoded-32-byte-key>"}'
 go run ./cmd/server
 ~~~
 
 健康检查路径为 /health。默认值和部署参数见 [配置指南](docs/configuration.md)。
 
-> 配置文件中的凭据是示例值。当前启动代码仍使用固定的凭据加密主密钥；生产部署前应将其改为安全的外部密钥管理方式，并确认认证已覆盖需要保护的路由。
+请将示例占位值替换为 openssl rand -base64 32 生成的密钥，并在服务重启时继续使用同一密钥。密钥注入、旧凭据迁移和轮换方式见配置指南。
 
 ## API 概览
 

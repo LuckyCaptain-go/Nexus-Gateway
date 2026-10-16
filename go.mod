@@ -43,10 +43,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.5
 	github.com/mark3labs/mcp-go v0.43.2
 	github.com/spf13/viper v1.21.0
+	gorm.io/driver/sqlite v1.5.7
 )
 
 require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
 )
 

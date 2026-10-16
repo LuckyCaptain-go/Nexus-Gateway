@@ -52,10 +52,12 @@ flowchart LR
 git clone https://github.com/RhinoLink-Tech/data-fabric.git
 cd data-fabric
 go mod download
+export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=dev-v1
+export DATA_FABRIC_CREDENTIAL_KEYS='{"dev-v1":"<base64-encoded-32-byte-key>"}'
 go run ./cmd/server
 ~~~
 
-健康检查路径为 /health。当前配置文件中的凭据是示例值；启动代码仍使用固定的凭据加密主密钥，生产部署前必须替换并迁移到安全的外部密钥管理方式。
+请将示例占位值替换为 openssl rand -base64 32 生成并安全保存的密钥；服务重启时继续使用同一密钥。健康检查路径为 /health，生产环境应通过密钥管理系统注入。
 
 更多信息参见 [API 使用指南](docs/api_usage.md)、[架构设计](docs/architecture.md)、[配置指南](docs/configuration.md)、[开发指南](docs/development.md) 和 [中文完整说明](README_zh.md)。
 

@@ -158,6 +158,28 @@ query:
 |-------|------|-------------|
 | `drivers.tidb.pd_addresses` | Array | List of PD addresses |
 
+## Data-source credential encryption
+
+The HTTP and MCP servers require an encryption keyring at startup. Keys are injected by the runtime or a secrets manager; they are not stored in the repository or the YAML config. If either variable is missing, malformed, or does not include the active key, startup fails.
+
+Generate a 32-byte key with openssl rand -base64 32 and store it in your secret manager. Inject the active key ID and a JSON map of key IDs to base64 keys:
+
+    export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=key-v1
+    export DATA_FABRIC_CREDENTIAL_KEYS='{"key-v1":"<base64-encoded-32-byte-key>"}'
+
+Use the same key across restarts. Generating a new key without retaining the old key makes previously encrypted data-source credentials unreadable.
+
+At startup, Data Fabric encrypts legacy plaintext credentials and validates existing ciphertext in a database transaction before accepting requests. If migration fails, the transaction is rolled back and the server does not start. Data-source passwords and recognized secret values in additionalProps are encrypted before persistence and decrypted only when loaded for internal connection use.
+
+### Key rotation
+
+1. Keep the current key in the keyring and add a newly generated key under a new ID.
+2. Set DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID to the new ID while retaining both keys in DATA_FABRIC_CREDENTIAL_KEYS.
+3. Restart the service. Startup migrates all data-source credentials to the new key; any missing or invalid old key stops startup.
+4. After the migration has completed successfully on every deployment, remove the old key from the injected keyring.
+
+Back up the database and key material securely before rotation. Do not put actual key values in config files, shell scripts, or source control.
+
 ## Environment Variables
 
 Configuration can also be overridden using environment variables:

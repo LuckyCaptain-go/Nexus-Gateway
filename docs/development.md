@@ -190,6 +190,10 @@ const (
    # Edit configs/config.yaml with your settings
    ```
 
+Before running the application, inject a persistent data-source credential keyring. Generate its key with openssl rand -base64 32, store it securely, and keep it unchanged across restarts:
+    export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=dev-v1
+    export DATA_FABRIC_CREDENTIAL_KEYS='{"dev-v1":"<base64-encoded-32-byte-key>"}'
+
 4. Run the application:
    ```bash
    go run cmd/server/main.go

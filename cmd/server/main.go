@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -27,23 +28,30 @@ func main() {
 		log.Fatal("Failed to load configuration:", err)
 	}
 
+	vault, err := security.LoadCredentialVaultFromEnv()
+	if err != nil {
+		log.Fatal("Failed to load credential encryption keys: ", err)
+	}
+
 	// Check if MCP server mode is enabled
 	if cfg.MCP.Enabled {
 		if cfg.MCP.Transport != "" && cfg.MCP.Transport != "stdio" {
 			log.Fatalf("unsupported MCP transport %q: only stdio is currently implemented", cfg.MCP.Transport)
 		}
 		log.Println("Starting Data Fabric as MCP Server...")
-		if err := startMCPServer(cfg); err != nil {
+		if err := startMCPServer(cfg, vault); err != nil {
 			log.Fatal("Failed to start MCP server:", err)
 		}
 		return
 	}
 
 	// Normal HTTP server mode
-	startHTTPServer(cfg)
+	if err := startHTTPServer(cfg, vault); err != nil {
+		log.Fatal("Failed to start HTTP server: ", err)
+	}
 }
 
-func startHTTPServer(cfg *config.Config) {
+func startHTTPServer(cfg *config.Config, vault *security.CredentialVault) error {
 	// Set Gin mode
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -52,24 +60,25 @@ func startHTTPServer(cfg *config.Config) {
 	// Initialize database connection
 	db, err := config.InitDatabase(cfg)
 	if err != nil {
-		log.Fatal("Failed to initialize database:", err)
+		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	// Auto migrate database schema
 	if err := db.AutoMigrate(&model.DataSource{}); err != nil {
-		log.Printf("Warning: Database migration failed: %v", err)
-		log.Println("Continuing with existing database schema...")
+		return fmt.Errorf("database schema migration failed: %w", err)
 	}
 
-	// Initialize repositories
-	datasourceRepo := repository.NewDataSourceRepository(db)
-
-	// Initialize security
-	// Use a 32-byte key for AES-256 encryption
-	masterKey := []byte("12345678901234567890123456789012") // 32 bytes - TODO: make this configurable
-	vault, err := security.NewCredentialVault(masterKey)
+	// Migrate old plaintext records and rotate any ciphertext before serving requests.
+	datasourceRepo, err := repository.NewDataSourceRepository(db, vault)
 	if err != nil {
-		log.Fatalf("Failed to create credential vault: %v", err)
+		return fmt.Errorf("failed to initialize data-source repository: %w", err)
+	}
+	migrated, err := datasourceRepo.MigrateCredentials(context.Background())
+	if err != nil {
+		return fmt.Errorf("credential migration failed; refusing to start: %w", err)
+	}
+	if migrated > 0 {
+		log.Printf("Encrypted or rotated credentials for %d data sources", migrated)
 	}
 
 	// Initialize infrastructure
@@ -192,26 +201,30 @@ func startHTTPServer(cfg *config.Config) {
 	log.Printf("API documentation: http://localhost:%s/swagger/index.html", cfg.Server.Port)
 
 	if err := router.Run(":" + cfg.Server.Port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		return fmt.Errorf("failed to start server: %w", err)
 	}
+	return nil
 }
 
-func startMCPServer(cfg *config.Config) error {
+func startMCPServer(cfg *config.Config, vault *security.CredentialVault) error {
 	db, err := config.InitDatabase(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
 	if err := db.AutoMigrate(&model.DataSource{}); err != nil {
-		log.Printf("Warning: Database migration failed: %v", err)
-		log.Println("Continuing with existing database schema...")
+		return fmt.Errorf("database schema migration failed: %w", err)
 	}
-
-	datasourceRepo := repository.NewDataSourceRepository(db)
-	masterKey := []byte("12345678901234567890123456789012")
-	vault, err := security.NewCredentialVault(masterKey)
+	datasourceRepo, err := repository.NewDataSourceRepository(db, vault)
 	if err != nil {
-		return fmt.Errorf("failed to create credential vault: %w", err)
+		return fmt.Errorf("failed to initialize data-source repository: %w", err)
+	}
+	migrated, err := datasourceRepo.MigrateCredentials(context.Background())
+	if err != nil {
+		return fmt.Errorf("credential migration failed; refusing to start: %w", err)
+	}
+	if migrated > 0 {
+		log.Printf("Encrypted or rotated credentials for %d data sources", migrated)
 	}
 
 	connPool := database.NewConnectionPool(security.NewTokenManager(vault), vault)
