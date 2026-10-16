@@ -2,12 +2,85 @@ package database
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
-	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
+	"net/url"
+	"regexp"
+	"sort"
+	"strings"
 	"time"
 
+	"github.com/RhinoLink-Tech/data-fabric/internal/database/drivers"
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 )
+
+var (
+	sensitiveConnectionParameter = regexp.MustCompile(`(?i)((?:password|passwd|token|secret|credential|access[_-]?key|api[_-]?key)=)[^&\s,;]+`)
+	connectionURLPassword        = regexp.MustCompile(`(?i)(https?://[^/\s@]+:)[^@/\s]*@`)
+	connectionAuthorization      = regexp.MustCompile(`(?i)(authorization:\s*(?:basic|bearer)\s+)[A-Za-z0-9._~+/-]+=*`)
+	sensitiveConnectionKey       = regexp.MustCompile(`(?i)(password|passwd|token|secret|credential|access[_-]?key|api[_-]?key|authorization)`)
+)
+
+// redactConnectionError preserves useful connection context while removing configured secrets.
+func redactConnectionError(err error, config *model.DataSourceConfig) string {
+	if err == nil {
+		return ""
+	}
+
+	message := err.Error()
+	secrets := make([]string, 0)
+	if config != nil {
+		if config.Password != "" {
+			secrets = append(secrets, config.Password)
+			if config.Username != "" {
+				secrets = append(secrets, base64.StdEncoding.EncodeToString([]byte(config.Username+":"+config.Password)))
+			}
+		}
+		for key, value := range config.AdditionalProps {
+			sensitive := model.IsSensitiveDataSourceProperty(key) || sensitiveConnectionKey.MatchString(key)
+			collectConnectionSecrets(value, sensitive, &secrets)
+		}
+	}
+
+	sort.Slice(secrets, func(i, j int) bool { return len(secrets[i]) > len(secrets[j]) })
+	for _, secret := range secrets {
+		for _, encoded := range []string{secret, url.QueryEscape(secret), url.PathEscape(secret)} {
+			if encoded != "" {
+				message = strings.ReplaceAll(message, encoded, "[REDACTED]")
+			}
+		}
+	}
+
+	message = connectionURLPassword.ReplaceAllString(message, "$1[REDACTED]@")
+	message = sensitiveConnectionParameter.ReplaceAllString(message, "$1[REDACTED]")
+	message = connectionAuthorization.ReplaceAllString(message, "$1[REDACTED]")
+	return message
+}
+
+func collectConnectionSecrets(value interface{}, force bool, secrets *[]string) {
+	switch typed := value.(type) {
+	case map[string]interface{}:
+		for key, child := range typed {
+			sensitive := force || model.IsSensitiveDataSourceProperty(key) || sensitiveConnectionKey.MatchString(key)
+			collectConnectionSecrets(child, sensitive, secrets)
+		}
+	case []interface{}:
+		for _, child := range typed {
+			collectConnectionSecrets(child, force, secrets)
+		}
+	case string:
+		if force && typed != "" {
+			*secrets = append(*secrets, typed)
+		}
+	default:
+		if force && value != nil {
+			secret := fmt.Sprint(value)
+			if secret != "" {
+				*secrets = append(*secrets, secret)
+			}
+		}
+	}
+}
 
 // HealthChecker performs health checks on database connections
 type HealthChecker struct {
@@ -64,7 +137,7 @@ func (hc *HealthChecker) CheckDataSourceHealth(ctx context.Context, dataSource *
 	driver, err := hc.registry.GetDriver(dataSource.Type)
 	if err != nil {
 		result.Status = "error"
-		result.Message = fmt.Sprintf("Driver not available: %v", err)
+		result.Message = fmt.Sprintf("Driver not available: %s", redactConnectionError(err, &dataSource.Config))
 		result.Latency = time.Since(startTime)
 		return result, nil
 	}
@@ -73,7 +146,7 @@ func (hc *HealthChecker) CheckDataSourceHealth(ctx context.Context, dataSource *
 	db, err := hc.connPool.GetConnection(ctx, dataSource)
 	if err != nil {
 		result.Status = "unhealthy"
-		result.Message = fmt.Sprintf("Failed to get connection: %v", err)
+		result.Message = fmt.Sprintf("Failed to get connection: %s", redactConnectionError(err, &dataSource.Config))
 		result.Latency = time.Since(startTime)
 		return result, nil
 	}
@@ -84,7 +157,7 @@ func (hc *HealthChecker) CheckDataSourceHealth(ctx context.Context, dataSource *
 
 	if err != nil {
 		result.Status = "unhealthy"
-		result.Message = fmt.Sprintf("Connection test failed: %v", err)
+		result.Message = fmt.Sprintf("Connection test failed: %s", redactConnectionError(err, &dataSource.Config))
 	} else {
 		result.Status = "healthy"
 		result.Message = "Connection successful"
@@ -144,7 +217,7 @@ func (hc *HealthChecker) CheckDataSourceConnectivity(ctx context.Context, config
 	driver, err := hc.registry.GetDriver(dbType)
 	if err != nil {
 		result.Status = "error"
-		result.Message = fmt.Sprintf("Driver not available: %v", err)
+		result.Message = fmt.Sprintf("Driver not available: %s", redactConnectionError(err, config))
 		result.Latency = time.Since(startTime)
 		return result, nil
 	}
@@ -155,7 +228,7 @@ func (hc *HealthChecker) CheckDataSourceConnectivity(ctx context.Context, config
 	// Validate DSN
 	if err := driver.ValidateDSN(dsn); err != nil {
 		result.Status = "error"
-		result.Message = fmt.Sprintf("Invalid connection string: %v", err)
+		result.Message = fmt.Sprintf("Invalid connection string: %s", redactConnectionError(err, config))
 		result.Latency = time.Since(startTime)
 		return result, nil
 	}
@@ -164,7 +237,7 @@ func (hc *HealthChecker) CheckDataSourceConnectivity(ctx context.Context, config
 	db, err := driver.Open(dsn)
 	if err != nil {
 		result.Status = "unhealthy"
-		result.Message = fmt.Sprintf("Failed to open connection: %v", err)
+		result.Message = fmt.Sprintf("Failed to open connection: %s", redactConnectionError(err, config))
 		result.Latency = time.Since(startTime)
 		return result, nil
 	}
@@ -176,7 +249,7 @@ func (hc *HealthChecker) CheckDataSourceConnectivity(ctx context.Context, config
 
 	if err != nil {
 		result.Status = "unhealthy"
-		result.Message = fmt.Sprintf("Connection test failed: %v", err)
+		result.Message = fmt.Sprintf("Connection test failed: %s", redactConnectionError(err, config))
 	} else {
 		result.Status = "healthy"
 		result.Message = "Connection successful"

@@ -6,6 +6,63 @@ Data Fabric provides a comprehensive API for querying 90+ data sources through a
 
 ## Basic Query API
 
+### Query-engine federation gateway
+
+Register a Trino, Presto, or OpenLooKeng coordinator as one managed data
+source. These engines expose a compatible statement REST protocol, so Data
+Fabric reuses one connection adapter while selecting the correct engine header
+family. Set `database` to the coordinator's default catalog; `schema` is
+optional. Catalogs configured on the coordinator can then be referenced
+together in one SQL statement.
+
+Choose `type` as `trino`, `presto`, or `openlookeng` to match the
+coordinator:
+
+```bash
+curl -X POST http://localhost:8099/api/v1/datasources \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "name": "query-engine-prod",
+    "type": "trino",
+    "config": {
+      "host": "coordinator.example.com",
+      "port": 8443,
+      "database": "iceberg",
+      "schema": "analytics",
+      "username": "data-fabric",
+      "password": "YOUR_PASSWORD",
+      "ssl": true,
+      "timeout": 30,
+      "additionalProps": {"source": "data-fabric"}
+    }
+  }'
+```
+
+Basic-auth passwords require HTTPS. The default HTTP port is `8080`; set the
+port exposed by your deployment. A coordinator's configured catalogs and
+connectors determine which source systems and SQL features are available.
+
+Use the returned data source ID for a query. Set `sourceDialect` when the
+input SQL uses a dialect that should be translated to the query engine dialect.
+Presto SQL translation is also used as the baseline for OpenLooKeng; engine
+specific extensions may still require query adjustments.
+
+```bash
+curl -X POST http://localhost:8099/api/v1/query \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{
+    "dataSourceId": "uuid-of-query-engine-datasource",
+    "sourceDialect": "mysql",
+    "sql": "SELECT o.order_id, c.customer_name FROM iceberg.sales.orders o JOIN postgresql.crm.customers c ON o.customer_id = c.customer_id",
+    "limit": 1000
+  }'
+```
+
+SQL conversion is limited by the syntax supported by the selected source and
+target dialects.
+
 ### Querying Snowflake Data Warehouse
 
 ```bash

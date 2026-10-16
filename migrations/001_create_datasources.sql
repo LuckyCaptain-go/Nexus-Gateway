@@ -2,7 +2,7 @@
 CREATE TABLE data_sources (
     id CHAR(36) PRIMARY KEY COMMENT 'UUID stored as string',
     name VARCHAR(255) NOT NULL COMMENT 'Human readable name for the data source',
-    type ENUM('mysql', 'mariadb', 'postgresql', 'oracle') NOT NULL COMMENT 'Database type',
+    type ENUM('mysql', 'mariadb', 'postgresql', 'oracle', 'trino', 'presto', 'openlookeng') NOT NULL COMMENT 'Database type',
     config JSON NOT NULL COMMENT 'Connection configuration in JSON format',
     status ENUM('active', 'inactive', 'error') DEFAULT 'active' COMMENT 'Current status of the data source',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Creation timestamp',

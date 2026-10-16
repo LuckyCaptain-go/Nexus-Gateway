@@ -121,6 +121,15 @@ func (dr *DriverRegistry) registerDrivers() {
 	dr.register(model.DatabaseTypeApacheHive, func() drivers.Driver {
 		return &warehouses.HiveDriver{}
 	})
+	dr.register(model.DatabaseTypeTrino, func() drivers.Driver {
+		return warehouses.NewTrinoDriver()
+	})
+	dr.register(model.DatabaseTypePresto, func() drivers.Driver {
+		return warehouses.NewPrestoDriver()
+	})
+	dr.register(model.DatabaseTypeOpenLooKeng, func() drivers.Driver {
+		return warehouses.NewOpenLooKengDriver()
+	})
 	dr.register(model.DatabaseTypeMaxCompute, func() drivers.Driver {
 		return warehouses.NewMaxComputeDriver()
 	})

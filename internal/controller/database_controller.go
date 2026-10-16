@@ -44,7 +44,7 @@ func (dc *DatabaseController) GetDatabaseTypes(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body model.DataSourceConfig true "Data source configuration"
-// @Param type query string true "Database type (mysql, mariadb, postgresql, oracle)"
+// @Param type query string true "Database type (mysql, mariadb, postgresql, oracle, trino, presto, openlookeng)"
 // @Success 200 {object} response.StandardResponse{data=database.HealthCheckResult}
 // @Failure 400 {object} response.StandardResponse
 // @Router /api/v1/database/test-connection [post]
@@ -66,12 +66,12 @@ func (dc *DatabaseController) TestDataSourceConnection(c *gin.Context) {
 	// Validate database type
 	dbType := model.DatabaseType(dbTypeStr)
 	switch dbType {
-	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB, model.DatabaseTypePostgreSQL, model.DatabaseTypeOracle:
+	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB, model.DatabaseTypePostgreSQL, model.DatabaseTypeOracle, model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
 		// Valid database types
 	default:
 		c.JSON(http.StatusBadRequest, response.ErrorResponse(
 			"INVALID_TYPE",
-			"Invalid database type. Supported types: mysql, mariadb, postgresql, oracle",
+			"Invalid database type. Supported types: mysql, mariadb, postgresql, oracle, trino, presto, openlookeng",
 			"",
 			correlationID,
 		))
@@ -142,12 +142,12 @@ func (dc *DatabaseController) ValidateDataSourceConfig(c *gin.Context) {
 	// Validate database type
 	dbType := model.DatabaseType(req.Type)
 	switch dbType {
-	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB, model.DatabaseTypePostgreSQL, model.DatabaseTypeOracle:
+	case model.DatabaseTypeMySQL, model.DatabaseTypeMariaDB, model.DatabaseTypePostgreSQL, model.DatabaseTypeOracle, model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
 		// Valid database types
 	default:
 		c.JSON(http.StatusBadRequest, response.ErrorResponse(
 			"INVALID_TYPE",
-			"Invalid database type. Supported types: mysql, mariadb, postgresql, oracle",
+			"Invalid database type. Supported types: mysql, mariadb, postgresql, oracle, trino, presto, openlookeng",
 			"",
 			correlationID,
 		))
@@ -226,6 +226,25 @@ func (dc *DatabaseController) GetDatabaseCompatibility(c *gin.Context) {
 			Version:     "5.7+",
 			Features:    []string{"SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
 			Limitations: []string{"No DML/DDL operations", "No stored procedures"},
+			Recommended: true,
+		},
+		"trino": {
+			Supported:   true,
+			Version:     "372+",
+			Features:    []string{"Unified SQL entry", "Cross-catalog queries", "SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT", "Window functions"},
+			Limitations: []string{"Requires a configured Trino coordinator and catalogs", "Connector capabilities vary by catalog"},
+			Recommended: true,
+		},
+		"presto": {
+			Supported:   true,
+			Features:    []string{"Unified SQL entry", "Cross-catalog queries", "SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
+			Limitations: []string{"Requires a configured Presto coordinator and catalogs", "Connector capabilities vary by catalog"},
+			Recommended: true,
+		},
+		"openlookeng": {
+			Supported:   true,
+			Features:    []string{"Unified SQL entry", "Cross-catalog queries", "SELECT", "JOIN", "GROUP BY", "ORDER BY", "LIMIT"},
+			Limitations: []string{"Requires a configured OpenLooKeng coordinator and catalogs", "Connector capabilities vary by catalog"},
 			Recommended: true,
 		},
 		"mariadb": {
