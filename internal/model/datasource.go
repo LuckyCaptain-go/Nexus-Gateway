@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -121,7 +122,7 @@ type DataSourceConfig struct {
 	Database        string                 `json:"database" validate:"required"`
 	Schema          string                 `json:"schema,omitempty"`
 	Username        string                 `json:"username" validate:"required"`
-	Password        string                 `json:"password" validate:"required"` // This should be encrypted
+	Password        string                 `json:"password"` // Never include this field in API response DTOs
 	SSL             bool                   `json:"ssl"`
 	Timeout         int                    `json:"timeout"`     // Connection timeout in seconds, default 30
 	MaxPoolSize     int                    `json:"maxPoolSize"` // Maximum pool size, default 10
@@ -166,6 +167,21 @@ func (ds *DataSource) BeforeCreate(tx *gorm.DB) error {
 		ds.ID = uuid.New().String()
 	}
 	return nil
+}
+
+// IsSensitiveDataSourceProperty reports whether an additional configuration key may contain a secret.
+func IsSensitiveDataSourceProperty(key string) bool {
+	normalized := strings.ToLower(strings.NewReplacer("-", "_", ".", "_").Replace(key))
+	for _, marker := range []string{
+		"password", "passwd", "token", "secret", "credential", "authorization",
+		"privatekey", "private_key", "accesskey", "access_key", "apikey", "api_key",
+		"keytab", "credentialsjson", "credentials_json", "ssl_key", "ssl_cert", "ssl_ca",
+	} {
+		if strings.Contains(normalized, marker) {
+			return true
+		}
+	}
+	return false
 }
 
 // IsValidDatabaseType checks if a database type is valid
