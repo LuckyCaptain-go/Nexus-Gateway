@@ -12,6 +12,8 @@ import (
 
 	"github.com/RhinoLink-Tech/data-fabric/internal/database"
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/security"
+	"github.com/RhinoLink-Tech/data-fabric/internal/utils/sql_translator"
 
 	"github.com/google/uuid"
 )
@@ -22,6 +24,57 @@ type StreamingService interface {
 	//GetQueryStats(ctx context.Context) (*model.QueryStats, error)
 	FetchWithStreaming(ctx context.Context, req *model.FetchQueryRequest) (*model.FetchQueryResponse, error)
 	FetchNextBatchWithStreaming(ctx context.Context, queryID, slug, token string, batchSize int) (*model.FetchQueryResponse, error)
+}
+
+func (ss *streamingService) translateSQLIfNeeded(sql, sourceDialect, targetDialect string) (string, error) {
+	if sourceDialect == "" || strings.EqualFold(sourceDialect, targetDialect) {
+		return sql, nil
+	}
+	if ss.sqlTranslator == nil {
+		return "", fmt.Errorf("SQL translator is not configured")
+	}
+	return ss.sqlTranslator.TranslateQuery(sql, sourceDialect, targetDialect)
+}
+
+func (ss *streamingService) mapQueryEngineTypeToStandard(dbTypeName string) model.StandardizedType {
+	upperTypeName := strings.ToUpper(dbTypeName)
+	switch {
+	case strings.Contains(upperTypeName, "BIGINT"):
+		return model.TypeBigInt
+	case strings.Contains(upperTypeName, "TINYINT"), strings.Contains(upperTypeName, "SMALLINT"), strings.Contains(upperTypeName, "INTEGER"):
+		return model.TypeInteger
+	case strings.Contains(upperTypeName, "DOUBLE"):
+		return model.TypeDouble
+	case strings.Contains(upperTypeName, "REAL"):
+		return model.TypeFloat
+	case strings.Contains(upperTypeName, "DECIMAL"), strings.Contains(upperTypeName, "NUMERIC"):
+		return model.TypeDecimal
+	case strings.Contains(upperTypeName, "ARRAY"):
+		return model.TypeArray
+	case strings.Contains(upperTypeName, "ROW"):
+		return model.TypeStruct
+	case strings.Contains(upperTypeName, "MAP"), strings.Contains(upperTypeName, "JSON"),
+		strings.Contains(upperTypeName, "BINGTILE"), strings.Contains(upperTypeName, "KDBTREE"):
+		return model.TypeJSON
+	case strings.Contains(upperTypeName, "VARBINARY"):
+		return model.TypeBinary
+	case strings.Contains(upperTypeName, "DATE"):
+		return model.TypeDate
+	case strings.Contains(upperTypeName, "TIMESTAMP"):
+		return model.TypeTimestamp
+	case strings.Contains(upperTypeName, "TIME"):
+		return model.TypeTime
+	case strings.Contains(upperTypeName, "BOOLEAN"):
+		return model.TypeBoolean
+	case strings.Contains(upperTypeName, "UUID"):
+		return model.TypeUUID
+	case strings.Contains(upperTypeName, "VARCHAR"), strings.Contains(upperTypeName, "CHAR"),
+		strings.Contains(upperTypeName, "IPADDRESS"), strings.Contains(upperTypeName, "GEOMETRY"),
+		strings.Contains(upperTypeName, "SPHERICALGEOGRAPHY"), strings.Contains(upperTypeName, "INTERVAL"):
+		return model.TypeString
+	default:
+		return model.TypeUnknown
+	}
 }
 
 // StreamingSession represents a streaming query session for batch fetching
@@ -123,6 +176,8 @@ type streamingService struct {
 	maxStreams              int
 	streamTimeout           time.Duration
 	streamingSessionManager *StreamingSessionManager
+	sqlValidator            *security.SQLValidator
+	sqlTranslator           *sql_translator.SQLTranslationManager
 }
 
 // ActiveStream represents an active streaming query
@@ -165,6 +220,8 @@ func NewStreamingService(datasourceRepo repository.DataSourceRepository, connPoo
 		maxStreams:              100, // Max concurrent streams
 		streamTimeout:           5 * time.Minute,
 		streamingSessionManager: NewStreamingSessionManager(),
+		sqlValidator:            security.NewSQLValidator(10000),
+		sqlTranslator:           sql_translator.NewSQLTranslationManager(true),
 	}
 }
 
@@ -182,6 +239,16 @@ func (ss *streamingService) ExecuteStreamQuery(ctx context.Context, req *model.Q
 		return "", 0, fmt.Errorf("failed to get data source: %w", err)
 	}
 
+	querySQL, err := ss.translateSQLIfNeeded(req.SQL, req.SourceDialect, string(dataSource.Type))
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to translate SQL: %w", err)
+	}
+	if ss.sqlValidator != nil {
+		if err := ss.sqlValidator.ValidateStatementForDataSource(querySQL, dataSource.Type); err != nil {
+			return "", 0, fmt.Errorf("SQL validation failed: %w", err)
+		}
+	}
+
 	// Create context with timeout
 	streamCtx, cancel := context.WithTimeout(context.Background(), ss.streamTimeout)
 
@@ -193,7 +260,7 @@ func (ss *streamingService) ExecuteStreamQuery(ctx context.Context, req *model.Q
 	}
 
 	// Execute query
-	rows, err := db.QueryContext(streamCtx, req.SQL, req.Parameters...)
+	rows, err := db.QueryContext(streamCtx, querySQL, req.Parameters...)
 	if err != nil {
 		cancel()
 		return "", 0, fmt.Errorf("query execution failed: %w", err)
@@ -228,7 +295,7 @@ func (ss *streamingService) ExecuteStreamQuery(ctx context.Context, req *model.Q
 	ss.activeStreams[streamID] = stream
 	ss.streamsMutex.Unlock()
 
-	totalCount, err := ss.getRowCount(ctx, db, req.SQL)
+	totalCount, err := ss.getRowCount(ctx, db, querySQL)
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to get row count: %w", err)
 	}
@@ -490,11 +557,12 @@ func (ss *streamingService) FetchWithStreaming(ctx context.Context, req *model.F
 
 	// Execute streaming query to get the stream ID
 	streamReq := &model.QueryRequest{
-		DataSourceID: req.DataSourceID,
-		SQL:          req.SQL,
-		Limit:        req.BatchSize,
-		Offset:       0,
-		Timeout:      req.Timeout,
+		DataSourceID:  req.DataSourceID,
+		SQL:           req.SQL,
+		SourceDialect: req.SourceDialect,
+		Limit:         req.BatchSize,
+		Offset:        0,
+		Timeout:       req.Timeout,
 	}
 	streamID, totalCount, err := ss.ExecuteStreamQuery(ctx, streamReq)
 	if err != nil {
@@ -572,18 +640,18 @@ func (ss *streamingService) FetchNextBatchWithStreaming(ctx context.Context, que
 	// Get the streaming session
 	session, err := ss.streamingSessionManager.Get(queryID)
 	if err != nil {
-		return nil, fmt.Errorf("session not found or expired: %w", err)
+		return nil, ErrQuerySessionUnavailable
 	}
 
 	// Verify slug and token
 	if session.Slug != slug || session.Token != token {
-		return nil, fmt.Errorf("invalid session credentials")
+		return nil, ErrInvalidQuerySession
 	}
 
 	// Check if stream exists and is valid
 	_, err = ss.GetStreamStatus(session.StreamID)
 	if err != nil {
-		return nil, fmt.Errorf("stream not found or expired: %w", err)
+		return nil, ErrQuerySessionUnavailable
 	}
 
 	// Fetch the next chunk of data
@@ -727,6 +795,8 @@ func (ss *streamingService) mapDatabaseTypeToStandard(dbTypeName string, dbType 
 		return ss.mapDatabricksTypeToStandard(dbTypeName, nullable)
 	case model.DatabaseTypeRedshift:
 		return ss.mapRedshiftTypeToStandard(dbTypeName, nullable)
+	case model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
+		return ss.mapQueryEngineTypeToStandard(dbTypeName)
 	default:
 		// Default mapping for unknown database types
 		return ss.mapGenericDatabaseTypeToStandard(dbTypeName, nullable)

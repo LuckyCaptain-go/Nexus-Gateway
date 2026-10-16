@@ -12,6 +12,46 @@ import (
 // DataTypeMapper maps database-specific types to standardized types
 type DataTypeMapper struct{}
 
+func (dtm *DataTypeMapper) mapPrestoCompatibleType(columnType string) model.StandardizedType {
+	switch {
+	case strings.HasPrefix(columnType, "TINYINT"), strings.HasPrefix(columnType, "SMALLINT"), strings.HasPrefix(columnType, "INTEGER"):
+		return model.TypeInteger
+	case strings.HasPrefix(columnType, "BIGINT"):
+		return model.TypeBigInt
+	case strings.HasPrefix(columnType, "REAL"):
+		return model.TypeFloat
+	case strings.HasPrefix(columnType, "DOUBLE"):
+		return model.TypeDouble
+	case strings.HasPrefix(columnType, "DECIMAL"), strings.HasPrefix(columnType, "NUMERIC"):
+		return model.TypeDecimal
+	case strings.HasPrefix(columnType, "VARCHAR"), strings.HasPrefix(columnType, "CHAR"),
+		strings.HasPrefix(columnType, "IPADDRESS"), strings.HasPrefix(columnType, "GEOMETRY"),
+		strings.HasPrefix(columnType, "SPHERICALGEOGRAPHY"), strings.HasPrefix(columnType, "INTERVAL"):
+		return model.TypeString
+	case strings.HasPrefix(columnType, "VARBINARY"):
+		return model.TypeBinary
+	case strings.HasPrefix(columnType, "BOOLEAN"):
+		return model.TypeBoolean
+	case strings.HasPrefix(columnType, "DATE"):
+		return model.TypeDate
+	case strings.HasPrefix(columnType, "TIMESTAMP"):
+		return model.TypeTimestamp
+	case strings.HasPrefix(columnType, "TIME"):
+		return model.TypeTime
+	case strings.HasPrefix(columnType, "JSON"), strings.HasPrefix(columnType, "MAP"),
+		strings.HasPrefix(columnType, "BINGTILE"), strings.HasPrefix(columnType, "KDBTREE"):
+		return model.TypeJSON
+	case strings.HasPrefix(columnType, "ARRAY"):
+		return model.TypeArray
+	case strings.HasPrefix(columnType, "ROW"):
+		return model.TypeStruct
+	case strings.HasPrefix(columnType, "UUID"):
+		return model.TypeUUID
+	default:
+		return model.TypeUnknown
+	}
+}
+
 // NewDataTypeMapper creates a new DataTypeMapper instance
 func NewDataTypeMapper() *DataTypeMapper {
 	return &DataTypeMapper{}
@@ -29,6 +69,8 @@ func (dtm *DataTypeMapper) MapToStandardType(dbType model.DatabaseType, dbColumn
 		return dtm.mapPostgreSQLType(normalizedType, nullable)
 	case model.DatabaseTypeOracle:
 		return dtm.mapOracleType(normalizedType, nullable)
+	case model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
+		return dtm.mapPrestoCompatibleType(normalizedType)
 	default:
 		return model.TypeUnknown
 	}

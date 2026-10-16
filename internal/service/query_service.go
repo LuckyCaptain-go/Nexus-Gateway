@@ -431,7 +431,7 @@ func (qs *queryService) FetchQuery(ctx context.Context, req *model.FetchQueryReq
 
 	// Validate after dialect conversion so valid source-dialect SQL is not rejected
 	// by the validator before it is converted to the target dialect.
-	if err := qs.sqlValidator.ValidateStatement(sqlToExecute); err != nil {
+	if err := qs.sqlValidator.ValidateStatementForDataSource(sqlToExecute, datasource.Type); err != nil {
 		return nil, fmt.Errorf("SQL validation failed: %w", err)
 	}
 
@@ -491,12 +491,12 @@ func (qs *queryService) FetchNextBatch(ctx context.Context, queryID, slug, token
 	// Get session
 	session, err := qs.sessionManager.Get(queryID)
 	if err != nil {
-		return nil, fmt.Errorf("session not found or expired")
+		return nil, ErrQuerySessionUnavailable
 	}
 
 	// Verify slug and token
 	if session.Slug != slug || session.Token != token {
-		return nil, fmt.Errorf("invalid session credentials")
+		return nil, ErrInvalidQuerySession
 	}
 
 	// Check if all data has been fetched
@@ -634,7 +634,7 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, dbType model.Data
 	}
 
 	// Build column information
-	columns := qs.buildBatchColumnInfo(columnTypes)
+	columns := qs.buildBatchColumnInfo(columnTypes, dbType)
 
 	// Process rows
 	var entries []*[]interface{}
@@ -664,14 +664,14 @@ func (qs *queryService) executeBatchQuery(ctx context.Context, dbType model.Data
 }
 
 // buildBatchColumnInfo builds column information from column types
-func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType) []model.ColumnInfo {
+func (qs *queryService) buildBatchColumnInfo(columnTypes []*sql.ColumnType, dbType model.DatabaseType) []model.ColumnInfo {
 	columns := make([]model.ColumnInfo, len(columnTypes))
 
 	for i, col := range columnTypes {
 		nullable, _ := col.Nullable()
 		columns[i] = model.ColumnInfo{
 			Name:     col.Name(),
-			Type:     qs.typeMapper.MapToStandardType(model.DatabaseTypeMySQL, col.DatabaseTypeName(), nullable),
+			Type:     qs.typeMapper.MapToStandardType(dbType, col.DatabaseTypeName(), nullable),
 			Nullable: nullable,
 		}
 	}

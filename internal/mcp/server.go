@@ -11,6 +11,7 @@ import (
 
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
 	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
+	queryservice "github.com/RhinoLink-Tech/data-fabric/internal/service"
 	"github.com/RhinoLink-Tech/data-fabric/internal/unified_service"
 	"github.com/RhinoLink-Tech/data-fabric/internal/utils/sql_translator"
 )
@@ -55,7 +56,7 @@ func (m *MCPServer) registerTools() {
 		mcp.WithDescription("Execute a SQL query against a specified data source"),
 		mcp.WithString("datasource_id", mcp.Required(), mcp.Description("The ID of the data source to query")),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL query to execute")),
-		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, postgres)")),
+		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, presto, openlookeng, postgres)")),
 		mcp.WithNumber("batch_size", mcp.Description("Number of records to return per batch, default 10000")),
 		mcp.WithNumber("timeout", mcp.Description("Query timeout in seconds, default 60")))
 	m.server.AddTool(executeSQLQueryTool, m.handleExecuteSQLQuery)
@@ -79,7 +80,7 @@ func (m *MCPServer) registerTools() {
 		mcp.WithDescription("Validate a SQL query without executing it"),
 		mcp.WithString("datasource_id", mcp.Required(), mcp.Description("The ID of the data source to validate against")),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL query to validate")),
-		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, postgres)")))
+		mcp.WithString("source_dialect", mcp.Description("Source SQL dialect for translation (e.g., mysql, trino, presto, openlookeng, postgres)")))
 	m.server.AddTool(validateSQLQueryTool, m.handleValidateSQLQuery)
 
 	// Tool to list tables in a specific data source
@@ -92,8 +93,8 @@ func (m *MCPServer) registerTools() {
 	translateSQLTool := mcp.NewTool("translate_sql",
 		mcp.WithDescription("Translate SQL from one dialect to another"),
 		mcp.WithString("sql", mcp.Required(), mcp.Description("The SQL to translate")),
-		mcp.WithString("source_dialect", mcp.Required(), mcp.Description("Source SQL dialect (e.g., mysql, trino, postgres)")),
-		mcp.WithString("target_dialect", mcp.Required(), mcp.Description("Target SQL dialect (e.g., mysql, trino, postgres)")))
+		mcp.WithString("source_dialect", mcp.Required(), mcp.Description("Source SQL dialect (e.g., mysql, trino, presto, openlookeng, postgres)")),
+		mcp.WithString("target_dialect", mcp.Required(), mcp.Description("Target SQL dialect (e.g., mysql, trino, presto, openlookeng, postgres)")))
 	m.server.AddTool(translateSQLTool, m.handleTranslateSQL)
 
 	// Tool to list supported SQL dialects
@@ -180,7 +181,7 @@ func (m *MCPServer) handleExecuteSQLQuery(ctx context.Context, request mcp.CallT
 	// Execute the query using the unified query service
 	result, err := m.unifiedQueryService.FetchQuery(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute query: %w", err)
+		return mcp.NewToolResultError(queryservice.SafeQueryErrorMessage(err)), nil
 	}
 
 	// Convert result to JSON for response
@@ -211,7 +212,7 @@ func (m *MCPServer) handleFetchNextBatch(ctx context.Context, request mcp.CallTo
 
 	result, err := m.unifiedQueryService.FetchNextBatch(ctx, queryID, slug, token, batchSize)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch next batch: %w", err)
+		return mcp.NewToolResultError(queryservice.SafeQueryErrorMessage(err)), nil
 	}
 	jsonResp, err := json.Marshal(result)
 	if err != nil {
@@ -277,7 +278,7 @@ func (m *MCPServer) handleValidateSQLQuery(ctx context.Context, request mcp.Call
 	if err != nil {
 		response := map[string]interface{}{
 			"valid": false,
-			"error": err.Error(),
+			"error": queryservice.SafeQueryErrorMessage(err),
 		}
 
 		jsonResp, err := json.Marshal(response)
@@ -347,7 +348,7 @@ func (m *MCPServer) handleListTables(ctx context.Context, request mcp.CallToolRe
 
 	result, err := m.unifiedQueryService.FetchQuery(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list tables: %w", err)
+		return mcp.NewToolResultError(queryservice.SafeQueryErrorMessage(err)), nil
 	}
 
 	// Convert result to JSON for response

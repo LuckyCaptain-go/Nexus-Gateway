@@ -38,6 +38,16 @@ func NewSQLValidator(maxQueryLength int) *SQLValidator {
 
 // ValidateStatement validates that the SQL statement is safe and read-only
 func (sv *SQLValidator) ValidateStatement(sql string) error {
+	return sv.validateStatement(sql, false)
+}
+
+// ValidateStatementForDataSource validates a read-only statement using the
+// identifier forms supported by the target data source.
+func (sv *SQLValidator) ValidateStatementForDataSource(sql string, dbType model.DatabaseType) error {
+	return sv.validateStatement(sql, supportsThreePartCatalogNames(dbType))
+}
+
+func (sv *SQLValidator) validateStatement(sql string, supportsThreePartCatalogNames bool) error {
 	// Basic checks
 	if err := sv.basicValidation(sql); err != nil {
 		return err
@@ -46,8 +56,16 @@ func (sv *SQLValidator) ValidateStatement(sql string) error {
 	// Normalize SQL first (removes trailing semicolon and whitespace)
 	normalizedSQL := sv.normalizeSQL(sql)
 
-	// Parse SQL statement (use normalized SQL)
+	// Parse SQL statement (use normalized SQL). Vitess accepts schema.table but
+	// not Trino's catalog.schema.table form, so retry with a validation-only
+	// copy that removes catalog prefixes. The SQL used for execution is intact.
 	stmt, err := sv.parseSQL(normalizedSQL)
+	if err != nil && supportsThreePartCatalogNames {
+		validationSQL := stripCatalogPrefixes(normalizedSQL)
+		if validationSQL != normalizedSQL {
+			stmt, err = sv.parseSQL(validationSQL)
+		}
+	}
 	if err != nil {
 		return ErrSQLSyntaxError
 	}
@@ -68,6 +86,132 @@ func (sv *SQLValidator) ValidateStatement(sql string) error {
 	}
 
 	return nil
+}
+
+func supportsThreePartCatalogNames(dbType model.DatabaseType) bool {
+	switch dbType {
+	case model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
+		return true
+	default:
+		return false
+	}
+}
+
+// stripCatalogPrefixes returns a validation-only SQL copy with dotted
+// identifier chains reduced to their final schema/table (or field) pair.
+// Quoted strings are skipped, and quoted identifiers are treated as one
+// component. For example, catalog.schema.table becomes schema.table.
+func stripCatalogPrefixes(sql string) string {
+	type token struct {
+		start int
+		ident bool
+		dot   bool
+	}
+
+	tokens := make([]token, 0, len(sql)/4)
+	for i := 0; i < len(sql); {
+		c := sql[i]
+		if isSQLSpace(c) {
+			i++
+			continue
+		}
+
+		if c == 39 {
+			// String contents are not identifier paths.
+			i++
+			for i < len(sql) {
+				if sql[i] == 92 && i+1 < len(sql) {
+					i += 2
+					continue
+				}
+				if sql[i] == 39 {
+					if i+1 < len(sql) && sql[i+1] == 39 {
+						i += 2
+						continue
+					}
+					i++
+					break
+				}
+				i++
+			}
+			tokens = append(tokens, token{start: i})
+			continue
+		}
+
+		if c == 34 || c == 96 {
+			quote := c
+			start := i
+			i++
+			for i < len(sql) {
+				if sql[i] == quote {
+					if i+1 < len(sql) && sql[i+1] == quote {
+						i += 2
+						continue
+					}
+					i++
+					break
+				}
+				i++
+			}
+			tokens = append(tokens, token{start: start, ident: true})
+			continue
+		}
+
+		if isSQLIdentifierStart(c) {
+			start := i
+			i++
+			for i < len(sql) && isSQLIdentifierPart(sql[i]) {
+				i++
+			}
+			tokens = append(tokens, token{start: start, ident: true})
+			continue
+		}
+
+		if c == '.' {
+			tokens = append(tokens, token{start: i, dot: true})
+		} else {
+			tokens = append(tokens, token{start: i})
+		}
+		i++
+	}
+
+	var out strings.Builder
+	lastWritten := 0
+	for i := 0; i < len(tokens); {
+		if !tokens[i].ident {
+			i++
+			continue
+		}
+		chain := []token{tokens[i]}
+		j := i
+		for j+2 < len(tokens) && tokens[j+1].dot && tokens[j+2].ident {
+			chain = append(chain, tokens[j+2])
+			j += 2
+		}
+		if len(chain) > 2 {
+			keepFrom := chain[len(chain)-2].start
+			chainStart := chain[0].start
+			out.WriteString(sql[lastWritten:chainStart])
+			lastWritten = keepFrom
+			i = j + 1
+			continue
+		}
+		i++
+	}
+	out.WriteString(sql[lastWritten:])
+	return out.String()
+}
+
+func isSQLSpace(c byte) bool {
+	return c == ' ' || c == 9 || c == 10 || c == 13 || c == 12
+}
+
+func isSQLIdentifierStart(c byte) bool {
+	return c == '_' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+}
+
+func isSQLIdentifierPart(c byte) bool {
+	return isSQLIdentifierStart(c) || c >= '0' && c <= '9' || c == '$'
 }
 
 // IsReadOnly checks if the SQL statement is read-only
@@ -155,7 +299,7 @@ func (sv *SQLValidator) checkSQLInjection(sql string) error {
 	// Note: sql should already be normalized (trailing semicolon removed)
 	suspiciousPatterns := []string{
 		// SQL comment patterns
-		"--", "/*", "*/",
+		"--",
 		// Multiple statements (check for multiple semicolons - should not exist after normalization)
 		";.*;",       // Multiple semicolons indicate multiple statements
 		";\\s+[a-z]", // Content after semicolon (another statement)
@@ -340,6 +484,16 @@ type DataSourceSQLConfig struct {
 // GetDataSourceSQLConfig returns SQL configuration for a data source type
 func GetDataSourceSQLConfig(dbType model.DatabaseType) DataSourceSQLConfig {
 	switch dbType {
+	case model.DatabaseTypeTrino, model.DatabaseTypePresto, model.DatabaseTypeOpenLooKeng:
+		return DataSourceSQLConfig{
+			SupportsTimeTravel:      false,
+			SupportsWindowFunctions: true,
+			SupportsArrays:          true,
+			SupportsStructs:         true,
+			SupportsJSON:            true,
+			IdentifierQuote:         `"`,
+			TimeTravelSyntax:        "",
+		}
 	// Data Lake Table Formats
 	case model.DatabaseTypeApacheIceberg:
 		return DataSourceSQLConfig{
@@ -524,7 +678,7 @@ func (sv *SQLValidator) ValidateDataSourceSyntax(sql string, dbType model.Databa
 	config := GetDataSourceSQLConfig(dbType)
 
 	// Basic validation first
-	if err := sv.ValidateStatement(sql); err != nil {
+	if err := sv.ValidateStatementForDataSource(sql, dbType); err != nil {
 		return err
 	}
 

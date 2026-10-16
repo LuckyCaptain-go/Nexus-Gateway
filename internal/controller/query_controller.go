@@ -2,11 +2,15 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/RhinoLink-Tech/data-fabric/internal/model"
+	"github.com/RhinoLink-Tech/data-fabric/internal/repository"
+	"github.com/RhinoLink-Tech/data-fabric/internal/security"
+	queryservice "github.com/RhinoLink-Tech/data-fabric/internal/service"
 	unifiedservice "github.com/RhinoLink-Tech/data-fabric/internal/unified_service"
 	"github.com/RhinoLink-Tech/data-fabric/pkg/response"
 
@@ -92,9 +96,10 @@ func (qc *QueryController) FetchQuery(c *gin.Context) {
 	// Execute fetch query using unified service
 	result, err := qc.queryService.FetchQuery(ctx, &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
-			"FETCH_ERROR",
-			"Failed to execute fetch query: "+err.Error(),
+		status, code := queryFailureStatusAndCode(err)
+		c.JSON(status, response.ErrorResponse(
+			code,
+			queryservice.SafeQueryErrorMessage(err),
 			"",
 			correlationID,
 		))
@@ -155,9 +160,10 @@ func (qc *QueryController) FetchNextBatch(c *gin.Context) {
 	// Fetch next batch using unified service
 	result, err := qc.queryService.FetchNextBatch(ctx, queryID, slug, token, batchSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse(
-			"FETCH_ERROR",
-			"Failed to fetch next batch: "+err.Error(),
+		status, code := queryFailureStatusAndCode(err)
+		c.JSON(status, response.ErrorResponse(
+			code,
+			queryservice.SafeQueryErrorMessage(err),
 			"",
 			correlationID,
 		))
@@ -211,7 +217,7 @@ func (qc *QueryController) ValidateQuery(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusOK, response.SuccessResponse(map[string]interface{}{
 			"valid":   false,
-			"error":   err.Error(),
+			"error":   queryservice.SafeQueryErrorMessage(err),
 			"sql":     req.SQL,
 			"queryId": qc.generateQueryID(),
 		}, correlationID))
@@ -316,4 +322,23 @@ func (qc *QueryController) generateSlug() string {
 func (qc *QueryController) generateToken() string {
 	// Generate a token for authorization
 	return uuid.New().String()
+}
+
+func queryFailureStatusAndCode(err error) (int, string) {
+	switch {
+	case errors.Is(err, repository.ErrDataSourceNotFound):
+		return http.StatusNotFound, "DATASOURCE_NOT_FOUND"
+	case errors.Is(err, queryservice.ErrQuerySessionUnavailable), errors.Is(err, queryservice.ErrInvalidQuerySession):
+		return http.StatusNotFound, "QUERY_SESSION_UNAVAILABLE"
+	case errors.Is(err, security.ErrNotSelectQuery), errors.Is(err, security.ErrSQLInjection),
+		errors.Is(err, security.ErrSQLSyntaxError), errors.Is(err, security.ErrDangerousKeyword),
+		errors.Is(err, security.ErrEmptyQuery), errors.Is(err, security.ErrQueryTooLong):
+		return http.StatusBadRequest, "INVALID_QUERY"
+	case errors.Is(err, context.DeadlineExceeded):
+		return http.StatusGatewayTimeout, "QUERY_TIMEOUT"
+	case errors.Is(err, context.Canceled):
+		return http.StatusRequestTimeout, "QUERY_CANCELLED"
+	default:
+		return http.StatusBadGateway, "QUERY_ENGINE_ERROR"
+	}
 }
