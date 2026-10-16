@@ -4,7 +4,7 @@ Data Fabric 可通过 MCP stdio 传输向本机 MCP 客户端提供查询工具�
 
 ## 前置条件
 
-- Go 1.25.1 或更高版本。
+- Go 1.26.1 或更高版本。
 - 已配置并可访问 Data Fabric 元数据数据库。
 - 如果使用 SQL 方言转换功能，需要 Python 3，并在运行环境安装 sqlglot：python3 -m pip install -r requirements-sql-translation.txt。
 - 从仓库根目录启动程序，以便转换脚本能被定位。

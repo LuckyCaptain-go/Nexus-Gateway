@@ -5,7 +5,7 @@
   <p><strong>Manage diverse data sources together; aim to query them through one language</strong></p>
   <p><a href="README.md">Project home</a> · <a href="README_zh.md">中文介绍</a></p>
   <p>
-    <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
+    <img src="https://img.shields.io/badge/Go-1.26.1+-00ADD8?logo=go" alt="Go 1.26.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
     <a href="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml"><img src="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
@@ -86,7 +86,7 @@ The following are representative source types defined in the repository. Driver 
 
 ### Requirements
 
-- Go 1.25.1 or newer.
+- Go 1.26.1 or newer.
 - A metadata database configured for the service and reachable data sources.
 - Single-source gateway mode does not require a federation engine. Federated queries require an implemented engine adapter and a deployed engine.
 

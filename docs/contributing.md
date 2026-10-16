@@ -41,7 +41,7 @@ We welcome pull requests for bug fixes, new features, and documentation improvem
 
 ### Prerequisites
 
-- Go 1.25.1 or higher
+- Go 1.26.1 or higher
 - Git
 - Make (optional)
 

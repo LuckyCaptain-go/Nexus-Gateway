@@ -4,7 +4,7 @@ Data Fabric exposes an optional MCP server over stdio. It reuses the configured 
 
 ## Requirements
 
-- Go 1.25.1 or later.
+- Go 1.26.1 or later.
 - A configured metadata database.
 - Python 3 with sqlglot installed when SQL dialect translation tools are used.
 - Start the application from the repository root so the translation script can be located.

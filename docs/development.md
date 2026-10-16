@@ -167,7 +167,7 @@ const (
 
 ### Prerequisites
 
-- Go 1.25.1 or higher
+- Go 1.26.1 or higher
 - Git
 - Make (optional, for convenience targets)
 

@@ -17,6 +17,7 @@ const (
 	CategoryObjectStorage      DriverCategory = "object_storage"
 	CategoryOLAP               DriverCategory = "olap"
 	CategoryCloudDataWarehouse DriverCategory = "cloud_data_warehouse"
+	CategoryQueryEngine        DriverCategory = "query_engine"
 	CategoryDomesticDatabase   DriverCategory = "domestic_database"
 	CategoryFileSystem         DriverCategory = "file_system"
 )

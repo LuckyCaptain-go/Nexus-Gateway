@@ -6,7 +6,7 @@
   <p>让应用通过统一入口管理和处理企业与集群中的多种数据源</p>
   <p><a href="README_zh.md">完整中文介绍</a> · <a href="README_en.md">English</a></p>
   <p>
-    <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
+    <img src="https://img.shields.io/badge/Go-1.26.1+-00ADD8?logo=go" alt="Go 1.26.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
     <a href="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml"><img src="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
@@ -46,7 +46,7 @@ flowchart LR
 
 ## 快速开始
 
-需要 Go 1.25.1 或更高版本，以及按配置准备的元数据数据库。先检查 [配置说明](docs/configuration.md) 中的端口、数据库和安全选项，再获取代码：
+需要 Go 1.26.1 或更高版本，以及按配置准备的元数据数据库。先检查 [配置说明](docs/configuration.md) 中的端口、数据库和安全选项，再获取代码：
 
 ~~~bash
 git clone https://github.com/RhinoLink-Tech/data-fabric.git

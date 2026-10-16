@@ -5,7 +5,7 @@
   <p><strong>统一纳管多种数据源，目标是以一套查询语言访问和处理数据</strong></p>
   <p><a href="README.md">项目主页</a> · <a href="README_en.md">English</a></p>
   <p>
-    <img src="https://img.shields.io/badge/Go-1.25.1+-00ADD8?logo=go" alt="Go 1.25.1+">
+    <img src="https://img.shields.io/badge/Go-1.26.1+-00ADD8?logo=go" alt="Go 1.26.1+">
     <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="Apache 2.0">
     <a href="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml"><img src="https://github.com/RhinoLink-Tech/data-fabric/actions/workflows/go.yml/badge.svg" alt="Go CI"></a>
   </p>
@@ -86,7 +86,7 @@ flowchart LR
 
 ### 环境要求
 
-- Go 1.25.1 或更高版本。
+- Go 1.26.1 或更高版本。
 - 按服务配置准备元数据数据库及可访问的数据源。
 - 单源网关模式不需要部署跨源查询引擎；跨源联邦能力需要完成相应的引擎适配并部署所选引擎。
 
