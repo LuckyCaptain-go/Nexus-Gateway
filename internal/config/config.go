@@ -95,7 +95,8 @@ func setDefaults() {
 	viper.SetDefault("database.ssl", "false")
 
 	// Security defaults
-	viper.SetDefault("security.jwt_secret", "your-secret-key")
+	// jwt_secret has no default on purpose: ValidateSecurity rejects an
+	// empty or placeholder secret whenever authentication is enabled.
 	viper.SetDefault("security.jwt_expiration", "24h")
 	viper.SetDefault("security.rate_limit_per_minute", 60)
 	viper.SetDefault("security.rate_limit_burst", 10)

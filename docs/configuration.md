@@ -187,13 +187,23 @@ Back up the database and key material securely before rotation. Do not put actua
 1. Environment variables win over the config file for the secret fields (`DATABASE_USERNAME`, `DATABASE_PASSWORD`, `JWT_SECRET`). Prefer them in every deployment.
 2. The `.env` file is gitignored but **not loaded automatically**. To use one locally: `set -a; source .env; set +a`, or pass `--env-file` to `docker run` / `env_file` in compose.
 3. In container deployments, inject secrets through the platform's secret mechanism (Kubernetes Secret, Docker secrets) instead of baking config files into images — the published image ships `config.yaml.example` only.
-4. Local development with authentication enabled needs a Bearer token. There is no token-issuing endpoint yet, so mint one yourself with the same `JWT_SECRET` (requires `pyjwt`):
+4. Calling `/api/v1/fetch` always needs a Bearer token, regardless of `security.enable_auth`. There is no token-issuing endpoint yet, so mint one yourself with the same `JWT_SECRET` (requires `pyjwt`):
 
    ```bash
    python3 -c "import jwt,time; print(jwt.encode({'userId':'dev','username':'dev','roles':['admin'],'iat':int(time.time()),'exp':int(time.time())+86400}, 'YOUR_JWT_SECRET', algorithm='HS256'))"
    ```
 
    If `JWT_SECRET` is unset the server falls back to a source-code default that anyone can read — never rely on that in shared environments (#8 removes the fallback).
+
+## Local development vs production
+
+| Setting | Local development (`debug`/`test`) | Production (`release`) |
+|---|---|---|
+| `security.enable_auth` | May be `false` to leave the data-source management API unauthenticated; `/api/v1/fetch` still requires a Bearer token either way (#6) | Must be `true`; the server refuses to start otherwise |
+| `security.jwt_secret` | Required whenever the HTTP server runs: set, not a known placeholder, at least 32 bytes | Same |
+| `server.mode` | `debug` / `test` | `release` |
+
+Startup fails closed on insecure authentication settings before the metadata database is connected. `test_fetch_api.sh` reads the Bearer token from `FETCH_TOKEN` — mint one as shown under Secret management and export it before running the script.
 
 ## Environment Variables
 
