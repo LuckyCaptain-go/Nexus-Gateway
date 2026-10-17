@@ -115,19 +115,19 @@ go run ./cmd/server
 
 ## API 概览
 
-| 方法 | 路径 | 用途 |
-| --- | --- | --- |
-| GET | /health | 服务健康检查 |
-| GET | /api/v1/database/types | 查询服务识别的数据源类型 |
-| GET | /api/v1/database/compatibility | 查询数据库兼容性信息 |
-| GET / POST | /api/v1/datasources | 列出或创建数据源 |
-| GET / PUT / DELETE | /api/v1/datasources/:id | 查看、更新或删除数据源 |
-| POST | /api/v1/datasources/:id/activate | 启用数据源 |
-| POST | /api/v1/datasources/:id/deactivate | 停用数据源 |
-| POST | /api/v1/database/test-connection | 测试数据源连接 |
-| POST | /api/v1/database/validate-config | 校验数据源配置 |
-| POST | /api/v1/fetch | 执行批量查询并获取首批结果 |
-| GET | /api/v1/fetch/:query_id/:slug/:token | 获取后续结果批次 |
+| 方法 | 路径 | 用途 | 认证 |
+| --- | --- | --- | --- |
+| GET | /health | 服务健康检查 | 无 |
+| GET | /api/v1/database/types | 查询服务识别的数据源类型 | 无 |
+| GET | /api/v1/database/compatibility | 查询数据库兼容性信息 | 无 |
+| GET / POST | /api/v1/datasources | 列出或创建数据源 | `enable_auth` 开启时需 Bearer |
+| GET / PUT / DELETE | /api/v1/datasources/:id | 查看、更新或删除数据源 | `enable_auth` 开启时需 Bearer |
+| POST | /api/v1/datasources/:id/activate | 启用数据源 | `enable_auth` 开启时需 Bearer |
+| POST | /api/v1/datasources/:id/deactivate | 停用数据源 | `enable_auth` 开启时需 Bearer |
+| POST | /api/v1/database/test-connection | 测试数据源连接 | `enable_auth` 开启时需 Bearer |
+| POST | /api/v1/database/validate-config | 校验数据源配置 | `enable_auth` 开启时需 Bearer |
+| POST | /api/v1/fetch | 执行批量查询并获取首批结果 | 始终需要 Bearer |
+| GET | /api/v1/fetch/:query_id/:slug/:token | 获取后续结果批次 | 始终需要 Bearer |
 
 具体请求字段、响应结构和认证行为见 [API 使用指南](docs/api_usage.md)。
 

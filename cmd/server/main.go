@@ -124,82 +124,16 @@ func startHTTPServer(cfg *config.Config, vault *security.CredentialVault) error 
 	sqlTranslationController := controller.NewSQLTranslationController() // Added SQL translation controller
 
 	// Create Gin router
-	router := gin.New()
-
-	// Add middleware
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
-	router.Use(middleware.Cors())
-	router.Use(middleware.CorrelationID())
-
-	// Authenticate optional JWTs before rate limiting so verified users share
-	// a per-user bucket. Invalid or absent credentials fall back to the peer IP.
-	if cfg.Security.EnableAuth && cfg.Security.EnableRateLimit {
-		router.Use(authMiddleware.OptionalAuth())
-	}
-
-	// Add rate limiting if enabled
-	if cfg.Security.EnableRateLimit {
-		router.Use(rateLimiter.RateLimit())
-	}
-
-	// Health check endpoint (always available)
-	router.GET("/health", healthController.HealthCheck)
-
-	// API v1 group
-	api := router.Group("/api/v1")
-
-	// Public endpoints (no authentication required)
-	public := api.Group("")
-	{
-		public.GET("/health", healthController.HealthCheck)
-		public.GET("/database/types", databaseController.GetDatabaseTypes)
-		public.GET("/database/compatibility", databaseController.GetDatabaseCompatibility)
-	}
-
-	// SQL translation endpoints (no authentication required)
-	sqlGroup := api.Group("/sql")
-	{
-		sqlGroup.POST("/translate", sqlTranslationController.TranslateSQL)
-		sqlGroup.GET("/dialects", sqlTranslationController.GetSupportedDialects)
-		sqlGroup.POST("/validate", sqlTranslationController.ValidateSQL)
-	}
-
-	// Auth endpoints (authentication required)
-	auth := api.Group("")
-	if cfg.Security.EnableAuth {
-		auth.Use(authMiddleware.RequireAuth())
-	}
-	{
-		// Data source endpoints
-		datasources := auth.Group("/datasources")
-		{
-			datasources.POST("", datasourceController.CreateDataSource)
-			datasources.GET("", datasourceController.ListDataSources)
-			datasources.GET("/stats", datasourceController.GetDataSourceStats)
-			datasources.GET("/:id", datasourceController.GetDataSource)
-			datasources.PUT("/:id", datasourceController.UpdateDataSource)
-			datasources.DELETE("/:id", datasourceController.DeleteDataSource)
-			datasources.POST("/:id/activate", datasourceController.ActivateDataSource)
-			datasources.POST("/:id/deactivate", datasourceController.DeactivateDataSource)
-		}
-
-		// Fetch endpoints (batch data retrieval)
-		fetch := api.Group("/fetch")
-		{
-			fetch.POST("", queryController.FetchQuery)
-			fetch.GET("/:query_id/:slug/:token", queryController.FetchNextBatch)
-		}
-
-		// Database management endpoints
-		database := auth.Group("/database")
-		{
-			database.POST("/test-connection", databaseController.TestDataSourceConnection)
-			database.POST("/validate-config", databaseController.ValidateDataSourceConfig)
-			database.GET("/connections/stats", databaseController.GetConnectionStats)
-			database.GET("/health", databaseController.GetDatabaseHealth)
-		}
-	}
+	router := newRouter(routerDeps{
+		cfg:                      cfg,
+		authMiddleware:           authMiddleware,
+		rateLimiter:              rateLimiter,
+		healthController:         healthController,
+		datasourceController:     datasourceController,
+		queryController:          queryController,
+		databaseController:       databaseController,
+		sqlTranslationController: sqlTranslationController,
+	})
 
 	// Start server
 	log.Printf("Starting server on port %s", cfg.Server.Port)
