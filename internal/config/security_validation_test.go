@@ -19,8 +19,13 @@ func TestValidateSecurity(t *testing.T) {
 		wantErr bool
 	}{
 		{"release with auth disabled", "release", false, "", 24 * time.Hour, true},
-		{"debug with auth disabled and no secret", "debug", false, "", 0, false},
-		{"test mode with auth disabled", "test", false, "", 0, false},
+		// The /fetch API always authenticates (#6), so the secret is checked
+		// even with security.enable_auth disabled.
+		{"debug with auth disabled and no secret", "debug", false, "", 0, true},
+		{"test mode with auth disabled no secret", "test", false, "", 0, true},
+		{"auth disabled valid secret", "debug", false, longSecret, 0, false},
+		{"auth disabled short secret rejected", "debug", false, shortSecret, 24 * time.Hour, true},
+		{"auth disabled placeholder secret rejected", "debug", false, "your-secret-key", 24 * time.Hour, true},
 		{"release auth enabled empty secret", "release", true, "", 24 * time.Hour, true},
 		{"debug auth enabled empty secret", "debug", true, "", 24 * time.Hour, true},
 		{"debug auth enabled whitespace secret", "debug", true, "   ", 24 * time.Hour, true},
