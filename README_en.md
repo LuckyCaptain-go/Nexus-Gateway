@@ -101,7 +101,7 @@ cd data-fabric
 go mod download
 ~~~
 
-Review the service port, metadata database, and security settings in configs/config.yaml, then start the server:
+Copy configs/config.yaml.example to configs/config.yaml, review the service port, metadata database, and security settings (inject secrets via environment variables), then start the server:
 
 ~~~bash
 export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=dev-v1

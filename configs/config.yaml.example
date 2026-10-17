@@ -1,0 +1,42 @@
+# Data Fabric 配置模板：复制为 configs/config.yaml 后按需修改。
+# 敏感字段建议用环境变量注入，不要写进文件：
+#   DATABASE_USERNAME / DATABASE_PASSWORD / JWT_SECRET
+# 详见 docs/configuration.md 的 "Secret management" 一节。
+
+server:
+  port: "8099"
+  mode: "debug"  # debug, release, test
+  host: "0.0.0.0"
+
+database:
+  host: "localhost"
+  port: "3306"
+  database: "data_fabric"
+  username: "data_fabric"   # 或 export DATABASE_USERNAME=...
+  password: ""              # 或 export DATABASE_PASSWORD=...
+  ssl: "false"
+
+security:
+  # 不写入文件：export JWT_SECRET=$(openssl rand -base64 32)
+  #jwt_secret: ""
+  jwt_expiration: "24h"
+  # 开启后 /api/v1 数据端点需要 Bearer token。本地自签一枚（24h 有效，需 pyjwt）：
+  # python3 -c "import jwt,time; print(jwt.encode({'userId':'dev','username':'dev','roles':['admin'],'iat':int(time.time()),'exp':int(time.time())+86400}, '与JWT_SECRET相同的值', algorithm='HS256'))"
+  # 注意：若未设置 JWT_SECRET，服务会回退到源码中的默认密钥，任何知道源码的人
+  # 都能伪造 token——生产环境必须显式注入（移除该默认值见 issue #8）。
+  enable_auth: true
+  enable_rate_limit: true
+  rate_limit_per_minute: 60
+  rate_limit_burst: 10
+
+logging:
+  level: "info"
+  format: "json"  # json, text
+
+query:
+  prefer_streaming: true
+  execution_mode: "auto"  # auto, streaming, pagination
+
+mcp:
+  enabled: false
+  transport: "stdio"

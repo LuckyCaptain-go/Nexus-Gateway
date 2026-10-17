@@ -101,7 +101,7 @@ cd data-fabric
 go mod download
 ~~~
 
-先检查 configs/config.yaml 中的服务端口、元数据数据库和安全参数，再启动：
+先复制 configs/config.yaml.example 为 configs/config.yaml，检查其中的服务端口、元数据数据库和安全参数（敏感字段建议通过环境变量注入），再启动：
 
 ~~~bash
 export DATA_FABRIC_CREDENTIAL_ACTIVE_KEY_ID=dev-v1

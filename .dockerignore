@@ -1,0 +1,5 @@
+# Keep local configuration with real credentials out of the build context
+configs/config.yaml
+.env
+
+.git

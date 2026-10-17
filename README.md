@@ -53,7 +53,7 @@ flowchart LR
 
 ## 快速开始
 
-需要 Go 1.26.1 或更高版本，以及按配置准备的元数据数据库。先检查 [配置说明](docs/configuration.md) 中的端口、数据库和安全选项，再获取代码：
+需要 Go 1.26.1 或更高版本，以及按配置准备的元数据数据库。先复制 configs/config.yaml.example 为 configs/config.yaml 并按需调整（敏感字段建议通过环境变量注入，见 [配置说明](docs/configuration.md)），再获取代码：
 
 ~~~bash
 git clone https://github.com/RhinoLink-Tech/data-fabric.git
