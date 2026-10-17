@@ -195,6 +195,16 @@ Back up the database and key material securely before rotation. Do not put actua
 
    If `JWT_SECRET` is unset the server falls back to a source-code default that anyone can read — never rely on that in shared environments (#8 removes the fallback).
 
+## Local development vs production
+
+| Setting | Local development (`debug`/`test`) | Production (`release`) |
+|---|---|---|
+| `security.enable_auth` | May be `false` to run without authentication | Must be `true`; the server refuses to start otherwise |
+| `security.jwt_secret` | Required whenever authentication is enabled: set, not a known placeholder, at least 32 bytes | Same |
+| `server.mode` | `debug` / `test` | `release` |
+
+Startup fails closed on insecure authentication settings before the metadata database is connected. Local helper scripts such as `test_fetch_api.sh` send a hardcoded bearer token and only work while authentication is disabled; with authentication enabled, mint a token as shown under Secret management and update the script (#6, #7).
+
 ## Environment Variables
 
 Secret fields are injected through environment variables and take precedence over any value in the config file. These variables are honored today:

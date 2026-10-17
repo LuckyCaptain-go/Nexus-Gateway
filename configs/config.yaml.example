@@ -22,8 +22,8 @@ security:
   jwt_expiration: "24h"
   # 开启后 /api/v1 数据端点需要 Bearer token。本地自签一枚（24h 有效，需 pyjwt）：
   # python3 -c "import jwt,time; print(jwt.encode({'userId':'dev','username':'dev','roles':['admin'],'iat':int(time.time()),'exp':int(time.time())+86400}, '与JWT_SECRET相同的值', algorithm='HS256'))"
-  # 注意：若未设置 JWT_SECRET，服务会回退到源码中的默认密钥，任何知道源码的人
-  # 都能伪造 token——生产环境必须显式注入（移除该默认值见 issue #8）。
+  # 注意：未设置 JWT_SECRET、使用占位值或短于 32 字节时，服务将拒绝启动（#8）；
+  # release 模式下也不允许将 enable_auth 设为 false。
   enable_auth: true
   enable_rate_limit: true
   rate_limit_per_minute: 60

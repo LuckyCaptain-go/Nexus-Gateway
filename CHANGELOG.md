@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
   - Back up your local `configs/config.yaml` before pulling this change (`cp configs/config.yaml ~/config.yaml.bak`); git will otherwise delete or conflict with it.
   - `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `JWT_SECRET` now actually override the config file, matching the documentation.
   - The published image no longer contains a config file: the container now defaults to port 8080 with authentication enabled. Inject `DATABASE_*` and `JWT_SECRET` explicitly when deploying.
+- The server now fails closed on insecure authentication settings: `release` mode refuses to start with authentication disabled, and enabled authentication requires a `jwt_secret` that is set, not a known placeholder, and at least 32 bytes long. The built-in default JWT secret is removed.
+  - **Breaking**: any deployment relying on the removed default secret — in any mode — must set `JWT_SECRET` (or `jwt_secret` in the config) before upgrading; startup then fails with instructions instead of accepting a forgeable secret.
 
 ### Streaming Query Updates
 

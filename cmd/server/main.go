@@ -52,6 +52,12 @@ func main() {
 }
 
 func startHTTPServer(cfg *config.Config, vault *security.CredentialVault) error {
+	// Fail closed on insecure authentication settings before the metadata
+	// database is touched.
+	if err := cfg.ValidateSecurity(); err != nil {
+		return fmt.Errorf("invalid security configuration: %w", err)
+	}
+
 	// Set Gin mode
 	if cfg.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
