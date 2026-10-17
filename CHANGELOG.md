@@ -15,6 +15,13 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Preserve application error codes and HTTP statuses when errors are wrapped with additional context.
 
+### Security
+
+- `configs/config.yaml` is no longer tracked by git: it contained real credentials in the repository history. Copy `configs/config.yaml.example` (placeholders only) for local setup, and keep real secrets out of the file.
+  - Back up your local `configs/config.yaml` before pulling this change (`cp configs/config.yaml ~/config.yaml.bak`); git will otherwise delete or conflict with it.
+  - `DATABASE_USERNAME`, `DATABASE_PASSWORD`, and `JWT_SECRET` now actually override the config file, matching the documentation.
+  - The published image no longer contains a config file: the container now defaults to port 8080 with authentication enabled. Inject `DATABASE_*` and `JWT_SECRET` explicitly when deploying.
+
 ### Streaming Query Updates
 
 #### Changed
